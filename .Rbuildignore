@@ -6,3 +6,7 @@
 ^notes.txt$
 ^todo.txt$
 ^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

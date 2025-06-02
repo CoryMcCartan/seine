@@ -34,3 +34,4 @@
 *.aux
 data-raw/*/*
 !data/*.rda
+docs

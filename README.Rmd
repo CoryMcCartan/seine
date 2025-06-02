@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 # **seine**: Semiparametric Ecological Inference <a href="https://corymccartan.com/sei/"><img src="man/figures/logo.svg" align="right" height="144" /></a>
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Installation
