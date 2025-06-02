@@ -8,6 +8,15 @@
 \description{
 Efficient and user-friendly routines for modern ecological inference.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/CoryMcCartan/seine}
+  \item \url{https://corymccartan.com/seine/}
+  \item Report bugs at \url{https://github.com/CoryMcCartan/seine/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Cory McCartan \email{mccartan@psu.edu} (\href{https://orcid.org/0000-0002-6251-669X}{ORCID})
 
