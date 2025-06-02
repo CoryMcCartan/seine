@@ -1,0 +1,30 @@
+Package: seine
+Title: Semiparametric Ecological Inference
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Cory", "McCartan", , "mccartan@psu.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6251-669X")),
+    person("Shiro", "Kuriwaki", , "shiro.kuriwaki@yale.edu", role = c("aut"),
+           comment = c(ORCID = "0000-0002-5687-2647"))
+    )
+Description: Efficient and user-friendly routines for modern ecological inference.
+Imports:
+    rlang,
+    cli,
+    graphics,
+    stats,
+    tidyselect,
+    tibble,
+    hardhat
+Suggests: 
+    testthat (>= 3.0.0)
+LinkingTo: 
+    cpp11,
+    cpp11armadillo,
+    testthat
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+LazyData: true
+Config/testthat/edition: 3
