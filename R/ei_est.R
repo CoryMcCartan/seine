@@ -5,7 +5,7 @@
 #' If both a regression model and a Riesz representer are provided, a debiased
 #' machine learning (DML) estimate is produced.
 #'
-#' @param regr A fitted regression model, from [ei_ridge()].
+#' @param regr A fitted regression model, from [ei_ridge()] or [ei_model()].
 #'    If `riesz` is not provided and `regr` is an [ei_riesz()] object, then
 #'    `riesz` will be set to the value of `regr` and `regr` will be set to
 #'    `NULL`. This is so users can call this function as
@@ -148,7 +148,7 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
         return(list(yhat=preds[[1]], preds=preds, x=x, z=NULL))
     }
     if (!inherits(regr, "ei_ridge") && !inherits(regr, "ei_model")) {
-        cli_abort("{.arg regr} must be a {.cls ei_ridge} object.",
+        cli_abort("{.arg regr} must be an {.cls ei_ridge} or {.cls ei_model} object.",
                   call=parent.frame())
     }
 
