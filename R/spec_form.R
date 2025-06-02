@@ -1,12 +1,12 @@
 #' Specify an ecological inference problem
 #'
 #' Uses tidy-select syntax to specify outcomes, predictors, and covariates.
-#' The result of this function can be passed directly into [ei_ridge()],
-#' [ei_model()], or [ei_riesz()], or plotted with [`plot()`][plot.ei_spec].
+#' The result of this function can be passed directly into [ei_ridge()] or
+#' [ei_riesz()], or plotted with [`plot()`][plot.ei_spec].
 #'
 #' The function is lightweight and does not perform any checking of the
 #' arguments, bounds, sum constraints, etc.  All of these checks are performed
-#' by [ei_model()].
+#' by [ei_ridge()] or [ei_riesz()].
 #'
 #' @param data A data frame.
 #' @param predictors <[`tidy-select`][dplyr::select]> Predictor variables.
@@ -16,7 +16,7 @@
 #'   This is the `y` variable in ecological regression that is of primary interest.
 #'   For example, the columns containing the percentage of votes for each party.
 #' @param covariates <[`tidy-select`][dplyr::select]> Covariates.
-#' @inheritParams ei_model
+#' @inheritParams ei_ridge
 #' @param strip Whether to strip common prefixes from column names within each group.
 #'   For example, columns named `vap_white`, `vap_black`, and `vap_hisp` would be
 #'   renamed `white`, `black` and `other` in the model and output.

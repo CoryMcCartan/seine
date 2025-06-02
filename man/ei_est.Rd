@@ -20,7 +20,7 @@ ei_est(
 \method{vcov}{ei_est}(object, ...)
 }
 \arguments{
-\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}} or \code{\link[=ei_model]{ei_model()}}.
+\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}.
 If \code{riesz} is not provided and \code{regr} is an \code{\link[=ei_riesz]{ei_riesz()}} object, then
 \code{riesz} will be set to the value of \code{regr} and \code{regr} will be set to
 \code{NULL}. This is so users can call this function as
