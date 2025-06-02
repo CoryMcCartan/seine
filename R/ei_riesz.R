@@ -168,7 +168,7 @@ ei_riesz_bridge <- function(processed, ...) {
     )
 }
 
-#' @rdname ei_impl
+#' @rdname ei-impl
 ei_riesz_impl <- function(x, z, weights, penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)

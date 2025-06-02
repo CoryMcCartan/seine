@@ -8,6 +8,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-5687-2647"))
     )
 Description: Efficient and user-friendly routines for modern ecological inference.
+Depends:
+    R (>= 3.5.0)
 Imports:
     rlang,
     cli,

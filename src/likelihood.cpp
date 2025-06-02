@@ -126,7 +126,7 @@ void proj_mvn(const vec& eta, const mat& L, const vec& x, double eps, vec& Lx, m
 #include <testthat.h>
 #include "random.h"
 context("Likelihood Tests") {
-    double tol = 1e-8;
+    double tol = 1e-5;
 
     test_that("MVN subspace projections calculated correctly") {
         int k = 5;

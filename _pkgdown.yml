@@ -25,7 +25,7 @@ reference:
   - ei_riesz
   - ridge-methods
   - weights.ei_riesz
-  - ei_impl
+  - ei-impl
 - title: Preprocessing
   desc: Functions to set up EI problems and tidy data
   contents:

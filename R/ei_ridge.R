@@ -222,7 +222,7 @@ ei_ridge_bridge <- function(processed, ...) {
 #' @inheritParams ei_riesz
 #'
 #' @returns A list with model components.
-#' @rdname ei_impl
+#' @rdname ei-impl
 ei_ridge_impl <- function(x, y, z, weights, penalty=NULL) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
