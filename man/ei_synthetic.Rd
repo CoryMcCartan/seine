@@ -5,46 +5,77 @@
 \title{Generate Synthetic Ecological Data}
 \usage{
 ei_synthetic(
-  x = c(3, 1),
-  eta = seq(0.5, 0.9, length.out = ncol(x) \%||\% length(x)),
-  Sigma = 0.02 * (1 + diag(ncol(x) \%||\% length(x))),
-  n = nrow(x)
+  n,
+  p = 0,
+  n_x = 2,
+  x = n_x:1,
+  z = NULL,
+  b_loc = NULL,
+  coefs = NULL,
+  b_cov = NULL
 )
 }
 \arguments{
+\item{n}{The number of rows (geographies) to generate. Defaults to the number
+of rows in \code{x}, if it is a matrix or data frame.}
+
+\item{p}{The number of covariates. Defaults to the number of columns in \code{z},
+if it is a matrix or data frame, or the length of \code{z}, if it is a vector
+of singular values.}
+
+\item{n_x}{The number of predictor variables. Defaults to the number of
+columns in \code{x}, if it is a matrix or data frame, or the length of \code{x}, if
+it is a vector of Dirichlet parameters.}
+
 \item{x}{Either a matrix or data frame containing the predictor percentages
 in each row, or a vector containing Dirichlet parameters to use in sampling
 predictor percentages.}
 
-\item{eta}{The center of the distribution of geography-level parameters.
-Defaults to a sequence across groups.}
+\item{z}{A matrix or data frame containing geography-level covariates, or a
+vector of singular values to use in generating the random covariates.
+Singular values default to \code{exp(-(seq_len(p) - 1)/2)}. They are applied
+to scale a random orthogonal matrix.}
 
-\item{Sigma}{The covariance matrix for geography-level parameters.}
+\item{b_loc}{The center of the distribution of geography-level parameters.
+Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.}
 
-\item{n}{The number of rows (geographies) to generate. Defaults to the number
-of rows in \code{x}, if the latter is a matrix or data frame.}
+\item{coefs}{Either A \code{p}-by-\code{n_x} matrix of coefficients for \code{z}, or
+The product with \code{z} is added to \code{ctr} to form the mean of the individual
+geography-level parameters. Defaults to a matrix of standard Normals.}
+
+\item{b_cov}{The covariance matrix for geography-level parameters.
+Defaults to \code{0.02 * (1 + diag(n_x))}.}
 }
 \value{
-A list with elements \code{x} (predictors), \code{y} (outcome), \code{b}
-(geography-level parameters), and \code{eta} and \code{Sigma} (global parameters).
+An \code{ei_spec} object with additional attributes \code{b_loc}, \code{coefs}, and
+\code{b_cov}, \code{eta} (the linear predictor for \code{b}), and \code{est_true} (the mean of
+the geography-level parameters, formatted similarly to the output from
+\code{\link[=ei_est]{ei_est()}}).
 }
 \description{
 Samples data from the following truncated Normal ecological model:
 \deqn{
      x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \Sigma) \\
+     \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
+     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{b_{cov}}) \\
      y_i = b_i^\top x_i,
 }
 where \eqn{\alpha} is a vector of hyperparameters that may be optionally
 specified as the \code{x} argument to the function, and \eqn{\mathcal{N}_{[0,
 1]^d}} indicates a multivariate Normal distribution truncated to the
 \emph{d}-dimensional hypercube.
+Aspects of the model can be replaced with data provided to the function.
 }
 \examples{
-ei_synthetic(n=100)
+ei_synthetic(n = 10)
+
+ei_synthetic(n = 10, p = 2, n_x = 3)
 
 data(elec_1968)
-ei_synthetic(cbind(elec_1968$pop_white, 1-elec_1968$pop_white),
-     eta=c(0.3, 0.9), Sigma=matrix(c(0.02, 0.016, 0.016, 0.2), nrow=2))
+ei_synthetic(
+    x = cbind(elec_1968$pop_white, 1 - elec_1968$pop_white),
+    b_loc = c(0.3, 0.9),
+    b_cov = matrix(c(0.02, 0.016, 0.016, 0.2), nrow=2)
+)
 
 }
