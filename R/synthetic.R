@@ -1,4 +1,4 @@
-#' Generate Synthetic Ecological Data
+#' Generate synthetic ecological data
 #'
 #' Samples data from the following truncated Normal ecological model:
 #' \deqn{
@@ -125,7 +125,7 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = NULL,
         ei_x = colnames(x),
         ei_y = "y",
         ei_z = colnames(z),
-        ei_wgt = rep(1, n),
+        ei_n = rep(1, n),
         b = b,
         b_loc = b_loc,
         coefs = coefs,

@@ -15,21 +15,23 @@
 #' @param outcome <[`tidy-select`][dplyr::select]> Outcome variables.
 #'   This is the `y` variable in ecological regression that is of primary interest.
 #'   For example, the columns containing the percentage of votes for each party.
+#' @param total <[`tidy-select`][dplyr::select]> A variable containing the total
+#'   number of observations in each aggregate unit. For example, the column
+#'   containing the total number of voters. Required by default.
 #' @param covariates <[`tidy-select`][dplyr::select]> Covariates.
-#' @inheritParams ei_ridge
 #' @param strip Whether to strip common prefixes from column names within each group.
 #'   For example, columns named `vap_white`, `vap_black`, and `vap_hisp` would be
 #'   renamed `white`, `black` and `other` in the model and output.
 #'
 #' @returns An `ei_spec` object, which is a data frame with additional
-#'   attributes recording `predictors`, `outcomes`, and `covariates`.
+#'   attributes recording `predictors`, `outcomes`, `total`, and `covariates`.
 #'
 #' @examples
 #' data(elec_1968)
 #' ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
 #'
 #' @export
-ei_spec = function(data, predictors, outcome, weights, covariates=NULL, strip=TRUE) {
+ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=TRUE) {
     predictors = try_fetch(
         eval_select(enquo(predictors), data, allow_empty=FALSE),
         error = function(cnd) rlang::abort("Predictor specification failed.", parent=cnd)
@@ -42,7 +44,7 @@ ei_spec = function(data, predictors, outcome, weights, covariates=NULL, strip=TR
         eval_select(enquo(covariates), data),
         error = function(cnd) rlang::abort("Covariate specification failed.", parent=cnd)
     )
-    weights = check_make_weights(!!enquo(weights), data)
+    total = check_make_weights(!!enquo(total), data)
 
 
     if (isTRUE(strip)) {
@@ -57,7 +59,7 @@ ei_spec = function(data, predictors, outcome, weights, covariates=NULL, strip=TR
         ei_x = names(predictors),
         ei_y = names(outcome),
         ei_z = names(covariates),
-        ei_wgt = weights,
+        ei_n = total,
         class="ei_spec"
     )
 }
@@ -75,20 +77,20 @@ print.ei_spec = function(x, ..., n=5) {
     NextMethod(n=n)
 }
 
-#' @describeIn ei_spec Extract the weights from a specification
+#' @describeIn ei_spec Extract the totals from a specification
 #' @param object An [ei_spec] object.
-#' @param normalize If `TRUE`, normalize the weights to have mean 1.
+#' @param normalize If `TRUE`, normalize the totals to have mean 1.
 #' @param ... Additional arguments (ignored).
 #' @export
 weights.ei_spec <- function(object, normalize = TRUE, ...) {
-    w = attr(object, "ei_wgt")
-    if (is.null(w)) {
-        w = rep(1, nrow(object))
+    n = attr(object, "ei_n")
+    if (is.null(n)) {
+        n = rep(1, nrow(object))
     }
     if (isTRUE(normalize)) {
-        w / mean(w)
+        n / mean(n)
     } else{
-        w
+        n
     }
 }
 
@@ -110,7 +112,7 @@ weights.ei_spec <- function(object, normalize = TRUE, ...) {
 plot.ei_spec = function(x, ..., pch=16, cex=0.2) {
     nm_x = attr(x, "ei_x")
     nm_y = attr(x, "ei_y")
-    size = sqrt(attr(x, "ei_wgt"))
+    size = sqrt(attr(x, "ei_n"))
     size = size / mean(size)
 
     graphics::pairs(x, horInd=match(nm_y, names(x)), verInd=match(nm_x, names(x)),
@@ -165,33 +167,37 @@ ei_bounds = function(bounds, outcome) {
 }
 
 # Shared helper for checking weights/total argument
-check_make_weights = function(weights, data, n) {
-    if (rlang::quo_is_missing(enquo(weights))) {
-        cli_abort(c(
-            "The {.arg weights} argument is required.",
-            "i"="{.arg weights} should contain the total number of individuals in each unit.",
-            ">"="To use equal weights (not recommended), pass {.arg weights = FALSE}."
-        ), call=parent.frame())
+check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
+    if (rlang::quo_is_missing(enquo(x))) {
+        if (isTRUE(required)) {
+            cli_abort(c(
+                "The {.arg {arg}} argument is required.",
+                "i"="{.arg {arg}} should contain the total number of individuals in each unit.",
+                ">"="To use uniform values (not recommended), pass {.arg {arg} = FALSE}."
+            ), call=parent.frame())
+        } else {
+            x = FALSE
+        }
     }
-    weights = eval_tidy(enquo(weights), data)
+    x = eval_tidy(enquo(x), data)
 
     if (!is.null(data)) {
         n = nrow(data)
     }
 
-    if (isFALSE(weights)) {
-        weights = rep(1, n)
+    if (isFALSE(x)) {
+        x = rep(1, n)
     }
-    if (any(weights < 0)) {
-        cli_abort("Negative weights are not allowed.", call=parent.frame())
+    if (any(x < 0)) {
+        cli_abort("Negative totals and weights are not allowed.", call=parent.frame())
     }
 
-    if (length(weights) != n) {
-        cli_abort("Length of {.arg weights} ({length(weights)}) does not match
+    if (length(x) != n) {
+        cli_abort("Length of {.arg {arg}} ({length(x)}) does not match
                   the number of data observations ({n}).", call=parent.frame())
     }
 
-    weights
+    x
 }
 
 

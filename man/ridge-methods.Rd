@@ -43,6 +43,6 @@ Models fitted with \code{\link[=ei_ridge]{ei_ridge()}} support various generic m
 
 \item \code{summary(ei_ridge)}: Summarize the model's fitted values and \eqn{R^2}.
 
-\item \code{weights(ei_ridge)}: Extract row weights from a fitted model.
+\item \code{weights(ei_ridge)}: Extract estimation weights from a fitted model.
 
 }}

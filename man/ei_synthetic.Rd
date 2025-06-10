@@ -2,7 +2,7 @@
 % Please edit documentation in R/synthetic.R
 \name{ei_synthetic}
 \alias{ei_synthetic}
-\title{Generate Synthetic Ecological Data}
+\title{Generate synthetic ecological data}
 \usage{
 ei_synthetic(
   n,
@@ -57,7 +57,7 @@ Samples data from the following truncated Normal ecological model:
 \deqn{
      x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
      \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{b_{cov}}) \\
+     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{B_{cov}}) \\
      y_i = b_i^\top x_i,
 }
 where \eqn{\alpha} is a vector of hyperparameters that may be optionally

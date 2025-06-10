@@ -9,6 +9,23 @@
 #' allows for efficient recalculation under different `penalty` values as part
 #' of leave-one-out cross-validation.
 #'
+#' @section Weights:
+#' The weakest identification result for ecological inference makes no
+#' assumption about the number of observations per aggregate unit (the totals).
+#' It requires, however, weighting the estimation steps according to the totals.
+#' This may reduce efficiency when the totals are variable and a slightly
+#' stronger condition holds.
+#'
+#' Specifically, if the totals are conditionally mean-independent of the missing
+#' data (the aggregation-unit level means of the outcome within each predictor
+#' level), given covariates, then it is appropriate to use uniform weights in
+#' estimation, or any fixed set of weights.
+#'
+#' In general, estimation efficiency is improved when units with larger variance
+#' in the outcome receive less weight. Various bulit-in options are provided by
+#' the helper functions in [ei_wgt()].
+#'
+#'
 #' @param x Depending on the context:
 #'   * A **data frame** of predictors.
 #'   * A **matrix** of predictors.
@@ -41,9 +58,12 @@
 #'   predictors, and how this may vary with covariates.
 #'   See the examples for more details.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
-#'   weights. In general these should be the count of the total number of
-#'   individuals in each unit. Required by default. To force constant weights,
-#'   you can provide `weights=FALSE`.
+#'   weights for estimation. These may be the same or different from the total
+#'   number of observations in each aggregate unit (see the `total` argument to
+#'   [ei_spec()]). See the discussion below under 'Weights' for choosing this
+#'   parameter. The default, uniform weights, makes a slightly
+#'   stronger-than-necessary assumption about the relationship between the
+#'   unit totals and the unknown data.
 #' @param penalty The ridge penalty. Set to `NULL` to automatically determine
 #'    the penalty which minimizes mean-square error, via an efficient
 #'    leave-one-out cross validation procedure. The ridge regression solution is
@@ -59,12 +79,11 @@
 #' data(elec_1968)
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-#'                weights = pres_total, covariates = c(pop_urban, farm))
+#'                total = pres_total, covariates = c(pop_urban, farm))
 #' ei_ridge(spec)
 #'
 #' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs + pres_oth ~
-#'       vap_white + vap_black + vap_other | pop_urban + farm,
-#'     data = elec_1968, weights = pres_total)
+#'       vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 #'
 #' @export
 ei_ridge <- function(x, ...) {
@@ -84,7 +103,7 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(form_preds, "term.labels"),
-        ei_wgt = check_make_weights(!!enquo(weights), data),
+        ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
     )
 
@@ -96,7 +115,7 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, penalty=NULL, ...) {
+ei_ridge.ei_spec <- function(x, weights, penalty=NULL, ...) {
     spec = x
     x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
     # handle factors
@@ -116,7 +135,7 @@ ei_ridge.ei_spec <- function(x, penalty=NULL, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(spec, "ei_x"),
-        ei_wgt = attr(spec, "ei_wgt"),
+        ei_wgt = check_make_weights(!!enquo(weights), x, arg="weights", required=FALSE),
         penalty = penalty,
     )
 
@@ -140,7 +159,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
-        ei_wgt = check_make_weights(weights, NULL),
+        ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
     )
     x = cbind(x, z)
@@ -333,7 +352,7 @@ summary.ei_ridge <- function(object, ...) {
     print(object$r2)
 }
 
-#' @describeIn ridge-methods Extract row weights from a fitted model.
+#' @describeIn ridge-methods Extract estimation weights from a fitted model.
 #' @param normalize If `TRUE`, normalize the weights to have mean 1.
 #' @export
 weights.ei_ridge <- function(object, normalize = TRUE, ...) {

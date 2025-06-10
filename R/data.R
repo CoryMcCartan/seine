@@ -1,4 +1,4 @@
-#' 1968 U.S. Presidential Election Data
+#' 1968 U.S. presidential election data
 #'
 #' County-level dataset containing election results and demographics from the
 #' 1968 U.S. presidential election in the states of Virginia, North Carolina,

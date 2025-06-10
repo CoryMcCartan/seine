@@ -13,7 +13,7 @@ ei_riesz(x, ...)
 
 \method{ei_riesz}{formula}(formula, data, weights, penalty, ...)
 
-\method{ei_riesz}{ei_spec}(x, penalty, ...)
+\method{ei_riesz}{ei_spec}(x, weights, penalty, ...)
 
 \method{ei_riesz}{data.frame}(x, z, weights, penalty, ...)
 
@@ -47,9 +47,12 @@ See the examples for more details.}
 both the predictors and the outcome.}
 
 \item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the \code{total} argument to
+\code{\link[=ei_spec]{ei_spec()}}). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.}
 
 \item{penalty}{The ridge penalty, which must be specified. Recommended value
 is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}}, which is stored in the \code{penalty}
@@ -79,13 +82,13 @@ data(elec_1968)
 
 # Recommended: get ridge penalty from ei_ridge()
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-               weights = pres_total, covariates = c(pop_urban, farm))
+               total = pres_total, covariates = c(pop_urban, farm))
 m = ei_ridge(spec)
 
 ei_riesz(spec, penalty = m$penalty)
 
 rr = ei_riesz(~ vap_white + vap_black + vap_other | pop_urban + farm,
-              data = elec_1968, weights = FALSE, penalty = m$penalty)
+              data = elec_1968, penalty = m$penalty)
 summary(rr)
 
 # Examine the weights and check they have mean 1

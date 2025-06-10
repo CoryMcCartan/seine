@@ -10,7 +10,7 @@ ei_est(
   regr = NULL,
   riesz = NULL,
   data,
-  weights,
+  total,
   outcome = NULL,
   conf_level = FALSE
 )
@@ -32,10 +32,9 @@ Riesz weights}
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression or Riesz representer.}
 
-\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
+number of observations in each aggregate unit. For example, the column
+containing the total number of voters. Required by default.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided
@@ -71,7 +70,7 @@ machine learning (DML) estimate is produced.
 data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-               weights = pres_total, covariates = c(pop_urban, farm))
+               total = pres_total, covariates = c(pop_urban, farm))
 
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)

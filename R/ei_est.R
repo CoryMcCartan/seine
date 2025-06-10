@@ -5,6 +5,7 @@
 #' If both a regression model and a Riesz representer are provided, a debiased
 #' machine learning (DML) estimate is produced.
 #'
+#' @inheritParams ei_spec
 #' @param regr A fitted regression model, from [ei_ridge()].
 #'    If `riesz` is not provided and `regr` is an [ei_riesz()] object, then
 #'    `riesz` will be set to the value of `regr` and `regr` will be set to
@@ -14,10 +15,6 @@
 #'    Riesz weights
 #' @param data The data frame, matrix, or [ei_spec] object that was used to fit
 #'   the regression or Riesz representer.
-#' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
-#'   weights. In general these should be the count of the total number of
-#'   individuals in each unit. Required by default. To force constant weights,
-#'   you can provide `weights=FALSE`.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
@@ -31,7 +28,7 @@
 #' data(elec_1968)
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-#'                weights = pres_total, covariates = c(pop_urban, farm))
+#'                total = pres_total, covariates = c(pop_urban, farm))
 #'
 #' m = ei_ridge(spec)
 #' rr = ei_riesz(spec, penalty = m$penalty)
@@ -44,7 +41,7 @@
 #' vcov(est)[1:4, 1:4]
 #'
 #' @export
-ei_est = function(regr=NULL, riesz=NULL, data, weights, outcome=NULL, conf_level=FALSE) {
+ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=FALSE) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }
@@ -57,10 +54,10 @@ ei_est = function(regr=NULL, riesz=NULL, data, weights, outcome=NULL, conf_level
     n = nrow(y)
     n_y = ncol(y)
 
-    if (missing(weights) && inherits(data, "ei_spec")) {
-        weights = attr(data, "ei_wgt")
+    if (missing(total) && inherits(data, "ei_spec")) {
+        total = attr(data, "ei_n")
     }
-    w = check_make_weights(!!enquo(weights), data, n)
+    w = check_make_weights(!!enquo(total), data, n)
     w = w / mean(w)
 
     # build predictions and RR
@@ -134,8 +131,8 @@ est_check_riesz = function(riesz, data, weights, n, regr) {
         cli_abort("The number of weights in {.arg riesz} ({nrow(riesz)}) must
                   match the number of observations ({n}).", call=parent.frame())
     }
-
-    riesz = riesz * weights # TODO FIX
+    # TODO check
+    # riesz = riesz * weights
     riesz = scale_cols(riesz, 1 / colMeans(riesz))
     riesz
 }

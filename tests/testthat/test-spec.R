@@ -6,7 +6,7 @@ test_that("ei_spec() produces correct specification", {
     expect_equal(attr(spec, "ei_x"), c("white", "black", "other")) # tests str_strip_prefix() too
     expect_equal(attr(spec, "ei_y"), c("dem_hum", "rep_nix", "ind_wal", "abs", "oth"))
     expect_equal(attr(spec, "ei_z"), character(0))
-    expect_equal(attr(spec, "ei_wgt"), elec_1968$pres_total)
+    expect_equal(attr(spec, "ei_n"), elec_1968$pres_total)
 })
 
 

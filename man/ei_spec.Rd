@@ -5,7 +5,7 @@
 \alias{weights.ei_spec}
 \title{Specify an ecological inference problem}
 \usage{
-ei_spec(data, predictors, outcome, weights, covariates = NULL, strip = TRUE)
+ei_spec(data, predictors, outcome, total, covariates = NULL, strip = TRUE)
 
 \method{weights}{ei_spec}(object, normalize = TRUE, ...)
 }
@@ -20,10 +20,9 @@ For example, the columns containing the percentage of each racial group.}
 This is the \code{y} variable in ecological regression that is of primary interest.
 For example, the columns containing the percentage of votes for each party.}
 
-\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
+number of observations in each aggregate unit. For example, the column
+containing the total number of voters. Required by default.}
 
 \item{covariates}{<\code{\link[dplyr:select]{tidy-select}}> Covariates.}
 
@@ -33,13 +32,13 @@ renamed \code{white}, \code{black} and \code{other} in the model and output.}
 
 \item{object}{An \link{ei_spec} object.}
 
-\item{normalize}{If \code{TRUE}, normalize the weights to have mean 1.}
+\item{normalize}{If \code{TRUE}, normalize the totals to have mean 1.}
 
 \item{...}{Additional arguments (ignored).}
 }
 \value{
 An \code{ei_spec} object, which is a data frame with additional
-attributes recording \code{predictors}, \code{outcomes}, and \code{covariates}.
+attributes recording \code{predictors}, \code{outcomes}, \code{total}, and \code{covariates}.
 }
 \description{
 Uses tidy-select syntax to specify outcomes, predictors, and covariates.
@@ -53,7 +52,7 @@ by \code{\link[=ei_ridge]{ei_ridge()}} or \code{\link[=ei_riesz]{ei_riesz()}}.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{weights(ei_spec)}: Extract the weights from a specification
+\item \code{weights(ei_spec)}: Extract the totals from a specification
 
 }}
 \examples{

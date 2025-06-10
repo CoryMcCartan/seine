@@ -13,7 +13,7 @@ ei_ridge(x, ...)
 
 \method{ei_ridge}{formula}(formula, data, weights, penalty = NULL, ...)
 
-\method{ei_ridge}{ei_spec}(x, penalty = NULL, ...)
+\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, ...)
 
 \method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, ...)
 
@@ -47,9 +47,12 @@ See the examples for more details.}
 both the predictors and the outcome.}
 
 \item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the \code{total} argument to
+\code{\link[=ei_spec]{ei_spec()}}). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.}
 
 \item{penalty}{The ridge penalty. Set to \code{NULL} to automatically determine
 the penalty which minimizes mean-square error, via an efficient
@@ -91,15 +94,32 @@ The regression is calculated using the singular value decomposition, which
 allows for efficient recalculation under different \code{penalty} values as part
 of leave-one-out cross-validation.
 }
+\section{Weights}{
+
+The weakest identification result for ecological inference makes no
+assumption about the number of observations per aggregate unit (the totals).
+It requires, however, weighting the estimation steps according to the totals.
+This may reduce efficiency when the totals are variable and a slightly
+stronger condition holds.
+
+Specifically, if the totals are conditionally mean-independent of the missing
+data (the aggregation-unit level means of the outcome within each predictor
+level), given covariates, then it is appropriate to use uniform weights in
+estimation, or any fixed set of weights.
+
+In general, estimation efficiency is improved when units with larger variance
+in the outcome receive less weight. Various bulit-in options are provided by
+the helper functions in \code{\link[=ei_wgt]{ei_wgt()}}.
+}
+
 \examples{
 data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-               weights = pres_total, covariates = c(pop_urban, farm))
+               total = pres_total, covariates = c(pop_urban, farm))
 ei_ridge(spec)
 
 ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs + pres_oth ~
-      vap_white + vap_black + vap_other | pop_urban + farm,
-    data = elec_1968, weights = pres_total)
+      vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 
 }

@@ -3,7 +3,7 @@
 \docType{data}
 \name{elec_1968}
 \alias{elec_1968}
-\title{1968 U.S. Presidential Election Data}
+\title{1968 U.S. presidential election data}
 \format{
 A data frame with 1,143 rows and 41 variables:
 \describe{

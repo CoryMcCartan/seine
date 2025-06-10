@@ -19,13 +19,13 @@
 #'
 #' # Recommended: get ridge penalty from ei_ridge()
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-#'                weights = pres_total, covariates = c(pop_urban, farm))
+#'                total = pres_total, covariates = c(pop_urban, farm))
 #' m = ei_ridge(spec)
 #'
 #' ei_riesz(spec, penalty = m$penalty)
 #'
 #' rr = ei_riesz(~ vap_white + vap_black + vap_other | pop_urban + farm,
-#'               data = elec_1968, weights = FALSE, penalty = m$penalty)
+#'               data = elec_1968, penalty = m$penalty)
 #' summary(rr)
 #'
 #' # Examine the weights and check they have mean 1
@@ -51,7 +51,7 @@ ei_riesz.formula <- function(formula, data, weights, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(form_preds, "term.labels"),
-        ei_wgt = check_make_weights(!!enquo(weights), data),
+        ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
     )
 
@@ -63,7 +63,7 @@ ei_riesz.formula <- function(formula, data, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.ei_spec <- function(x, penalty, ...) {
+ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
     spec = x
     x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
     # handle factors
@@ -83,7 +83,7 @@ ei_riesz.ei_spec <- function(x, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(spec, "ei_x"),
-        ei_wgt = attr(spec, "ei_wgt"),
+        ei_wgt = check_make_weights(!!enquo(weights), x, arg="weights", required=FALSE),
         penalty = penalty,
     )
 
@@ -107,7 +107,7 @@ ei_riesz.data.frame <- function(x, z, weights, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
-        ei_wgt = check_make_weights(weights, NULL),
+        ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
     )
     x = cbind(x, z)
@@ -180,8 +180,8 @@ ei_riesz_impl <- function(x, z, weights, penalty) {
     loo = matrix(nrow=nrow(x), ncol=ncol(x))
     for (group in seq_len(ncol(x))) {
         fit = riesz_svd(xz, udv, ncol(z), w, sqrt_w, group, penalty)
-        alpha[, group] = fit$alpha * int_scale
-        loo[, group] = fit$loo * int_scale
+        alpha[, group] = fit$alpha * int_scale * w
+        loo[, group] = fit$loo * int_scale * w
     }
     colnames(alpha) = colnames(x)
     colnames(loo) = colnames(x)
