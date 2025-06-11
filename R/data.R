@@ -48,13 +48,13 @@
 #' Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy
 #' Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical
 #' Geographic Information System: Version 19.0. 1970 Decennial Census.
-#' Minneapolis, MN: IPUMS. 2024. <http://doi.org/10.18128/D050.V19.0>
+#' Minneapolis, MN: IPUMS. 2024. \doi{10.18128/D050.V19.0}
 #'
 #' **Presidential election data**:
 #' Clubb, Jerome M., Flanigan, William H., and Zingale, Nancy H. Electoral Data
 #' for Counties in the United States: Presidential and Congressional Races,
 #' 1840-1972. Inter-university Consortium for Political and Social Research
-#' (distributor), 2006-11-13. <https://doi.org/10.3886/ICPSR08611.v1>
+#' (distributor), 2006-11-13. \doi{10.3886/ICPSR08611.v1}
 #'
 #'
 "elec_1968"
