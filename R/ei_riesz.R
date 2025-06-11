@@ -11,6 +11,7 @@
 #'   is the same penalty used in [ei_ridge()], which is stored in the `penalty`
 #'   entry of the fitted model object.
 #' @inheritParams ei_ridge
+#' @inheritParams ei_spec
 #'
 #' @returns An `ei_riesz` object.
 #'
@@ -25,7 +26,7 @@
 #' ei_riesz(spec, penalty = m$penalty)
 #'
 #' rr = ei_riesz(~ vap_white + vap_black + vap_other | pop_urban + farm,
-#'               data = elec_1968, penalty = m$penalty)
+#'               data = elec_1968, total = pres_total, penalty = m$penalty)
 #' summary(rr)
 #'
 #' # Examine the weights and check they have mean 1
@@ -41,7 +42,7 @@ ei_riesz <- function(x, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.formula <- function(formula, data, weights, penalty, ...) {
+ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
     f_lhs(formula) = NULL
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -51,6 +52,7 @@ ei_riesz.formula <- function(formula, data, weights, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(form_preds, "term.labels"),
+        ei_n = check_make_weights(!!enquo(total), data),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
     )
@@ -83,6 +85,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = attr(spec, "ei_x"),
+        ei_n = attr(spec, "ei_n"),
         ei_wgt = check_make_weights(!!enquo(weights), x, arg="weights", required=FALSE),
         penalty = penalty,
     )
@@ -94,7 +97,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.data.frame <- function(x, z, weights, penalty, ...) {
+ei_riesz.data.frame <- function(x, z, total, weights, penalty, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -107,6 +110,7 @@ ei_riesz.data.frame <- function(x, z, weights, penalty, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
+        ei_n = check_make_weights(!!enquo(total)),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
     )
@@ -118,8 +122,8 @@ ei_riesz.data.frame <- function(x, z, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.matrix <- function(x, z, weights, penalty, ...) {
-    ei_riesz.data.frame(x, z, weights, penalty, ...)
+ei_riesz.matrix <- function(x, z, total, weights, penalty, ...) {
+    ei_riesz.data.frame(x, z, total, weights, penalty, ...)
 }
 
 
@@ -143,6 +147,7 @@ ei_riesz_bridge <- function(processed, ...) {
         x = cbind(x, 1 - x)
         colnames(x)[2] = ".other"
     }
+    total = processed$blueprint$ei_n
     weights = processed$blueprint$ei_wgt
     penalty = processed$blueprint$penalty
 
@@ -156,7 +161,7 @@ ei_riesz_bridge <- function(processed, ...) {
     if (any(is.na(x))) cli_abort("Missing values found in predictors.")
     if (any(is.na(z))) cli_abort("Missing values found in covariates.")
 
-    fit <- ei_riesz_impl(x, z, weights, penalty)
+    fit <- ei_riesz_impl(x, z, total, weights, penalty)
 
     new_ei_riesz(
         weights = fit$alpha,
@@ -168,8 +173,11 @@ ei_riesz_bridge <- function(processed, ...) {
     )
 }
 
+#' @param total A vector of total observations per unit.
+#'
 #' @rdname ei-impl
-ei_riesz_impl <- function(x, z, weights, penalty) {
+#' @export
+ei_riesz_impl <- function(x, z, total, weights, penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)
     xz = row_kronecker(x, z, int_scale)
@@ -179,7 +187,7 @@ ei_riesz_impl <- function(x, z, weights, penalty) {
     alpha = matrix(nrow=nrow(x), ncol=ncol(x))
     loo = matrix(nrow=nrow(x), ncol=ncol(x))
     for (group in seq_len(ncol(x))) {
-        fit = riesz_svd(xz, udv, ncol(z), w, sqrt_w, group, penalty)
+        fit = riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
         alpha[, group] = fit$alpha * int_scale * w
         loo[, group] = fit$loo * int_scale * w
     }

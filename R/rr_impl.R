@@ -60,10 +60,10 @@ ridge_hat_naive <- function(
 # Riesz regression implementations ---------------------------------------------
 
 # Closed-form Riesz regression via the normal equations
-riesz_naive <- function(xz, p, weights, group=1, penalty=0) {
+riesz_naive <- function(xz, p, total, weights, group=1, penalty=0) {
     n_x = ncol(xz) %/% (1L + p)
     use = c(group, n_x + p*(group-1) + seq_len(p))
-    Dz = crossprod(xz[, use], weights) / mean(xz[, group] * weights)
+    Dz = crossprod(xz[, use], total) / mean(xz[, group] * total)
     Lambda = diag(rep(penalty, ncol(xz)))
 
     XXinv = solve(crossprod(xz, weights*xz) + Lambda)
@@ -76,10 +76,10 @@ riesz_naive <- function(xz, p, weights, group=1, penalty=0) {
 
 # Closed-form Riesz regression via SVD
 # Any weights must be incorporated into udv
-riesz_svd <- function(xz, udv, p, weights, sqrt_w, group=1, penalty=0) {
+riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
     n_x = ncol(xz) %/% (1L + p)
     use = c(group, n_x + p*(group-1) + seq_len(p))
-    Dz = colSums(xz[, use] * weights) / mean(xz[, group] * weights)
+    Dz = colSums(xz[, use] * total) / mean(xz[, group] * total)
     d_pen = c(udv$d / (udv$d^2 + penalty))
 
     xzAinv = (udv$u / sqrt_w) %*% (d_pen * t(udv$v[use, ]))

@@ -237,11 +237,13 @@ ei_ridge_bridge <- function(processed, ...) {
 #' @param x A matrix of predictors
 #' @param y A vector of outcomes
 #' @param z A matrix of covariates
-#' @param weights A vector of unit weights
+#' @param weights A vector of estimation weights
 #' @inheritParams ei_riesz
 #'
 #' @returns A list with model components.
+#'
 #' @rdname ei-impl
+#' @export
 ei_ridge_impl <- function(x, y, z, weights, penalty=NULL) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)

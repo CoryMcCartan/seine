@@ -18,14 +18,16 @@ reference:
   desc: Estimate global and local quantities and perform sensitivity analyses
   contents:
   - ei_est
+  - ei_wrap_model
 - title: Ecological modeling
   desc: Fit regression and weighting models to aggregate data to use in inference
   contents:
   - ei_ridge
   - ei_riesz
+  - ei_wgt
   - ridge-methods
   - weights.ei_riesz
-  - ei_ridge_impl
+  - ei-impl
 - title: Preprocessing
   desc: Functions to set up EI problems and tidy data
   contents:

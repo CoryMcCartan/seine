@@ -23,6 +23,7 @@ test_that("ridge regression methods agree", {
 
 test_that("Riesz regression methods agree", {
     y = mtcars$mpg
+    tot = y^2 / mean(y^2)
     w = sqrt(y) / mean(sqrt(y))
     z = model.matrix(y ~ ., mtcars)
     x = rbeta(length(y), 1, 3)
@@ -32,8 +33,8 @@ test_that("Riesz regression methods agree", {
     penalties = c(0.0001, 0.1, 1, 10)
     udv = svd(xz * sqrt(w))
     for (lambda in penalties) {
-        fit_naive = riesz_naive(xz, ncol(z), w, group=1, penalty=lambda)
-        fit_svd = riesz_svd(xz, udv, ncol(z), w, sqrt(w), group=1, penalty=lambda)
+        fit_naive = riesz_naive(xz, ncol(z), tot, w, group=1, penalty=lambda)
+        fit_svd = riesz_svd(xz, udv, ncol(z), tot, w, sqrt(w), group=1, penalty=lambda)
 
         expect_equal(fit_naive$alpha, fit_svd$alpha, ignore_attr=TRUE)
         expect_equal(fit_naive$loo, fit_svd$loo, ignore_attr=TRUE)

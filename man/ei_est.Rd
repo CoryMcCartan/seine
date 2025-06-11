@@ -20,7 +20,8 @@ ei_est(
 \method{vcov}{ei_est}(object, ...)
 }
 \arguments{
-\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}.
+\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
+of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.
 If \code{riesz} is not provided and \code{regr} is an \code{\link[=ei_riesz]{ei_riesz()}} object, then
 \code{riesz} will be set to the value of \code{regr} and \code{regr} will be set to
 \code{NULL}. This is so users can call this function as
@@ -34,7 +35,8 @@ the regression or Riesz representer.}
 
 \item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
 number of observations in each aggregate unit. For example, the column
-containing the total number of voters. Required by default.}
+containing the total number of voters. Required if \code{data} is not an
+\code{\link[=ei_spec]{ei_spec()}} object and \code{riesz} is not provided.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided

@@ -11,13 +11,13 @@
 \usage{
 ei_riesz(x, ...)
 
-\method{ei_riesz}{formula}(formula, data, weights, penalty, ...)
+\method{ei_riesz}{formula}(formula, data, total, weights, penalty, ...)
 
 \method{ei_riesz}{ei_spec}(x, weights, penalty, ...)
 
-\method{ei_riesz}{data.frame}(x, z, weights, penalty, ...)
+\method{ei_riesz}{data.frame}(x, z, total, weights, penalty, ...)
 
-\method{ei_riesz}{matrix}(x, z, weights, penalty, ...)
+\method{ei_riesz}{matrix}(x, z, total, weights, penalty, ...)
 
 \method{ei_riesz}{default}(x, ...)
 }
@@ -45,6 +45,10 @@ See the examples for more details.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
+
+\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
+number of observations in each aggregate unit. For example, the column
+containing the total number of voters. Required by default.}
 
 \item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
 weights for estimation. These may be the same or different from the total
@@ -88,7 +92,7 @@ m = ei_ridge(spec)
 ei_riesz(spec, penalty = m$penalty)
 
 rr = ei_riesz(~ vap_white + vap_black + vap_other | pop_urban + farm,
-              data = elec_1968, penalty = m$penalty)
+              data = elec_1968, total = pres_total, penalty = m$penalty)
 summary(rr)
 
 # Examine the weights and check they have mean 1

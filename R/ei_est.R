@@ -5,8 +5,8 @@
 #' If both a regression model and a Riesz representer are provided, a debiased
 #' machine learning (DML) estimate is produced.
 #'
-#' @inheritParams ei_spec
-#' @param regr A fitted regression model, from [ei_ridge()].
+#' @param regr A fitted regression model, from [ei_ridge()], or another kind
+#'    of regression model wrapped with [ei_wrap_model()].
 #'    If `riesz` is not provided and `regr` is an [ei_riesz()] object, then
 #'    `riesz` will be set to the value of `regr` and `regr` will be set to
 #'    `NULL`. This is so users can call this function as
@@ -15,6 +15,10 @@
 #'    Riesz weights
 #' @param data The data frame, matrix, or [ei_spec] object that was used to fit
 #'   the regression or Riesz representer.
+#' @param total <[`tidy-select`][dplyr::select]> A variable containing the total
+#'   number of observations in each aggregate unit. For example, the column
+#'   containing the total number of voters. Required if `data` is not an
+#'   [ei_spec()] object and `riesz` is not provided.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
@@ -54,8 +58,13 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
     n = nrow(y)
     n_y = ncol(y)
 
-    if (missing(total) && inherits(data, "ei_spec")) {
-        total = attr(data, "ei_n")
+    if (missing(total)) {
+        if (inherits(riesz, "ei_riesz")) {
+            total = riesz$blueprint$ei_n
+        }
+        if (inherits(data, "ei_spec")) {
+            total = attr(data, "ei_n")
+        }
     }
     w = check_make_weights(!!enquo(total), data, n)
     w = w / mean(w)
@@ -144,7 +153,10 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
         x = matrix(1, nrow=n, ncol=length(xcols))
         return(list(yhat=preds[[1]], preds=preds, x=x, z=NULL))
     }
-    if (!inherits(regr, "ei_ridge") && !inherits(regr, "ei_model")) {
+    if (inherits(regr, "ei_wrapped")) {
+        return(regr)
+    }
+    if (!inherits(regr, c("ei_ridge", "ei_model"))) {
         cli_abort("{.arg regr} must be a {.cls ei_ridge} object.",
                   call=parent.frame())
     }
@@ -169,11 +181,105 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
                                            regr$coef[group, ] * -regr$int_scale)
     }
 
-    list(yhat=regr$fitted, preds=preds, x=x, z=z)
+    list(yhat=regr$fitted, preds=preds, x=x)
+}
+
+#' Wrap another predictive model for use in `ei_est`
+#'
+#' Stores additional data and attributes on a generic model class so that it
+#' can be used as the `regr` argument to [ei_est()]. Given the wide variety of
+#' model classes, there is no guarantee this function will work. However, most
+#' model classes supporting a [fitted()] and [predict()] method will work as long
+#' as there is no transformation of the predictor variables as part of the model
+#' formula or fitting.
+#'
+#' @param x A model object, supporting [fitted()] and [predict()] generics.
+#' @param data A data frame or matrix containing the data used to fit the model,
+#'   or an [ei_spec()] object (recommended). If the latter, then the
+#'   `predictors` and `outcome` arguments are ignored and need not be provided.
+#' @inheritParams ei_spec
+#'
+#' @returns An `ei_wrapped` object, which has the information required to use
+#'   the provided `x` with [ei_est()].
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal, pres_total,
+#'                covariates = c(pop_urban, farm))
+#'
+#' m = lm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm, spec)
+#' m_wrap = ei_wrap_model(m, spec)
+#' print(m_wrap)
+#'
+#' ei_est(m_wrap, data = spec)
+#'
+#' @export
+ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL) {
+    if (inherits(data, "ei_spec")) {
+        predictors = attr(data, "ei_x")
+        outcome = attr(data, "ei_y")
+    } else {
+        predictors = try_fetch(
+            names(eval_select(enquo(predictors), data, allow_empty=FALSE)),
+            error = function(cnd) cli_abort("Predictor specification failed.", parent=cnd)
+        )
+        outcome =  try_fetch(
+            names(eval_select(enquo(outcome), data, allow_empty=FALSE)),
+            error = function(cnd) cli_abort("Outcome specification failed.", parent=cnd)
+        )
+    }
+
+    # find predict() and its newdata argument
+    fn_pred = NULL
+    for (cl in class(x)) {
+        fn_pred = utils::getS3method("predict", cl, optional=TRUE)
+        if (!is.null(fn_pred))
+            break
+    }
+    if (is.null(fn_pred)) {
+        cli_abort("No {.fn predict} method for an object
+                  of class {.cls {class(x)}}", call = parent.frame())
+    }
+
+    args = rlang::fn_fmls_names(fn_pred)
+    arg = args[grepl("new.?data", args)]
+    if (length(arg) != 1) {
+        cli_abort("No {.arg new_data}, {.arg newdata}, or similar argument to the
+                  {.fn predict} method for an object of class {.cls {class(x)}}",
+                  call = parent.frame())
+    }
+
+    preds = list()
+    for (group in predictors) {
+        data_copy = data
+        data_copy[, predictors] = 0
+        data_copy[, group] = 1
+
+        argl = list(x, data_copy)
+        names(argl) = c("", arg)
+        preds[[group]] = as.matrix(do.call(fn_pred, argl))
+    }
+
+    out = list(
+        y = as.matrix(data[, outcome]),
+        yhat = fitted(x),
+        preds = preds,
+        x = as.matrix(data[, predictors]),
+        blueprint = list(ei_x = predictors),
+        classes = class(x)
+    )
+    class(out) = "ei_wrapped"
+
+    if (is.null(out$yhat)) {
+        cli_abort("Unable to extract fitted values for {.cls class(x)} model.")
+    }
+
+    out
 }
 
 
-# Type --------
+# Types --------
 
 #' @describeIn ei_est Format estimates or standard errors as a matrix
 #' @param x,object An object of class `ei_est`
@@ -191,4 +297,9 @@ as.matrix.ei_est <- function(x, se=FALSE, ...) {
 #' @export
 vcov.ei_est <- function(object, ...) {
     attr(object, "vcov")
+}
+
+#' @export
+print.ei_wrapped <- function(x, ...) {
+    cat_line(format_inline("A wrapped {.cls {x$classes}} model with {length(x$yhat)} observations"))
 }

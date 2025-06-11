@@ -32,6 +32,20 @@ test_that("Degenerate TMVN samples correctly", {
     expect_equal(qr(scale(z))$rank, 1)
 })
 
+# MVN density, Cholesky parametrization
+# Assumes `x` is a matrix with 1 row per obs.
+# Assumes `L` is a lower triangular matrix
+# CONSTANTS DROPPED
+dmvnorm_chol = function(x, mu, L, log=FALSE) {
+    rss = colSums(forwardsolve(L, t(x) - mu)^2)
+    out = -sum(log(diag(L))) - 0.5 * rss
+    if (!log) exp(out) else out
+}
+# gradient of log density wrt mu
+dmvnorm_chol_lgr = function(x, mu, L) {
+    t(chol2inv(t(L)) %*% (t(x) - mu))
+}
+
 # infer mean for known Sigma
 # return z-score
 # Note: normal approx doesn't always hold well for truncated likelihood esp when OOB

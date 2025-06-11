@@ -11,6 +11,3 @@
 #' @useDynLib seine, .registration = TRUE
 ## usethis namespace: end
 NULL
-
-
-rlang::on_load(rlang::local_use_cli())

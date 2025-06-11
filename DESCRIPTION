@@ -14,6 +14,7 @@ Imports:
     rlang,
     cli,
     graphics,
+    utils,
     stats,
     tidyselect,
     tibble,

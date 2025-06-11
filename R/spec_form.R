@@ -34,15 +34,15 @@
 ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=TRUE) {
     predictors = try_fetch(
         eval_select(enquo(predictors), data, allow_empty=FALSE),
-        error = function(cnd) rlang::abort("Predictor specification failed.", parent=cnd)
+        error = function(cnd) cli_abort("Predictor specification failed.", parent=cnd)
     )
     outcome =  try_fetch(
         eval_select(enquo(outcome), data, allow_empty=FALSE),
-        error = function(cnd) rlang::abort("Outcome specification failed.", parent=cnd)
+        error = function(cnd) cli_abort("Outcome specification failed.", parent=cnd)
     )
     covariates = try_fetch(
         eval_select(enquo(covariates), data),
-        error = function(cnd) rlang::abort("Covariate specification failed.", parent=cnd)
+        error = function(cnd) cli_abort("Covariate specification failed.", parent=cnd)
     )
     total = check_make_weights(!!enquo(total), data)
 
