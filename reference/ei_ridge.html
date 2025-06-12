@@ -59,7 +59,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
 <span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -105,9 +105,12 @@ both the predictors and the outcome.</p></dd>
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>&lt;<code><a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">data-masking</a></code>&gt; A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide <code>weights=FALSE</code>.</p></dd>
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the <code>total</code> argument to
+<code><a href="ei_spec.html">ei_spec()</a></code>). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.</p></dd>
 
 
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
@@ -146,22 +149,38 @@ specified as:</p><ul><li><p>A <strong>data frame</strong> with numeric columns.<
 allows for efficient recalculation under different <code>penalty</code> values as part
 of leave-one-out cross-validation.</p>
     </div>
+    <div class="section level2">
+    <h2 id="weights">Weights<a class="anchor" aria-label="anchor" href="#weights"></a></h2>
+
+
+<p>The weakest identification result for ecological inference makes no
+assumption about the number of observations per aggregate unit (the totals).
+It requires, however, weighting the estimation steps according to the totals.
+This may reduce efficiency when the totals are variable and a slightly
+stronger condition holds.</p>
+<p>Specifically, if the totals are conditionally mean-independent of the missing
+data (the aggregation-unit level means of the outcome within each predictor
+level), given covariates, then it is appropriate to use uniform weights in
+estimation, or any fixed set of weights.</p>
+<p>In general, estimation efficiency is improved when units with larger variance
+in the outcome receive less weight. Various bulit-in options are provided by
+the helper functions in <code><a href="ei_wgt.html">ei_wgt()</a></code>.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_oth</span>,</span></span>
-<span class="r-in"><span>               weights <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An ecological inference model with 5 outcomes, 3 groups, and 1143 observations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01392e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01453e-08</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">pres_dem_hum</span> <span class="op">+</span> <span class="va">pres_rep_nix</span> <span class="op">+</span> <span class="va">pres_ind_wal</span> <span class="op">+</span> <span class="va">pres_abs</span> <span class="op">+</span> <span class="va">pres_oth</span> <span class="op">~</span></span></span>
-<span class="r-in"><span>      <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> <span class="va">pop_urban</span> <span class="op">+</span> <span class="va">farm</span>,</span></span>
-<span class="r-in"><span>    data <span class="op">=</span> <span class="va">elec_1968</span>, weights <span class="op">=</span> <span class="va">pres_total</span><span class="op">)</span></span></span>
+<span class="r-in"><span>      <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> <span class="va">pop_urban</span> <span class="op">+</span> <span class="va">farm</span>, data <span class="op">=</span> <span class="va">elec_1968</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An ecological inference model with 5 outcomes, 3 groups, and 1143 observations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01392e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01453e-08</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

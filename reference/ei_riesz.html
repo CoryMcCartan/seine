@@ -56,16 +56,16 @@ overall estimates of conditional means using <code><a href="ei_est.html">ei_est(
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'formula'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'matrix'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -103,11 +103,20 @@ See the examples for more details.</p></dd>
 both the predictors and the outcome.</p></dd>
 
 
+<dt id="arg-total">total<a class="anchor" aria-label="anchor" href="#arg-total"></a></dt>
+<dd><p>&lt;<code>tidy-select</code>&gt; A variable containing the total
+number of observations in each aggregate unit. For example, the column
+containing the total number of voters. Required by default.</p></dd>
+
+
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>&lt;<code><a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">data-masking</a></code>&gt; A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide <code>weights=FALSE</code>.</p></dd>
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the <code>total</code> argument to
+<code><a href="ei_spec.html">ei_spec()</a></code>). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.</p></dd>
 
 
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
@@ -138,33 +147,33 @@ specified as:</p><ul><li><p>A <strong>data frame</strong> with numeric columns.<
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Recommended: get ridge penalty from ei_ridge()</span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_oth</span>,</span></span>
-<span class="r-in"><span>               weights <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">spec</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A Riesz representer with 3 groups and 1143 observations</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01392e-08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01453e-08</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">rr</span> <span class="op">=</span> <span class="fu">ei_riesz</span><span class="op">(</span><span class="op">~</span> <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> <span class="va">pop_urban</span> <span class="op">+</span> <span class="va">farm</span>,</span></span>
-<span class="r-in"><span>              data <span class="op">=</span> <span class="va">elec_1968</span>, weights <span class="op">=</span> <span class="cn">FALSE</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span></span>
+<span class="r-in"><span>              data <span class="op">=</span> <span class="va">elec_1968</span>, total <span class="op">=</span> <span class="va">pres_total</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rr</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Second moment of representer:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    vap_white    vap_black    vap_other </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2.719559    29.568634 15239.577678 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     4.461456    48.486776 31468.779992 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Second moment of representer (leave-one-out):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_white   vap_black   vap_other </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     4.03236    30.41628 97891.15264 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    vap_white    vap_black    vap_other </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     4.992583    51.531747 46719.396300 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Examine the weights and check they have mean 1</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/weights.html" class="external-link">weights</a></span><span class="op">(</span><span class="va">rr</span>, group <span class="op">=</span> <span class="st">"vap_black"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  3.6408163 -0.6857622  9.0627402  1.7750695 -4.1684545 14.6568390</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  3.3584139 -0.9872354  8.7084517  4.6428913 -4.6285576  6.0225661</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/weights.html" class="external-link">weights</a></span><span class="op">(</span><span class="va">rr</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> vap_white vap_black vap_other </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1.0000000 1.0000000 0.9999999 </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">$</span><span class="va">pres_ind_wal</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/weights.html" class="external-link">weights</a></span><span class="op">(</span><span class="va">rr</span>, <span class="st">"vap_white"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.336432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3633165</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

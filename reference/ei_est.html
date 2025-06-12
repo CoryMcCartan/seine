@@ -63,7 +63,7 @@ machine learning (DML) estimate is produced.</p>
 <span>  regr <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  riesz <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">data</span>,</span>
-<span>  <span class="va">weights</span>,</span>
+<span>  <span class="va">total</span>,</span>
 <span>  outcome <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  conf_level <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -80,7 +80,8 @@ machine learning (DML) estimate is produced.</p>
 
 
 <dl><dt id="arg-regr">regr<a class="anchor" aria-label="anchor" href="#arg-regr"></a></dt>
-<dd><p>A fitted regression model, from <code><a href="ei_ridge.html">ei_ridge()</a></code>.
+<dd><p>A fitted regression model, from <code><a href="ei_ridge.html">ei_ridge()</a></code>, or another kind
+of regression model wrapped with <code><a href="ei_wrap_model.html">ei_wrap_model()</a></code>.
 If <code>riesz</code> is not provided and <code>regr</code> is an <code><a href="ei_riesz.html">ei_riesz()</a></code> object, then
 <code>riesz</code> will be set to the value of <code>regr</code> and <code>regr</code> will be set to
 <code>NULL</code>. This is so users can call this function as
@@ -97,11 +98,11 @@ Riesz weights</p></dd>
 the regression or Riesz representer.</p></dd>
 
 
-<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
-<dd><p>&lt;<code><a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">data-masking</a></code>&gt; A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide <code>weights=FALSE</code>.</p></dd>
+<dt id="arg-total">total<a class="anchor" aria-label="anchor" href="#arg-total"></a></dt>
+<dd><p>&lt;<code>tidy-select</code>&gt; A variable containing the total
+number of observations in each aggregate unit. For example, the column
+containing the total number of voters. Required if <code>data</code> is not an
+<code><a href="ei_spec.html">ei_spec()</a></code> object and <code>riesz</code> is not provided.</p></dd>
 
 
 <dt id="arg-outcome">outcome<a class="anchor" aria-label="anchor" href="#arg-outcome"></a></dt>
@@ -144,66 +145,66 @@ errors are always returned.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_oth</span>,</span></span>
-<span class="r-in"><span>               weights <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rr</span> <span class="op">=</span> <span class="fu"><a href="ei_riesz.html">ei_riesz</a></span><span class="op">(</span><span class="va">spec</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_est</span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, data <span class="op">=</span> <span class="va">spec</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span> <span class="co"># Plug-in estimate</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome estimate std.error   conf.low conf.high</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.251    0.020<span style="text-decoration: underline;">7</span>     0.211      0.292  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.382    0.031<span style="text-decoration: underline;">8</span>     0.320      0.445  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  8.20     1.06       6.12      10.3    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.448    0.035<span style="text-decoration: underline;">0</span>     0.380      0.517  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.154</span>    0.009<span style="text-decoration: underline;">16</span>   -<span style="color: #BB0000;">0.172</span>     -<span style="color: #BB0000;">0.136</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  1.01     0.188      0.638      1.38   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.299    0.016<span style="text-decoration: underline;">6</span>     0.267      0.332  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.767    0.051<span style="text-decoration: underline;">8</span>     0.666      0.869  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">8.15</span>     1.14     -<span style="color: #BB0000;">10.4</span>       -<span style="color: #BB0000;">5.93</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">15</span>  0.000<span style="text-decoration: underline;">234</span>   0.000<span style="text-decoration: underline;">693</span>   0.001<span style="text-decoration: underline;">61</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.004<span style="text-decoration: underline;">36</span>  0.000<span style="text-decoration: underline;">515</span>   0.003<span style="text-decoration: underline;">35</span>    0.005<span style="text-decoration: underline;">37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.006<span style="text-decoration: underline;">63</span>   -<span style="color: #BB0000;">0.065</span><span style="color: #BB0000; text-decoration: underline;">2</span>    -<span style="color: #BB0000;">0.039</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> white     oth      0.001<span style="text-decoration: underline;">15</span>  0.000<span style="text-decoration: underline;">234</span>   0.000<span style="text-decoration: underline;">693</span>   0.001<span style="text-decoration: underline;">61</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> black     oth      0.004<span style="text-decoration: underline;">36</span>  0.000<span style="text-decoration: underline;">515</span>   0.003<span style="text-decoration: underline;">35</span>    0.005<span style="text-decoration: underline;">37</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> other     oth     -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.006<span style="text-decoration: underline;">63</span>   -<span style="color: #BB0000;">0.065</span><span style="color: #BB0000; text-decoration: underline;">2</span>    -<span style="color: #BB0000;">0.039</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome estimate std.error conf.low conf.high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.248    0.015<span style="text-decoration: underline;">4</span>    0.218     0.278  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.420    0.038<span style="text-decoration: underline;">1</span>    0.345     0.495  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  3.87     0.477     2.93      4.80   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.387    0.027<span style="text-decoration: underline;">1</span>    0.334     0.440  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.089</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.005<span style="text-decoration: underline;">06</span>  -<span style="color: #BB0000;">0.099</span><span style="color: #BB0000; text-decoration: underline;">3</span>   -<span style="color: #BB0000;">0.079</span><span style="color: #BB0000; text-decoration: underline;">5</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  1.40     0.233     0.943     1.85   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.363    0.027<span style="text-decoration: underline;">9</span>    0.309     0.418  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.667    0.041<span style="text-decoration: underline;">8</span>    0.585     0.749  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">4.25</span>     0.595    -<span style="color: #BB0000;">5.41</span>     -<span style="color: #BB0000;">3.08</span>   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">53</span>  0.000<span style="text-decoration: underline;">179</span>  0.001<span style="text-decoration: underline;">18</span>   0.001<span style="text-decoration: underline;">88</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.002<span style="text-decoration: underline;">78</span>  0.000<span style="text-decoration: underline;">290</span>  0.002<span style="text-decoration: underline;">21</span>   0.003<span style="text-decoration: underline;">34</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">8</span>   0.002<span style="text-decoration: underline;">33</span>  -<span style="color: #BB0000;">0.023</span><span style="color: #BB0000; text-decoration: underline;">3</span>   -<span style="color: #BB0000;">0.014</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> white     oth      0.001<span style="text-decoration: underline;">53</span>  0.000<span style="text-decoration: underline;">179</span>  0.001<span style="text-decoration: underline;">18</span>   0.001<span style="text-decoration: underline;">88</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> black     oth      0.002<span style="text-decoration: underline;">78</span>  0.000<span style="text-decoration: underline;">290</span>  0.002<span style="text-decoration: underline;">21</span>   0.003<span style="text-decoration: underline;">34</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> other     oth     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">8</span>   0.002<span style="text-decoration: underline;">33</span>  -<span style="color: #BB0000;">0.023</span><span style="color: #BB0000; text-decoration: underline;">3</span>   -<span style="color: #BB0000;">0.014</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
 <span class="r-in"><span><span class="fu">ei_est</span><span class="op">(</span>riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># Weighted (Riesz) estimate</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome estimate std.error</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.251    0.047<span style="text-decoration: underline;">1</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.382    0.186   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  8.20     5.07    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.448    0.057<span style="text-decoration: underline;">4</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.154</span>    0.174   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  1.01     5.20    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.299    0.032<span style="text-decoration: underline;">9</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.767    0.154   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">8.15</span>     3.26    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">15</span>  0.000<span style="text-decoration: underline;">377</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.004<span style="text-decoration: underline;">36</span>  0.002<span style="text-decoration: underline;">08</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.055<span style="text-decoration: underline;">8</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> white     oth      0.001<span style="text-decoration: underline;">15</span>  0.000<span style="text-decoration: underline;">377</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> black     oth      0.004<span style="text-decoration: underline;">36</span>  0.002<span style="text-decoration: underline;">08</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> other     oth     -<span style="color: #BB0000;">0.052</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.055<span style="text-decoration: underline;">8</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.248    0.021<span style="text-decoration: underline;">3</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.420    0.079<span style="text-decoration: underline;">6</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  3.87     2.36    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.387    0.021<span style="text-decoration: underline;">1</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.089</span><span style="color: #BB0000; text-decoration: underline;">4</span>   0.058<span style="text-decoration: underline;">7</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  1.40     1.72    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.363    0.021<span style="text-decoration: underline;">4</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.667    0.083<span style="text-decoration: underline;">0</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">4.25</span>     1.78    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">53</span>  0.000<span style="text-decoration: underline;">282</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.002<span style="text-decoration: underline;">78</span>  0.000<span style="text-decoration: underline;">858</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">8</span>   0.017<span style="text-decoration: underline;">3</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> white     oth      0.001<span style="text-decoration: underline;">53</span>  0.000<span style="text-decoration: underline;">282</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> black     oth      0.002<span style="text-decoration: underline;">78</span>  0.000<span style="text-decoration: underline;">858</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> other     oth     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">8</span>   0.017<span style="text-decoration: underline;">3</span>  </span>
 <span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu">ei_est</span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># Double/debiased ML estimate</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         dem_hum    rep_nix    ind_wal          abs          oth</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.2514755  0.4480782  0.2992944  0.001151928  0.001151928</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.3824496 -0.1538928  0.7670800  0.004363138  0.004363138</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other 8.2002756  1.0065979 -8.1546861 -0.052187355 -0.052187355</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         dem_hum     rep_nix    ind_wal          abs          oth</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.2481598  0.38699489  0.3633165  0.001528811  0.001528811</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.4200405 -0.08937756  0.6665617  0.002775393  0.002775393</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> other 3.8671722  1.39827216 -4.2466833 -0.018760984 -0.018760984</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, se<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          dem_hum    rep_nix    ind_wal          abs          oth</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.02392274 0.03679981 0.02037134 0.0003795963 0.0003795963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.05186651 0.03741616 0.07577585 0.0020152257 0.0020152257</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other 1.81579169 0.98068420 2.19031071 0.0505327951 0.0505327951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.01770099 0.02909194 0.02826466 0.0002937972 0.0002937972</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.04602302 0.02328971 0.05257540 0.0008645117 0.0008645117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> other 0.78202192 0.53981237 1.09745695 0.0158211423 0.0158211423</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               white:dem_hum black:dem_hum other:dem_hum white:rep_nix</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white:dem_hum  0.0005722975 -0.0000398951   0.020253249  0.0007052276</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black:dem_hum -0.0000398951  0.0026901346   0.002987941  0.0005413884</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other:dem_hum  0.0202532487  0.0029879409   3.297099467  0.0382632050</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white:rep_nix  0.0007052276  0.0005413884   0.038263205  0.0013542260</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white:dem_hum  0.0003133249  0.0002732986   0.006420237  0.0004300809</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black:dem_hum  0.0002732986  0.0021181180   0.011485449  0.0007930489</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> other:dem_hum  0.0064202365  0.0114854489   0.611558291  0.0129493462</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white:rep_nix  0.0004300809  0.0007930489   0.012949346  0.0008463410</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
