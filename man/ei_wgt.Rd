@@ -41,9 +41,10 @@ square root of the number of observations.
 \examples{
 data(elec_1968)
 
-ei_wgt_unif(elec_1968$pres_total)
+ei_wgt_unif(head(elec_1968$pres_total))
 
-spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal, total=pres_total)
+spec = ei_spec(head(elec_1968), predictors = vap_white:vap_other,
+               outcome = pres_ind_wal, total = pres_total)
 ei_wgt_prop(spec)
 ei_wgt_sqrt(spec)
 
