@@ -56,7 +56,7 @@ parameter. The default, uniform weights, makes a slightly
 stronger-than-necessary assumption about the relationship between the
 unit totals and the unknown data.}
 
-\item{penalty}{The ridge penalty, which must be specified. Recommended value
+\item{penalty}{The ridge penalty (a non-negative scalar), which must be specified. Recommended value
 is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}}, which is stored in the \code{penalty}
 entry of the fitted model object.}
 

@@ -62,7 +62,7 @@
 #'   parameter. The default, uniform weights, makes a slightly
 #'   stronger-than-necessary assumption about the relationship between the
 #'   unit totals and the unknown data.
-#' @param penalty The ridge penalty. Set to `NULL` to automatically determine
+#' @param penalty The ridge penalty (a non-negative scalar). Set to `NULL` to automatically determine
 #'    the penalty which minimizes mean-square error, via an efficient
 #'    leave-one-out cross validation procedure. The ridge regression solution is
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
