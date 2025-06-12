@@ -34,14 +34,12 @@ You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in prepari
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{formula}{A formula such as \code{y | x ~ z} specifying the outcome and
-predictor terms on the left-hand side, and any covariate terms on the
-right-hand side.
-The outcome and predictor variables must be separated by a vertical bar
-\code{|} on the left-hand side.
-This is because EI models the conditional mean of the outcome given
-predictors, and how this may vary with covariates.
-See the examples for more details.}
+\item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y} regressed
+on the covariates of interest \code{x}.  The x's should form a partition, that is, \code{x0 + x1 = 1} for
+each observation. Users can be include more than two variables as well, e.g.
+\code{pct_white + pct_black + pct_hisp + pct_other}. Include additional covariates
+separated by a vertical bar \code{|}.  These covariates are necessary for \code{ei_riesz} but
+optional for \code{ei_ridge}.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}

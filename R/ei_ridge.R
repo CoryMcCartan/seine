@@ -49,14 +49,12 @@
 #'   These are scaled internally to have mean zero and unit variance.
 #' @param data When a **formula** is used, `data` is a **data frame** containing
 #'   both the predictors and the outcome.
-#' @param formula A formula such as `y | x ~ z` specifying the outcome and
-#'   predictor terms on the left-hand side, and any covariate terms on the
-#'   right-hand side.
-#'   The outcome and predictor variables must be separated by a vertical bar
-#'   `|` on the left-hand side.
-#'   This is because EI models the conditional mean of the outcome given
-#'   predictors, and how this may vary with covariates.
-#'   See the examples for more details.
+#' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y` regressed
+#'  on the covariates of interest `x`.  The x's should form a partition, that is, `x0 + x1 = 1` for
+#'  each observation. Users can be include more than two variables as well, e.g.
+#'  `pct_white + pct_black + pct_hisp + pct_other`. Include additional covariates
+#'  separated by a vertical bar `|`.  These covariates are necessary for `ei_riesz` but
+#'  optional for `ei_ridge`.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
 #'   weights for estimation. These may be the same or different from the total
 #'   number of observations in each aggregate unit (see the `total` argument to
