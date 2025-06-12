@@ -13,13 +13,15 @@ ei_wrap_model(x, data, predictors = NULL, outcome = NULL)
 or an \code{\link[=ei_spec]{ei_spec()}} object (recommended). If the latter, then the
 \code{predictors} and \code{outcome} arguments are ignored and need not be provided.}
 
-\item{predictors}{<\code{\link[dplyr:select]{tidy-select}}> Predictor variables.
-This is the \code{x} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of each racial group.}
+\item{predictors}{<\code{\link[tidyselect:language]{tidy-select}}> Predictor
+variables. This is the \code{x} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+each racial group.}
 
-\item{outcome}{<\code{\link[dplyr:select]{tidy-select}}> Outcome variables.
-This is the \code{y} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of votes for each party.}
+\item{outcome}{<\code{\link[tidyselect:language]{tidy-select}}> Outcome
+variables. This is the \code{y} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+votes for each party.}
 }
 \value{
 An \code{ei_wrapped} object, which has the information required to use

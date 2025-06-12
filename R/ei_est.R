@@ -15,10 +15,10 @@
 #'    Riesz weights
 #' @param data The data frame, matrix, or [ei_spec] object that was used to fit
 #'   the regression or Riesz representer.
-#' @param total <[`tidy-select`][dplyr::select]> A variable containing the total
-#'   number of observations in each aggregate unit. For example, the column
-#'   containing the total number of voters. Required if `data` is not an
-#'   [ei_spec()] object and `riesz` is not provided.
+#' @param total <[`tidy-select`][tidyselect::select_helpers]> A variable
+#'   containing the total number of observations in each aggregate unit. For
+#'   example, the column containing the total number of voters. Required if
+#'   `data` is not an [ei_spec()] object and `riesz` is not provided.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.

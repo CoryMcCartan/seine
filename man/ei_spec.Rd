@@ -12,19 +12,22 @@ ei_spec(data, predictors, outcome, total, covariates = NULL, strip = TRUE)
 \arguments{
 \item{data}{A data frame.}
 
-\item{predictors}{<\code{\link[dplyr:select]{tidy-select}}> Predictor variables.
-This is the \code{x} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of each racial group.}
+\item{predictors}{<\code{\link[tidyselect:language]{tidy-select}}> Predictor
+variables. This is the \code{x} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+each racial group.}
 
-\item{outcome}{<\code{\link[dplyr:select]{tidy-select}}> Outcome variables.
-This is the \code{y} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of votes for each party.}
+\item{outcome}{<\code{\link[tidyselect:language]{tidy-select}}> Outcome
+variables. This is the \code{y} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+votes for each party.}
 
-\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
-number of observations in each aggregate unit. For example, the column
-containing the total number of voters. Required by default.}
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required by
+default.}
 
-\item{covariates}{<\code{\link[dplyr:select]{tidy-select}}> Covariates.}
+\item{covariates}{<\code{\link[tidyselect:language]{tidy-select}}> Covariates.}
 
 \item{strip}{Whether to strip common prefixes from column names within each group.
 For example, columns named \code{vap_white}, \code{vap_black}, and \code{vap_hisp} would be

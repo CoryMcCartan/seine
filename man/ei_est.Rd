@@ -33,10 +33,10 @@ Riesz weights}
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression or Riesz representer.}
 
-\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
-number of observations in each aggregate unit. For example, the column
-containing the total number of voters. Required if \code{data} is not an
-\code{\link[=ei_spec]{ei_spec()}} object and \code{riesz} is not provided.}
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required if
+\code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object and \code{riesz} is not provided.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided

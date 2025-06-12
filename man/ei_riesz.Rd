@@ -46,9 +46,10 @@ See the examples for more details.}
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
 
-\item{total}{<\code{\link[dplyr:select]{tidy-select}}> A variable containing the total
-number of observations in each aggregate unit. For example, the column
-containing the total number of voters. Required by default.}
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required by
+default.}
 
 \item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
 weights for estimation. These may be the same or different from the total

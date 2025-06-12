@@ -9,16 +9,19 @@
 #' by [ei_ridge()] or [ei_riesz()].
 #'
 #' @param data A data frame.
-#' @param predictors <[`tidy-select`][dplyr::select]> Predictor variables.
-#'   This is the `x` variable in ecological regression that is of primary interest.
-#'   For example, the columns containing the percentage of each racial group.
-#' @param outcome <[`tidy-select`][dplyr::select]> Outcome variables.
-#'   This is the `y` variable in ecological regression that is of primary interest.
-#'   For example, the columns containing the percentage of votes for each party.
-#' @param total <[`tidy-select`][dplyr::select]> A variable containing the total
-#'   number of observations in each aggregate unit. For example, the column
-#'   containing the total number of voters. Required by default.
-#' @param covariates <[`tidy-select`][dplyr::select]> Covariates.
+#' @param predictors <[`tidy-select`][tidyselect::select_helpers]> Predictor
+#'   variables. This is the `x` variable in ecological regression that is of
+#'   primary interest. For example, the columns containing the percentage of
+#'   each racial group.
+#' @param outcome <[`tidy-select`][tidyselect::select_helpers]> Outcome
+#'   variables. This is the `y` variable in ecological regression that is of
+#'   primary interest. For example, the columns containing the percentage of
+#'   votes for each party.
+#' @param total <[`tidy-select`][tidyselect::select_helpers]> A variable
+#'   containing the total number of observations in each aggregate unit. For
+#'   example, the column containing the total number of voters. Required by
+#'   default.
+#' @param covariates <[`tidy-select`][tidyselect::select_helpers]> Covariates.
 #' @param strip Whether to strip common prefixes from column names within each group.
 #'   For example, columns named `vap_white`, `vap_black`, and `vap_hisp` would be
 #'   renamed `white`, `black` and `other` in the model and output.

@@ -9,18 +9,19 @@ ei_proportions(data, ..., .total = ".total", .other = ".other", clamp = 0.001)
 \arguments{
 \item{data}{A data frame.}
 
-\item{...}{<\code{\link[dplyr:select]{tidy-select}}> Columns to convert to proportions.
-If one column is completely missing, it will be imputed as 1 minus the total.}
+\item{...}{<\code{\link[tidyselect:language]{tidy-select}}> Columns to convert
+to proportions. If one column is completely missing, it will be imputed as
+1 minus the total.}
 
-\item{.total}{<\code{\link[dplyr:select]{tidy-select}}> Column to use as the total.
-If this column does not exist, it will be created as the sum of the selected
-columns. Supports renaming syntax.}
+\item{.total}{<\code{\link[tidyselect:language]{tidy-select}}> Column to use as
+the total. If this column does not exist, it will be created as the sum of
+the selected columns. Supports renaming syntax.}
 
-\item{.other}{<\code{\link[dplyr:select]{tidy-select}}> Column to store the remainder,
-so that the selected columns plus \code{.other} sum to 1. If the selected
-columns do sum to 1 after normalization, this argument will not be used;
-otherwise it will be created or overwritten.
-The calculation of \code{.other} is performed \emph{after} clamping (see below).}
+\item{.other}{<\code{\link[tidyselect:language]{tidy-select}}> Column to store
+the remainder, so that the selected columns plus \code{.other} sum to 1. If the
+selected columns do sum to 1 after normalization, this argument will not be
+used; otherwise it will be created or overwritten. The calculation of
+\code{.other} is performed \emph{after} clamping (see below).}
 
 \item{clamp}{Proportions that are \code{clamp} below 0 or above 1 will be rounded
 to 0 and 1, respectively.  Values outside \code{clamp} will throw an error.
