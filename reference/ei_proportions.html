@@ -71,22 +71,23 @@ containing the remainder amount so that all proportions sum to 1.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>&lt;<code>tidy-select</code>&gt; Columns to convert to proportions.
-If one column is completely missing, it will be imputed as 1 minus the total.</p></dd>
+<dd><p>&lt;<code><a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">tidy-select</a></code>&gt; Columns to convert
+to proportions. If one column is completely missing, it will be imputed as
+1 minus the total.</p></dd>
 
 
 <dt id="arg--total">.total<a class="anchor" aria-label="anchor" href="#arg--total"></a></dt>
-<dd><p>&lt;<code>tidy-select</code>&gt; Column to use as the total.
-If this column does not exist, it will be created as the sum of the selected
-columns. Supports renaming syntax.</p></dd>
+<dd><p>&lt;<code><a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">tidy-select</a></code>&gt; Column to use as
+the total. If this column does not exist, it will be created as the sum of
+the selected columns. Supports renaming syntax.</p></dd>
 
 
 <dt id="arg--other">.other<a class="anchor" aria-label="anchor" href="#arg--other"></a></dt>
-<dd><p>&lt;<code>tidy-select</code>&gt; Column to store the remainder,
-so that the selected columns plus <code>.other</code> sum to 1. If the selected
-columns do sum to 1 after normalization, this argument will not be used;
-otherwise it will be created or overwritten.
-The calculation of <code>.other</code> is performed <em>after</em> clamping (see below).</p></dd>
+<dd><p>&lt;<code><a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">tidy-select</a></code>&gt; Column to store
+the remainder, so that the selected columns plus <code>.other</code> sum to 1. If the
+selected columns do sum to 1 after normalization, this argument will not be
+used; otherwise it will be created or overwritten. The calculation of
+<code>.other</code> is performed <em>after</em> clamping (see below).</p></dd>
 
 
 <dt id="arg-clamp">clamp<a class="anchor" aria-label="anchor" href="#arg-clamp"></a></dt>
