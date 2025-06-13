@@ -131,7 +131,9 @@ to scale a random orthogonal matrix.</p></dd>
 
 <dt id="arg-b-loc">b_loc<a class="anchor" aria-label="anchor" href="#arg-b-loc"></a></dt>
 <dd><p>The center of the distribution of geography-level parameters.
-Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.</p></dd>
+Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.
+Because of the truncation, this will not exactly be the mean of the
+geography-level parameters.</p></dd>
 
 
 <dt id="arg-coefs">coefs<a class="anchor" aria-label="anchor" href="#arg-coefs"></a></dt>
@@ -163,11 +165,11 @@ the geography-level parameters, formatted similarly to the output from
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1    x2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.789 0.233 0.767</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.768 0.827 0.173</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.545 0.763 0.237</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.623 0.524 0.476</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.633 0.852 0.148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.826 0.233 0.767</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.438 0.827 0.173</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.708 0.763 0.237</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.690 0.524 0.476</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.460 0.852 0.148</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_synthetic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, p <span class="op">=</span> <span class="fl">2</span>, n_x <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
@@ -176,13 +178,13 @@ the geography-level parameters, formatted similarly to the output from
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Outcome: `y`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: `z1` and `z2`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1    x2     x3      z1      z2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.543 0.754 0.227 0.019<span style="text-decoration: underline;">8</span> -<span style="color: #BB0000;">0.218</span>  -<span style="color: #BB0000;">0.366</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.786 0.722 0.171 0.107  -<span style="color: #BB0000;">0.181</span>  -<span style="color: #BB0000;">0.103</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.207 0.315 0.601 0.084<span style="text-decoration: underline;">3</span>  0.197  -<span style="color: #BB0000;">0.301</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.720 0.628 0.154 0.217   0.024<span style="text-decoration: underline;">4</span>  0.027<span style="text-decoration: underline;">7</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.397 0.253 0.591 0.156   0.090<span style="text-decoration: underline;">6</span> -<span style="color: #BB0000;">0.101</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1    x2     x3     z1      z2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.921 0.722 0.171 0.107  -<span style="color: #BB0000;">0.170</span>  0.106 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.427 0.315 0.601 0.084<span style="text-decoration: underline;">3</span>  0.329 -<span style="color: #BB0000;">0.220</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.197 0.628 0.154 0.217   0.672 -<span style="color: #BB0000;">0.142</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 1.18  0.253 0.591 0.156  -<span style="color: #BB0000;">0.232</span> -<span style="color: #BB0000;">0.034</span><span style="color: #BB0000; text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 1.08  0.677 0.184 0.139  -<span style="color: #BB0000;">0.438</span> -<span style="color: #BB0000;">0.416</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></span>
@@ -198,11 +200,11 @@ the geography-level parameters, formatted similarly to the output from
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,143 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1     x2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.451 0.716 0.284 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.374 0.819 0.181 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.253 0.538 0.462 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.478 0.721 0.279 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.276 0.976 0.024<span style="text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.378 0.716 0.284 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.394 0.819 0.181 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.437 0.538 0.462 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.168 0.721 0.279 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.188 0.976 0.024<span style="text-decoration: underline;">1</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,138 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

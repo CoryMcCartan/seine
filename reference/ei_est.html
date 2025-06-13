@@ -131,7 +131,10 @@ errors are always returned.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with estimates.</p>
+    <p>A data frame with estimates. It has two additional attributes:
+<code>vcov</code>, containing the estimated covariance matrix for the estimates, and
+<code>n</code>, containing the number of aggregate units used in estimation (the
+number of rows in <code>data</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="methods-by-generic-">Methods (by generic)<a class="anchor" aria-label="anchor" href="#methods-by-generic-"></a></h2>
