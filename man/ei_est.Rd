@@ -53,7 +53,10 @@ errors are always returned.}
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A data frame with estimates.
+A data frame with estimates. It has two additional attributes:
+\code{vcov}, containing the estimated covariance matrix for the estimates, and
+\code{n}, containing the number of aggregate units used in estimation (the
+number of rows in \code{data}).
 }
 \description{
 Produces estimates of overall conditional means from a fitted

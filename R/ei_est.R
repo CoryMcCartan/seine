@@ -26,7 +26,10 @@
 #'   If `FALSE` (the default), no confidence intervals are calculated. Standard
 #'   errors are always returned.
 #'
-#' @returns A data frame with estimates.
+#' @returns A data frame with estimates. It has two additional attributes:
+#'   `vcov`, containing the estimated covariance matrix for the estimates, and
+#'   `n`, containing the number of aggregate units used in estimation (the
+#'   number of rows in `data`).
 #'
 #' @examples
 #' data(elec_1968)
@@ -99,6 +102,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
 
     rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))
     attr(out, "vcov") = vcov
+    attr(out, "n") = n
 
     out
 }
