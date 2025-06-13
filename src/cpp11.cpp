@@ -6,6 +6,14 @@
 #include <R_ext/Visibility.h>
 
 // R_interface.cpp
+void R_sync_rng();
+extern "C" SEXP _seine_R_sync_rng() {
+  BEGIN_CPP11
+    R_sync_rng();
+    return R_NilValue;
+  END_CPP11
+}
+// R_interface.cpp
 doubles_matrix<> R_ess_tmvn(int N, const doubles& mu, const doubles_matrix<>& L, const doubles& init);
 extern "C" SEXP _seine_R_ess_tmvn(SEXP N, SEXP mu, SEXP L, SEXP init) {
   BEGIN_CPP11
@@ -58,6 +66,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_seine_R_ess_tmvn",     (DL_FUNC) &_seine_R_ess_tmvn,     4},
     {"_seine_R_llik_intonly", (DL_FUNC) &_seine_R_llik_intonly, 6},
     {"_seine_R_proj_mvn",     (DL_FUNC) &_seine_R_proj_mvn,     4},
+    {"_seine_R_sync_rng",     (DL_FUNC) &_seine_R_sync_rng,     0},
     {"_seine_R_utn_moments",  (DL_FUNC) &_seine_R_utn_moments,  2},
     {"run_testthat_tests",    (DL_FUNC) &run_testthat_tests,    1},
     {NULL, NULL, 0}

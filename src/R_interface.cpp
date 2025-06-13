@@ -2,6 +2,7 @@
 #include "cpp11.hpp"
 #include "cpp11armadillo.hpp"
 
+#include "random.h"
 #include "tmvn.h"
 #include "epmgp.h"
 #include "likelihood.h"
@@ -9,6 +10,14 @@
 using namespace arma;
 using namespace cpp11;
 namespace writable = cpp11::writable;
+
+[[cpp11::register]]
+void R_sync_rng() {
+    GetRNGstate();
+    int seed = R_unif_index(1000000);
+    PutRNGstate();
+    seed_rng(seed);
+}
 
 [[cpp11::register]]
 doubles_matrix<> R_ess_tmvn(int N, const doubles& mu, const doubles_matrix<>& L, const doubles& init) {

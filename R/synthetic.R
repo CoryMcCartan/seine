@@ -108,6 +108,7 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = NULL,
     warmup = 10L
     b = matrix(nrow=n, ncol=n_x)
     L = t(chol(b_cov))
+    R_sync_rng()
     for (i in seq_len(n)) {
         b[i, ] = R_ess_tmvn(warmup, eta[i, ], L, init=eta[i, ])[warmup, ]
         eta[i, ] = R_ep_moments(eta[i, ], L, numeric(0), 0, 1e-4)[[2]]
