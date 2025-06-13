@@ -49,12 +49,14 @@
 #'   These are scaled internally to have mean zero and unit variance.
 #' @param data When a **formula** is used, `data` is a **data frame** containing
 #'   both the predictors and the outcome.
-#' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y` regressed
-#'  on the covariates of interest `x`.  The x's should form a partition, that is, `x0 + x1 = 1` for
-#'  each observation. Users can be include more than two variables as well, e.g.
+#' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y`
+#'  regressed on the covariates of interest `x`.  The x's should form a
+#'  partition, that is, `x0 + x1 = 1` for each observation. Users can be include
+#'  more than two variables as well, e.g.
 #'  `pct_white + pct_black + pct_hisp + pct_other`. Include additional covariates
-#'  separated by a vertical bar `|`.  These covariates are necessary for `ei_riesz` but
-#'  optional for `ei_ridge`.
+#'  separated by a vertical bar `|`.
+#'  These covariates are necessary for `ei_riesz` and `ei_ridge`.
+#'  See `ei_wrap_model` for formulas that do not require covariates.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
 #'   weights for estimation. These may be the same or different from the total
 #'   number of observations in each aggregate unit (see the `total` argument to
@@ -62,9 +64,10 @@
 #'   parameter. The default, uniform weights, makes a slightly
 #'   stronger-than-necessary assumption about the relationship between the
 #'   unit totals and the unknown data.
-#' @param penalty The ridge penalty (a non-negative scalar). Set to `NULL` to automatically determine
-#'    the penalty which minimizes mean-square error, via an efficient
-#'    leave-one-out cross validation procedure. The ridge regression solution is
+#' @param penalty The ridge penalty (a non-negative scalar). Set to `NULL` to
+#'    automatically determine the penalty which minimizes mean-square error,
+#'    via an efficient leave-one-out cross validation procedure.
+#'    The ridge regression solution is
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 #'    where \eqn{\lambda} is the value of `penalty`.
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are

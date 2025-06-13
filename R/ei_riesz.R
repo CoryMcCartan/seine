@@ -7,9 +7,9 @@
 #'
 #' The regression is calculated using the singular value decomposition.
 #'
-#' @param penalty The ridge penalty (a non-negative scalar), which must be specified. Recommended value
-#'   is the same penalty used in [ei_ridge()], which is stored in the `penalty`
-#'   entry of the fitted model object.
+#' @param penalty The ridge penalty (a non-negative scalar), which must be
+#'   specified. Recommended value is the same penalty used in [ei_ridge()],
+#'   which is stored in the `penalty` entry of the fitted model object.
 #' @inheritParams ei_ridge
 #' @inheritParams ei_spec
 #'
