@@ -141,6 +141,23 @@ specified as:</p><ul><li><p>A <strong>data frame</strong> with numeric columns.<
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The regression is calculated using the singular value decomposition.</p>
     </div>
+    <div class="section level2">
+    <h2 id="weights">Weights<a class="anchor" aria-label="anchor" href="#weights"></a></h2>
+
+
+<p>The weakest identification result for ecological inference makes no
+assumption about the number of observations per aggregate unit (the totals).
+It requires, however, weighting the estimation steps according to the totals.
+This may reduce efficiency when the totals are variable and a slightly
+stronger condition holds.</p>
+<p>Specifically, if the totals are conditionally mean-independent of the missing
+data (the aggregation-unit level means of the outcome within each predictor
+level), given covariates, then it is appropriate to use uniform weights in
+estimation, or any fixed set of weights.</p>
+<p>In general, estimation efficiency is improved when units with larger variance
+in the outcome receive less weight. Various bulit-in options are provided by
+the helper functions in <code><a href="ei_wgt.html">ei_wgt()</a></code>.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
