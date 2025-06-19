@@ -88,14 +88,14 @@ You can use <code><a href="ei_proportions.html">ei_proportions()</a></code> to a
 
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>A formula such as <code>y | x ~ z</code> specifying the outcome and
-predictor terms on the left-hand side, and any covariate terms on the
-right-hand side.
-The outcome and predictor variables must be separated by a vertical bar
-<code>|</code> on the left-hand side.
-This is because EI models the conditional mean of the outcome given
-predictors, and how this may vary with covariates.
-See the examples for more details.</p></dd>
+<dd><p>A formula such as <code>y ~ x0 + x1 | z</code> specifying the outcome <code>y</code>
+regressed on the covariates of interest <code>x</code>.  The x's should form a
+partition, that is, <code>x0 + x1 = 1</code> for each observation. Users can be include
+more than two variables as well, e.g.
+<code>pct_white + pct_black + pct_hisp + pct_other</code>. Include additional covariates
+separated by a vertical bar <code>|</code>.
+These covariates are necessary for <code>ei_riesz</code> and <code>ei_ridge</code>.
+See <code>ei_wrap_model</code> for formulas that do not require covariates.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -121,9 +121,9 @@ unit totals and the unknown data.</p></dd>
 
 
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
-<dd><p>The ridge penalty, which must be specified. Recommended value
-is the same penalty used in <code><a href="ei_ridge.html">ei_ridge()</a></code>, which is stored in the <code>penalty</code>
-entry of the fitted model object.</p></dd>
+<dd><p>The ridge penalty (a non-negative scalar), which must be
+specified. Recommended value is the same penalty used in <code><a href="ei_ridge.html">ei_ridge()</a></code>,
+which is stored in the <code>penalty</code> entry of the fitted model object.</p></dd>
 
 
 <dt id="arg-z">z<a class="anchor" aria-label="anchor" href="#arg-z"></a></dt>
