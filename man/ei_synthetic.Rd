@@ -37,7 +37,9 @@ Singular values default to \code{exp(-(seq_len(p) - 1)/2)}. They are applied
 to scale a random orthogonal matrix.}
 
 \item{b_loc}{The center of the distribution of geography-level parameters.
-Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.}
+Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.
+Because of the truncation, this will not exactly be the mean of the
+geography-level parameters.}
 
 \item{coefs}{Either A \code{p}-by-\code{n_x} matrix of coefficients for \code{z}, or
 The product with \code{z} is added to \code{ctr} to form the mean of the individual

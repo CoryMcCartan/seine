@@ -31,6 +31,8 @@
 #'   to scale a random orthogonal matrix.
 #' @param b_loc The center of the distribution of geography-level parameters.
 #'   Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.
+#'   Because of the truncation, this will not exactly be the mean of the
+#'   geography-level parameters.
 #' @param coefs Either A `p`-by-`n_x` matrix of coefficients for `z`, or
 #'   The product with `z` is added to `ctr` to form the mean of the individual
 #'   geography-level parameters. Defaults to a matrix of standard Normals.
@@ -106,6 +108,7 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = NULL,
     warmup = 10L
     b = matrix(nrow=n, ncol=n_x)
     L = t(chol(b_cov))
+    R_sync_rng()
     for (i in seq_len(n)) {
         b[i, ] = R_ess_tmvn(warmup, eta[i, ], L, init=eta[i, ])[warmup, ]
         eta[i, ] = R_ep_moments(eta[i, ], L, numeric(0), 0, 1e-4)[[2]]
