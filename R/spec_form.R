@@ -57,15 +57,72 @@ ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=TRUE
     }
     cols = c(predictors, outcome, covariates)
 
-    new_tibble(
-        setNames(data[cols], names(cols)),
-        ei_x = names(predictors),
-        ei_y = names(outcome),
-        ei_z = names(covariates),
-        ei_n = total,
-        class="ei_spec"
+    new_ei_spec(
+        data = setNames(data[cols], names(cols)),
+        x = names(predictors),
+        y = names(outcome),
+        z = names(covariates),
+        n = total
     )
 }
+
+# Internal constructor
+new_ei_spec = function(data, x, y, z, n, ...) {
+    new_tibble(data, ei_x = x, ei_y = y, ei_z = z, ei_n = n, class="ei_spec")
+}
+
+# Internal validator
+validate_ei_spec = function(x) {
+    if (!inherits(x, "ei_spec")) {
+        cli_abort("Object must be an {.cls ei_spec} object.", call=parent.frame())
+    }
+    if (!is.data.frame(x)) {
+        cli_abort("An {.cls ei_spec} object must be a data frame.", call=parent.frame())
+    }
+    if (is.null(attr(x, "ei_x"))) {
+        cli_abort("No predictors specified in {.cls ei_spec} object.", call=parent.frame())
+    }
+    if (is.null(attr(x, "ei_y"))) {
+        cli_abort("No outcome specified in {.cls ei_spec} object.", call=parent.frame())
+    }
+    if (is.null(attr(x, "ei_n"))) {
+        cli_abort("No total specified in {.cls ei_spec} object.", call=parent.frame())
+    }
+
+    if (!all(attr(x, "ei_x") %in% names(x))) {
+        cli_abort(c(
+            "Some predictors are not present in the data frame.",
+            ">" = paste0("Missing: {.var ", setdiff(attr(x, "ei_x"), names(x)), "}")
+        ), call=parent.frame())
+    }
+    if (!all(attr(x, "ei_y") %in% names(x))) {
+        cli_abort(c(
+            "Some outcomes are not present in the data frame.",
+            ">" = paste0("Missing: {.var ", setdiff(attr(x, "ei_y"), names(x)), "}")
+        ), call=parent.frame())
+    }
+    if (!all(attr(x, "ei_z") %in% names(x))) {
+        cli_abort(c(
+            "Some covariates are not present in the data frame.",
+            ">" = paste0("Missing: {.var ", setdiff(attr(x, "ei_z"), names(x)), "}")
+        ), call=parent.frame())
+    }
+    if (length(attr(x, "ei_n")) != nrow(x)) {
+        cli_abort("Length of {.var ei_n} ({length(attr(x, 'ei_n'))}) does not
+                  match the number of data observations ({nrow(x)}).",
+                  call=parent.frame())
+    }
+
+    xm = as.matrix(x[, attr(x, "ei_x")])
+    if (storage.mode(xm) != "double") {
+        cli_abort("Predictors must be numeric; found {.cls {storage.mode(xm)}}.",
+                  call=parent.frame())
+    }
+    check_preds(xm)
+
+    invisible(x)
+}
+
 
 #' @export
 print.ei_spec = function(x, ..., n=5) {
@@ -191,6 +248,9 @@ check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
     if (isFALSE(x)) {
         x = rep(1, n)
     }
+    if (any(is.na(x))) {
+        cli_abort("Missing values found in {.arg {arg}}.", call=parent.frame())
+    }
     if (any(x < 0)) {
         cli_abort("Negative totals and weights are not allowed.", call=parent.frame())
     }
@@ -201,6 +261,12 @@ check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
     }
 
     x
+}
+
+check_preds = function(x, tol = 1e-6) {
+    if (!isTRUE(all.equal(rowSums(x), rep(1, nrow(x)), tolerance = tol))) {
+        cli_warn("Predictors should sum to 1 in every row.", call=parent.frame())
+    }
 }
 
 

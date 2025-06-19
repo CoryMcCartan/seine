@@ -6,7 +6,7 @@
 \alias{seine-package}
 \title{seine: Semiparametric Ecological Inference}
 \description{
-Efficient and user-friendly routines for modern ecological inference.
+Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan & Kuriwaki (2025) \href{https://arxiv.org/abs/2507.XXXXX}{arXiv:2507.XXXXX}, which generalize ecological regression as introduced by Goodman (1953) \doi{10.2307/2088121}. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, and sensitivity analysis.
 }
 \seealso{
 Useful links:

@@ -7,7 +7,12 @@ Authors@R: c(
     person("Shiro", "Kuriwaki", , "shiro.kuriwaki@yale.edu", role = c("aut"),
            comment = c(ORCID = "0000-0002-5687-2647"))
     )
-Description: Efficient and user-friendly routines for modern ecological inference.
+Description: Efficient and user-friendly routines for modern ecological 
+    inference. Implements the methods described in McCartan & Kuriwaki (2025)
+    <arxiv:2507.XXXXX>, which generalize ecological regression as introduced by
+    Goodman (1953) <doi:10.2307/2088121>. Includes routines for preprocessing,
+    synthetic data generation, double/debiased machine learning (DML) 
+    estimation, and sensitivity analysis.
 Depends:
     R (>= 3.5.0)
 Imports:

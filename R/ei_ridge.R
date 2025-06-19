@@ -117,6 +117,7 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
 #' @rdname ei_ridge
 ei_ridge.ei_spec <- function(x, weights, penalty=NULL, ...) {
     spec = x
+    validate_ei_spec(spec)
     x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
     # handle factors
     chr_cols = logical(length(x))

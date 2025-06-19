@@ -7,6 +7,8 @@
 #'
 #' The regression is calculated using the singular value decomposition.
 #'
+#' @inheritSection ei_ridge Weights
+#'
 #' @param penalty The ridge penalty, which must be specified. Recommended value
 #'   is the same penalty used in [ei_ridge()], which is stored in the `penalty`
 #'   entry of the fitted model object.
@@ -67,6 +69,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
 #' @rdname ei_riesz
 ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
     spec = x
+    validate_ei_spec(spec)
     x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
     # handle factors
     chr_cols = logical(length(x))

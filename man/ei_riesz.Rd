@@ -82,6 +82,24 @@ overall estimates of conditional means using \code{\link[=ei_est]{ei_est()}}.
 \details{
 The regression is calculated using the singular value decomposition.
 }
+\section{Weights}{
+
+The weakest identification result for ecological inference makes no
+assumption about the number of observations per aggregate unit (the totals).
+It requires, however, weighting the estimation steps according to the totals.
+This may reduce efficiency when the totals are variable and a slightly
+stronger condition holds.
+
+Specifically, if the totals are conditionally mean-independent of the missing
+data (the aggregation-unit level means of the outcome within each predictor
+level), given covariates, then it is appropriate to use uniform weights in
+estimation, or any fixed set of weights.
+
+In general, estimation efficiency is improved when units with larger variance
+in the outcome receive less weight. Various bulit-in options are provided by
+the helper functions in \code{\link[=ei_wgt]{ei_wgt()}}.
+}
+
 \examples{
 data(elec_1968)
 
