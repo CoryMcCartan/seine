@@ -63,7 +63,8 @@ ei_proportions = function(data, ..., .total=".total", .other=".other", clamp=1e-
         cli_abort("{.arg total} must refer to a single column.")
     }
 
-    data[cols] = data[cols] / total
+    denom = total + (total == 0)
+    data[cols] = data[cols] / denom
     old_names = names(data)[cols]
     names(data)[cols] = names(cols)
 
