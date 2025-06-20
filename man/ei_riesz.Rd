@@ -34,14 +34,14 @@ You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in prepari
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{formula}{A formula such as \code{y | x ~ z} specifying the outcome and
-predictor terms on the left-hand side, and any covariate terms on the
-right-hand side.
-The outcome and predictor variables must be separated by a vertical bar
-\code{|} on the left-hand side.
-This is because EI models the conditional mean of the outcome given
-predictors, and how this may vary with covariates.
-See the examples for more details.}
+\item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
+regressed on the covariates of interest \code{x}.  The x's should form a
+partition, that is, \code{x0 + x1 = 1} for each observation. Users can be include
+more than two variables as well, e.g.
+\code{pct_white + pct_black + pct_hisp + pct_other}. Include additional covariates
+separated by a vertical bar \code{|}.
+These covariates are necessary for \code{ei_riesz} and \code{ei_ridge}.
+See \code{ei_wrap_model} for formulas that do not require covariates.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
@@ -59,9 +59,9 @@ parameter. The default, uniform weights, makes a slightly
 stronger-than-necessary assumption about the relationship between the
 unit totals and the unknown data.}
 
-\item{penalty}{The ridge penalty, which must be specified. Recommended value
-is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}}, which is stored in the \code{penalty}
-entry of the fitted model object.}
+\item{penalty}{The ridge penalty (a non-negative scalar), which must be
+specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
+which is stored in the \code{penalty} entry of the fitted model object.}
 
 \item{z}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{w} are any covariates,
 specified as:
