@@ -21,12 +21,12 @@
 #' @name ei_wgt
 NULL
 
-#' @describeIn ei_wgt Uniform weights. Appropriate if the unit-level variance
-#'   is constant, i.e., homosekdastic.
+#' @describeIn ei_wgt Uniform weights across units with any population.
+#'   Appropriate if the unit-level variance is constant, i.e., homosekdastic.
 #' @export
 ei_wgt_unif <- function(x) {
     x = get_tot(x)
-    rep(1, length(x))
+    1 * (x > 0)
 }
 
 #' @describeIn ei_wgt Weights proportional to the totals. Appropriate if the
