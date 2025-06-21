@@ -53,6 +53,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
     bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(form_preds, "term.labels"),
         ei_n = check_make_weights(!!enquo(total), data),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
@@ -70,30 +71,24 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
 ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
     spec = x
     validate_ei_spec(spec)
-    x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
-    # handle factors
-    chr_cols = logical(length(x))
-    for (col in seq_len(length(x))) {
-        if (is.character(x[[col]]) || is.factor(x[[col]])) {
-            chr_cols[col] = TRUE
-            form = formula(paste("~ 0 +", names(x)[col]))
-            x = cbind(x, model.matrix(form, x))
-        }
-    }
-    x = x[, !chr_cols, drop=FALSE]
 
-    y = spec[attr(spec, "ei_y")]
+    form = as.formula(paste0(
+        paste0(attr(spec, "ei_y"), collapse=" + "), " ~ ",
+        paste0(attr(spec, "ei_x"), collapse=" + "), " + ",
+        paste0(attr(spec, "ei_z"), collapse=" + ")
+    ))
 
-    bp = hardhat::new_default_xy_blueprint(
+    bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(spec, "ei_x"),
         ei_n = attr(spec, "ei_n"),
-        ei_wgt = check_make_weights(!!enquo(weights), x, arg="weights", required=FALSE),
+        ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         penalty = penalty,
     )
 
-    processed = hardhat::mold(x, NULL, blueprint=bp)
+    processed <- hardhat::mold(form, spec, blueprint=bp)
     ei_riesz_bridge(processed, ...)
 }
 

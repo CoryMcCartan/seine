@@ -19,6 +19,9 @@
 #'   containing the total number of observations in each aggregate unit. For
 #'   example, the column containing the total number of voters. Required if
 #'   `data` is not an [ei_spec()] object and `riesz` is not provided.
+#' @param subset <[`data-masking`][rlang::args_data_masking]> An optional
+#'   indexing vector describing the subset of units over which to calculate
+#'   estimates.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
@@ -35,7 +38,7 @@
 #' data(elec_1968)
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-#'                total = pres_total, covariates = c(pop_urban, farm))
+#'                total = pres_total, covariates = c(state, pop_urban, farm))
 #'
 #' m = ei_ridge(spec)
 #' rr = ei_riesz(spec, penalty = m$penalty)
@@ -47,8 +50,12 @@
 #' as.matrix(est, se=TRUE)
 #' vcov(est)[1:4, 1:4]
 #'
+#' est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
+#' as.matrix(est)
+#' nobs(est)
 #' @export
-ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=FALSE) {
+ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
+                  outcome=NULL, conf_level=FALSE) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }
@@ -61,6 +68,24 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
     n = nrow(y)
     n_y = ncol(y)
 
+    if (!missing(subset)) {
+        subset = eval_tidy(enquo(subset), data)
+        if (is.logical(subset)) {
+            subset = 1*subset
+        } else if (is.numeric(subset)) {
+            subset = 1*(seq_len(n) == subset)
+        } else {
+            cli_abort("The {.arg subset} argument must be a logical or integer
+                       vector.", call=parent.frame())
+        }
+        if (any(is.na(subset))) {
+            cli_abort("The {.arg subset} argument must not contain missing values.",
+                      call=parent.frame())
+        }
+    } else {
+        subset = rep(1, n)
+    }
+
     if (missing(total)) {
         if (inherits(riesz, "ei_riesz")) {
             total = riesz$blueprint$ei_n
@@ -70,7 +95,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
         }
     }
     w = check_make_weights(!!enquo(total), data, n)
-    w = w / mean(w)
+    w = subset * w / mean(subset * w)
 
     # build predictions and RR
     riesz = est_check_riesz(riesz, data, w, n, regr)
@@ -85,7 +110,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
         eif[, i + (seq_len(n_y) - 1)*n_x] = plugin + wtd
     }
     est = colMeans(eif)
-    vcov = crossprod(shift_cols(eif, est)) / (n - 1)^2
+    vcov = crossprod(shift_cols(eif, est)) / (sum(w) - 1)^2
     se = sqrt(diag(vcov))
 
     out = tibble::new_tibble(list(
@@ -102,7 +127,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, outcome=NULL, conf_level=F
 
     rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))
     attr(out, "vcov") = vcov
-    attr(out, "n") = n
+    attr(out, "n") = sum(w)
 
     out
 }

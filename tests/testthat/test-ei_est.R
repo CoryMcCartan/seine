@@ -14,6 +14,19 @@ test_that("Estimation methods agree when there is no penalization", {
     expect_true(all(est_d$std.error > est_p$std.error))
 })
 
+test_that("Estimation methods work with character predictors", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+                   total = pres_total, covariates = c(state, pop_urban))
+    m = ei_ridge(spec)
+    rr = ei_riesz(spec, penalty=m$penalty)
+
+    expect_no_error({
+        est_p = ei_est(m, data=spec, subset = state=="Louisiana")
+        est_w = ei_est(rr, data=spec, subset = state=="Louisiana")
+        est_d = ei_est(m, rr, data=spec, subset = state=="Louisiana")
+    })
+})
+
 test_that("Shrinkage has the expected effect", {
     spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
                    total = pres_total, covariates = c(pop_urban, farm))
