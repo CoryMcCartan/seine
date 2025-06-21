@@ -4,7 +4,7 @@
 \alias{ei_wrap_model}
 \title{Wrap another predictive model for use in \code{ei_est}}
 \usage{
-ei_wrap_model(x, data, predictors = NULL, outcome = NULL)
+ei_wrap_model(x, data, predictors = NULL, outcome = NULL, ...)
 }
 \arguments{
 \item{x}{A model object, supporting \code{\link[=fitted]{fitted()}} and \code{\link[=predict]{predict()}} generics.}
@@ -22,6 +22,8 @@ each racial group.}
 variables. This is the \code{y} variable in ecological regression that is of
 primary interest. For example, the columns containing the percentage of
 votes for each party.}
+
+\item{...}{Additional arguments passed to the \code{\link[=predict]{predict()}} method.}
 }
 \value{
 An \code{ei_wrapped} object, which has the information required to use
@@ -41,10 +43,14 @@ data(elec_1968)
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal, pres_total,
                covariates = c(pop_urban, farm))
 
-m = lm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm, spec)
-m_wrap = ei_wrap_model(m, spec)
+# Note: this is not a model recommended for valid ecological inference!
+m = suppressWarnings(
+    glm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm,
+        data = spec, family = "binomial")
+)
+m_wrap = ei_wrap_model(m, spec, type = "response")
 print(m_wrap)
 
-ei_est(m_wrap, data = spec)
+ei_est(m_wrap, data = spec) # notice all estimates nonnegative
 
 }

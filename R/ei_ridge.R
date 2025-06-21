@@ -237,7 +237,9 @@ ei_ridge_bridge <- function(processed, ...) {
 #' @param y A vector of outcomes
 #' @param z A matrix of covariates
 #' @param weights A vector of estimation weights
-#' @inheritParams ei_riesz
+#' @param penalty The ridge penalty (a non-negative scalar), which must be
+#'   specified for [ei_riesz_impl()] but can be automatically estimated with
+#'   [ei_ridge_impl()] by providing `penalty=NULL`.
 #'
 #' @returns A list with model components.
 #'

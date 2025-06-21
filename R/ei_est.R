@@ -226,6 +226,7 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
 #' @param data A data frame or matrix containing the data used to fit the model,
 #'   or an [ei_spec()] object (recommended). If the latter, then the
 #'   `predictors` and `outcome` arguments are ignored and need not be provided.
+#' @param ... Additional arguments passed to the [predict()] method.
 #' @inheritParams ei_spec
 #'
 #' @returns An `ei_wrapped` object, which has the information required to use
@@ -237,14 +238,18 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal, pres_total,
 #'                covariates = c(pop_urban, farm))
 #'
-#' m = lm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm, spec)
-#' m_wrap = ei_wrap_model(m, spec)
+#' # Note: this is not a model recommended for valid ecological inference!
+#' m = suppressWarnings(
+#'     glm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm,
+#'         data = spec, family = "binomial")
+#' )
+#' m_wrap = ei_wrap_model(m, spec, type = "response")
 #' print(m_wrap)
 #'
-#' ei_est(m_wrap, data = spec)
+#' ei_est(m_wrap, data = spec) # notice all estimates nonnegative
 #'
 #' @export
-ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL) {
+ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
     if (inherits(data, "ei_spec")) {
         predictors = attr(data, "ei_x")
         outcome = attr(data, "ei_y")
@@ -285,8 +290,8 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL) {
         data_copy[, predictors] = 0
         data_copy[, group] = 1
 
-        argl = list(x, data_copy)
-        names(argl) = c("", arg)
+        argl = list(x, data_copy, ...)
+        names(argl) = c("", arg, names(argl)[-1:-2])
         preds[[group]] = as.matrix(do.call(fn_pred, argl))
     }
 

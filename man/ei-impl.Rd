@@ -19,8 +19,8 @@ ei_riesz_impl(x, z, total, weights, penalty)
 \item{weights}{A vector of estimation weights}
 
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be
-specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
-which is stored in the \code{penalty} entry of the fitted model object.}
+specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with
+\code{\link[=ei_ridge_impl]{ei_ridge_impl()}} by providing \code{penalty=NULL}.}
 
 \item{total}{A vector of total observations per unit.}
 }
