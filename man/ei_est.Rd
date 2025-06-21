@@ -4,6 +4,7 @@
 \alias{ei_est}
 \alias{as.matrix.ei_est}
 \alias{vcov.ei_est}
+\alias{nobs.ei_est}
 \title{Estimate ecological quantities}
 \usage{
 ei_est(
@@ -11,6 +12,7 @@ ei_est(
   riesz = NULL,
   data,
   total,
+  subset = NULL,
   outcome = NULL,
   conf_level = FALSE
 )
@@ -18,6 +20,8 @@ ei_est(
 \method{as.matrix}{ei_est}(x, se = FALSE, ...)
 
 \method{vcov}{ei_est}(object, ...)
+
+\method{nobs}{ei_est}(object, ...)
 }
 \arguments{
 \item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
@@ -37,6 +41,10 @@ the regression or Riesz representer.}
 containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required if
 \code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object and \code{riesz} is not provided.}
+
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided
@@ -70,12 +78,14 @@ machine learning (DML) estimate is produced.
 
 \item \code{vcov(ei_est)}: Extract full covariance matrix of estimates
 
+\item \code{nobs(ei_est)}: Extract number of units covered by estimates
+
 }}
 \examples{
 data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-               total = pres_total, covariates = c(pop_urban, farm))
+               total = pres_total, covariates = c(state, pop_urban, farm))
 
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
@@ -87,4 +97,7 @@ as.matrix(est)
 as.matrix(est, se=TRUE)
 vcov(est)[1:4, 1:4]
 
+est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
+as.matrix(est)
+nobs(est)
 }

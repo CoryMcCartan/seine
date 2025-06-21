@@ -26,8 +26,8 @@ vector of unit totals, or an existing \code{\link[=ei_spec]{ei_spec()}} object.
 }
 \section{Functions}{
 \itemize{
-\item \code{ei_wgt_unif()}: Uniform weights. Appropriate if the unit-level variance
-is constant, i.e., homosekdastic.
+\item \code{ei_wgt_unif()}: Uniform weights across units with any population.
+Appropriate if the unit-level variance is constant, i.e., homosekdastic.
 
 \item \code{ei_wgt_prop()}: Weights proportional to the totals. Appropriate if the
 unit-level variance is inversely proportional to the number of

@@ -110,7 +110,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
         eif[, i + (seq_len(n_y) - 1)*n_x] = plugin + wtd
     }
     est = colMeans(eif)
-    vcov = crossprod(shift_cols(eif, est)) / (sum(w) - 1)^2
+    vcov = crossprod(shift_cols(eif, est)) / (sum(subset) - 1)^2
     se = sqrt(diag(vcov))
 
     out = tibble::new_tibble(list(
@@ -127,7 +127,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
 
     rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))
     attr(out, "vcov") = vcov
-    attr(out, "n") = sum(w)
+    attr(out, "n") = sum(subset)
 
     out
 }
@@ -326,6 +326,12 @@ as.matrix.ei_est <- function(x, se=FALSE, ...) {
 #' @export
 vcov.ei_est <- function(object, ...) {
     attr(object, "vcov")
+}
+
+#' @describeIn ei_est Extract number of units covered by estimates
+#' @export
+nobs.ei_est <- function(object, ...) {
+    attr(object, "n")
 }
 
 #' @export
