@@ -89,13 +89,14 @@ You can use <code><a href="ei_proportions.html">ei_proportions()</a></code> to a
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A formula such as <code>y ~ x0 + x1 | z</code> specifying the outcome <code>y</code>
-regressed on the covariates of interest <code>x</code>.  The x's should form a
-partition, that is, <code>x0 + x1 = 1</code> for each observation. Users can be include
-more than two variables as well, e.g.
-<code>pct_white + pct_black + pct_hisp + pct_other</code>. Include additional covariates
-separated by a vertical bar <code>|</code>.
-These covariates are necessary for <code>ei_riesz</code> and <code>ei_ridge</code>.
-See <code>ei_wrap_model</code> for formulas that do not require covariates.</p></dd>
+regressed on the predictors of interest <code>x</code> and any covariates <code>z</code>.
+The predictors should form a partition, that is, <code>x0 + x1 = 1</code> for each
+observation. Users can be include more than two predictors as well, e.g.
+<code>pct_white + pct_black + pct_hisp + pct_other</code>.
+If there are just two predictors, it is acceptable to only include one in
+the formula; the other will be formed as 1 minus the provided predictor.
+Include additional covariates separated by a vertical bar <code>|</code>.
+These covariates are strongly recommended for reliable ecological inference.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -164,7 +165,7 @@ the helper functions in <code><a href="ei_wgt.html">ei_wgt()</a></code>.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Recommended: get ridge penalty from ei_ridge()</span></span></span>
-<span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_oth</span>,</span></span>
+<span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_abs</span>,</span></span>
 <span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
