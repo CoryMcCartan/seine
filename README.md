@@ -5,7 +5,14 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
+
+## This software is experimental
+
+**seine** and the underlying statistical methods are under active
+development. The package is not currently recommended for non-expert
+use.
 
 ## Installation
 
