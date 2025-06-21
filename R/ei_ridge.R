@@ -50,13 +50,14 @@
 #' @param data When a **formula** is used, `data` is a **data frame** containing
 #'   both the predictors and the outcome.
 #' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y`
-#'  regressed on the covariates of interest `x`.  The x's should form a
-#'  partition, that is, `x0 + x1 = 1` for each observation. Users can be include
-#'  more than two variables as well, e.g.
-#'  `pct_white + pct_black + pct_hisp + pct_other`. Include additional covariates
-#'  separated by a vertical bar `|`.
-#'  These covariates are necessary for `ei_riesz` and `ei_ridge`.
-#'  See `ei_wrap_model` for formulas that do not require covariates.
+#'  regressed on the predictors of interest `x` and any covariates `z`.
+#'  The predictors should form a partition, that is, `x0 + x1 = 1` for each
+#'  observation. Users can be include more than two predictors as well, e.g.
+#'  `pct_white + pct_black + pct_hisp + pct_other`.
+#'  If there are just two predictors, it is acceptable to only include one in
+#'  the formula; the other will be formed as 1 minus the provided predictor.
+#'  Include additional covariates separated by a vertical bar `|`.
+#'  These covariates are strongly recommended for reliable ecological inference.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
 #'   weights for estimation. These may be the same or different from the total
 #'   number of observations in each aggregate unit (see the `total` argument to
@@ -79,11 +80,11 @@
 #' @examples
 #' data(elec_1968)
 #'
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 #'                total = pres_total, covariates = c(pop_urban, farm))
 #' ei_ridge(spec)
 #'
-#' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs + pres_oth ~
+#' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~
 #'       vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 #'
 #' @export
@@ -191,6 +192,7 @@ ei_ridge_bridge <- function(processed, ...) {
         x = cbind(x, 1 - x)
         colnames(x)[2] = ".other"
     }
+    check_preds(x)
     weights = processed$blueprint$ei_wgt
 
     # normalize

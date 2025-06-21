@@ -37,7 +37,7 @@
 #' @examples
 #' data(elec_1968)
 #'
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 #'                total = pres_total, covariates = c(state, pop_urban, farm))
 #'
 #' m = ei_ridge(spec)

@@ -21,7 +21,7 @@
 #' data(elec_1968)
 #'
 #' # Recommended: get ridge penalty from ei_ridge()
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 #'                total = pres_total, covariates = c(pop_urban, farm))
 #' m = ei_ridge(spec)
 #'
@@ -145,6 +145,7 @@ ei_riesz_bridge <- function(processed, ...) {
         x = cbind(x, 1 - x)
         colnames(x)[2] = ".other"
     }
+    check_preds(x)
     total = processed$blueprint$ei_n
     weights = processed$blueprint$ei_wgt
     penalty = processed$blueprint$penalty

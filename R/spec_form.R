@@ -31,7 +31,7 @@
 #'
 #' @examples
 #' data(elec_1968)
-#' ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
+#' ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #'
 #' @export
 ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=TRUE) {
@@ -165,7 +165,7 @@ weights.ei_spec <- function(object, normalize = TRUE, ...) {
 #'
 #' @examples
 #' data(elec_1968)
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #' plot(spec)
 #'
 #' @export

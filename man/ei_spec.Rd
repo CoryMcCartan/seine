@@ -60,6 +60,6 @@ by \code{\link[=ei_ridge]{ei_ridge()}} or \code{\link[=ei_riesz]{ei_riesz()}}.
 }}
 \examples{
 data(elec_1968)
-ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
+ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 
 }

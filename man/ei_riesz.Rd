@@ -35,13 +35,14 @@ You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in prepari
 \item{...}{Not currently used, but required for extensibility.}
 
 \item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
-regressed on the covariates of interest \code{x}.  The x's should form a
-partition, that is, \code{x0 + x1 = 1} for each observation. Users can be include
-more than two variables as well, e.g.
-\code{pct_white + pct_black + pct_hisp + pct_other}. Include additional covariates
-separated by a vertical bar \code{|}.
-These covariates are necessary for \code{ei_riesz} and \code{ei_ridge}.
-See \code{ei_wrap_model} for formulas that do not require covariates.}
+regressed on the predictors of interest \code{x} and any covariates \code{z}.
+The predictors should form a partition, that is, \code{x0 + x1 = 1} for each
+observation. Users can be include more than two predictors as well, e.g.
+\code{pct_white + pct_black + pct_hisp + pct_other}.
+If there are just two predictors, it is acceptable to only include one in
+the formula; the other will be formed as 1 minus the provided predictor.
+Include additional covariates separated by a vertical bar \code{|}.
+These covariates are strongly recommended for reliable ecological inference.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
@@ -104,7 +105,7 @@ the helper functions in \code{\link[=ei_wgt]{ei_wgt()}}.
 data(elec_1968)
 
 # Recommended: get ridge penalty from ei_ridge()
-spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
                total = pres_total, covariates = c(pop_urban, farm))
 m = ei_ridge(spec)
 
