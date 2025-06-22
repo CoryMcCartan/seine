@@ -78,9 +78,12 @@ model: \deqn{
      \begin{pmatrix}x_i\\ z_i\end{pmatrix} \stackrel{\text{iid}}{\sim}
          \mathcal{N}_{[0,1]^{n_x} \times \mathbb{R}^p}\left(
          \begin{pmatrix}\mu_x\\ 0\end{pmatrix},
-         \begin{pmatrix}\Sigma_x & \Gamma \\ \Gamma & T\end{pmatrix}\right) \\
-     \eta = z_i^\top \Lambda + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}}) \\
+         \begin{pmatrix}\Sigma_x & \Gamma \\ \Gamma & T\end{pmatrix}\right)
+} \deqn{
+     \eta = z_i^\top \Lambda + \mathtt{b_{loc}}
+} \deqn{
+     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}})
+} \deqn{
      y_i = b_i^\top x_i,
 } where \eqn{\mu_x} and \eqn{\Sigma_x} are the mean and covariance of the
 Normal approximation to a Dirichlet distribution with parameters supplied by

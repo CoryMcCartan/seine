@@ -9,9 +9,12 @@
 #'      \begin{pmatrix}x_i\\ z_i\end{pmatrix} \stackrel{\text{iid}}{\sim}
 #'          \mathcal{N}_{[0,1]^{n_x} \times \mathbb{R}^p}\left(
 #'          \begin{pmatrix}\mu_x\\ 0\end{pmatrix},
-#'          \begin{pmatrix}\Sigma_x & \Gamma \\ \Gamma & T\end{pmatrix}\right) \\
-#'      \eta = z_i^\top \Lambda + \mathtt{b_{loc}} \\
-#'      b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}}) \\
+#'          \begin{pmatrix}\Sigma_x & \Gamma \\ \Gamma & T\end{pmatrix}\right)
+#' } \deqn{
+#'      \eta = z_i^\top \Lambda + \mathtt{b_{loc}}
+#' } \deqn{
+#'      b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}})
+#' } \deqn{
 #'      y_i = b_i^\top x_i,
 #' } where \eqn{\mu_x} and \eqn{\Sigma_x} are the mean and covariance of the
 #' Normal approximation to a Dirichlet distribution with parameters supplied by
@@ -26,7 +29,7 @@
 #' sufficient for a positive definite \eqn{T}.
 #'
 #' The matrices \eqn{\Gamma} and \eqn{\Lambda} are initially filled with
-#' independent samples from a standard Normal distribution. \eqn{Gamma} is then
+#' independent samples from a standard Normal distribution. \eqn{\Gamma} is then
 #' projected so that its rows sum to zero, preserving the sum-to-1 requirement
 #' on `x`, and so that its columns are scaled to produce the correct \eqn{R^2}
 #' value matching `r2_xz`. The matrix \eqn{\Lambda} is likewise scaled to
