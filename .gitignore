@@ -29,9 +29,10 @@
 *.tex
 *.dta
 *.fls
-*.fdb_latexmk
-*.synctex.gz
 *.aux
+
 data-raw/*/*
 !data/*.rda
 docs
+
+todo.txt

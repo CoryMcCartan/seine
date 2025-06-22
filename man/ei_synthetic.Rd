@@ -9,15 +9,16 @@ ei_synthetic(
   p = 0,
   n_x = 2,
   x = n_x:1,
-  z = NULL,
+  z = 0.25 * exp(-(seq_len(p) - 1)/2),
+  r2_xz = 0.5,
+  r2_bz = 0.5,
   b_loc = NULL,
-  coefs = NULL,
   b_cov = NULL
 )
 }
 \arguments{
 \item{n}{The number of rows (geographies) to generate. Defaults to the number
-of rows in \code{x}, if it is a matrix or data frame.}
+of rows in \code{x} or \code{z}, if they are a matrix or data frame.}
 
 \item{p}{The number of covariates. Defaults to the number of columns in \code{z},
 if it is a matrix or data frame, or the length of \code{z}, if it is a vector
@@ -25,57 +26,101 @@ of singular values.}
 
 \item{n_x}{The number of predictor variables. Defaults to the number of
 columns in \code{x}, if it is a matrix or data frame, or the length of \code{x}, if
-it is a vector of Dirichlet parameters.}
+it is a vector of mean parameters for the softmax-transformed Normal
+distribution.}
 
 \item{x}{Either a matrix or data frame containing the predictor percentages
 in each row, or a vector containing Dirichlet parameters to use in sampling
 predictor percentages.}
 
 \item{z}{A matrix or data frame containing geography-level covariates, or a
-vector of singular values to use in generating the random covariates.
-Singular values default to \code{exp(-(seq_len(p) - 1)/2)}. They are applied
-to scale a random orthogonal matrix.}
+vector of values to form a Toeplitz covariance matrix for the random
+covariates.}
+
+\item{r2_xz}{The approximate \eqn{R^2} of the covariates \code{z} and predictors
+\code{x}. See the model specification for details. If either \code{r2_xz} or \code{r2_bz}
+are zero, then there is no confounding, and an unadjusted Goodman
+regression will estimate the global parameters correctly.}
+
+\item{r2_bz}{The approximate \eqn{R^2} of the covariates \code{z} and unit-level
+parameters \code{b}. See the model specification for details. If either \code{r2_xz}
+or \code{r2_bz} are zero, then there is no confounding, and an unadjusted
+Goodman regression will estimate the global parameters correctly.}
 
 \item{b_loc}{The center of the distribution of geography-level parameters.
 Defaults to a linearly spaced sequence across groups from 0.5 to 0.9.
 Because of the truncation, this will not exactly be the mean of the
 geography-level parameters.}
 
-\item{coefs}{Either A \code{p}-by-\code{n_x} matrix of coefficients for \code{z}, or
-The product with \code{z} is added to \code{ctr} to form the mean of the individual
-geography-level parameters. Defaults to a matrix of standard Normals.}
-
-\item{b_cov}{The covariance matrix for geography-level parameters.
+\item{b_cov}{The residual covariance matrix for geography-level parameters.
 Defaults to \code{0.02 * (1 + diag(n_x))}.}
 }
 \value{
-An \code{ei_spec} object with additional attributes \code{b_loc}, \code{coefs}, and
-\code{b_cov}, \code{eta} (the linear predictor for \code{b}), and \code{est_true} (the mean of
-the geography-level parameters, formatted similarly to the output from
-\code{\link[=ei_est]{ei_est()}}).
+An \code{ei_spec} object with additional attributes:
+\itemize{
+\item \code{b_loc} and \code{b_cov}
+\item \code{Lambda} with the coefficients of \code{z}
+\item \code{eta}, the linear predictor for \code{b}
+\item \code{est_true}, the mean of the geography-level parameters, formatted
+similarly to the output from  \code{\link[=ei_est]{ei_est()}}
+\item \code{r2_xz_act} and \code{r2_bz_act}, containing the actual (sample) \eqn{R^2}
+values for \code{x} and \code{z}, and \code{b} and \code{z}, respectively.
+}
 }
 \description{
-Samples data from the following truncated Normal ecological model:
-\deqn{
-     x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
-     \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{B_{cov}}) \\
-     y_i = b_i^\top x_i,
+Samples data from a following truncated Normal ecological model. The data can
+be generated completely at random, or can be generated conditional on
+provided predictors \code{x} and/or covariates \code{z}.
 }
-where \eqn{\alpha} is a vector of hyperparameters that may be optionally
-specified as the \code{x} argument to the function, and \eqn{\mathcal{N}_{[0,
-1]^d}} indicates a multivariate Normal distribution truncated to the
-\emph{d}-dimensional hypercube.
+\details{
+This function samples data from the following truncated Normal ecological
+model: \deqn{
+     \begin{pmatrix}x_i\\ z_i\end{pmatrix} \stackrel{\text{iid}}{\sim}
+         \mathcal{N}_{[0,1]^{n_x} \times \mathbb{R}^p}\left(
+         \begin{pmatrix}\mu_x\\ 0\end{pmatrix},
+         \begin{pmatrix}\Sigma_x & \Gamma \\ \Gamma & T\end{pmatrix}\right) \\
+     \eta = z_i^\top \Lambda + \mathtt{b_{loc}} \\
+     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}}) \\
+     y_i = b_i^\top x_i,
+} where \eqn{\mu_x} and \eqn{\Sigma_x} are the mean and covariance of the
+Normal approximation to a Dirichlet distribution with parameters supplied by
+the \code{x} argument below, and \eqn{\Gamma}, \eqn{T}, and \eqn{\Gamma} are
+matrices sampled to have certain properties, as described below.
+The subscripts on \eqn{\mathcal{N}} indicate truncation; i.e., both the
+predictors \code{x} and the unit-level parameters \code{b} are truncated to the
+\emph{n_x}-dimensional hypercube.
+
+The matrix \eqn{T} is a symmetric Toeplitz matrix with diagonals provided by
+the \code{z} argument. Generally, a decreasing set of nonnegative values will be
+sufficient for a positive definite \eqn{T}.
+
+The matrices \eqn{\Gamma} and \eqn{\Lambda} are initially filled with
+independent samples from a standard Normal distribution. \eqn{Gamma} is then
+projected so that its rows sum to zero, preserving the sum-to-1 requirement
+on \code{x}, and so that its columns are scaled to produce the correct \eqn{R^2}
+value matching \code{r2_xz}. The matrix \eqn{\Lambda} is likewise scaled to
+produce the correct \eqn{R^2} value matching \code{r2_bz}. Due to the truncation
+in the sampling of \code{x} and \code{b}, the in-sample \eqn{R^2} values will generally
+be slightly smaller than the provided arguments.
+
 Aspects of the model can be replaced with data provided to the function.
+If \code{x} or \code{z} is provided as a matrix or data frame, then the other value is
+sampled from its marginal distribution. If both are provided, then the first
+row of the model is skipped.
 }
 \examples{
 ei_synthetic(n = 10)
 
 ei_synthetic(n = 10, p = 2, n_x = 3)
 
+# Manual hyperparameters: x2 dominant and z1, z2 very correlated
+ei_synthetic(n = 10, x = c(1, 95, 4), z = c(10, 9.999))
+
+# Condition on provided x but not z
 data(elec_1968)
 ei_synthetic(
     x = cbind(elec_1968$pop_white, 1 - elec_1968$pop_white),
+    p = 5,
     b_loc = c(0.3, 0.9),
     b_cov = matrix(c(0.02, 0.016, 0.016, 0.2), nrow=2)
 )
