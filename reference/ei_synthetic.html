@@ -5,29 +5,11 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Generate synthetic ecological data — ei_synthetic"><meta name="description" content="Samples data from the following truncated Normal ecological model:
-$$
-     x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
-     \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{B_{cov}}) \\
-     y_i = b_i^\top x_i,
-$$
-where \(\alpha\) is a vector of hyperparameters that may be optionally
-specified as the x argument to the function, and \(\mathcal{N}_{[0,
-1]^d}\) indicates a multivariate Normal distribution truncated to the
-d-dimensional hypercube.
-Aspects of the model can be replaced with data provided to the function."><meta property="og:description" content="Samples data from the following truncated Normal ecological model:
-$$
-     x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
-     \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{B_{cov}}) \\
-     y_i = b_i^\top x_i,
-$$
-where \(\alpha\) is a vector of hyperparameters that may be optionally
-specified as the x argument to the function, and \(\mathcal{N}_{[0,
-1]^d}\) indicates a multivariate Normal distribution truncated to the
-d-dimensional hypercube.
-Aspects of the model can be replaced with data provided to the function."><meta property="og:image" content="https://corymccartan.com/seine/logo.svg"><!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Generate synthetic ecological data — ei_synthetic"><meta name="description" content="Samples data from a following truncated Normal ecological model. The data can
+be generated completely at random, or can be generated conditional on
+provided predictors x and/or covariates z."><meta property="og:description" content="Samples data from a following truncated Normal ecological model. The data can
+be generated completely at random, or can be generated conditional on
+provided predictors x and/or covariates z."><meta property="og:image" content="https://corymccartan.com/seine/logo.svg"><!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
@@ -67,18 +49,9 @@ gtag('config', 'G-2KH5JZ6JS1');
     </div>
 
     <div class="ref-description section level2">
-    <p>Samples data from the following truncated Normal ecological model:
-$$
-     x_i \stackrel{\text{iid}}{\sim} \mathrm{Dirichlet}(\alpha) \\
-     \eta = z_i^\top \mathtt{coefs} + \mathtt{b_{loc}} \\
-     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^d}(\eta, \mathtt{B_{cov}}) \\
-     y_i = b_i^\top x_i,
-$$
-where \(\alpha\) is a vector of hyperparameters that may be optionally
-specified as the <code>x</code> argument to the function, and \(\mathcal{N}_{[0,
-1]^d}\) indicates a multivariate Normal distribution truncated to the
-<em>d</em>-dimensional hypercube.
-Aspects of the model can be replaced with data provided to the function.</p>
+    <p>Samples data from a following truncated Normal ecological model. The data can
+be generated completely at random, or can be generated conditional on
+provided predictors <code>x</code> and/or covariates <code>z</code>.</p>
     </div>
 
     <div class="section level2">
@@ -88,9 +61,10 @@ Aspects of the model can be replaced with data provided to the function.</p>
 <span>  p <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  n_x <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  x <span class="op">=</span> <span class="va">n_x</span><span class="op">:</span><span class="fl">1</span>,</span>
-<span>  z <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  z <span class="op">=</span> <span class="fl">0.25</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>  r2_xz <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  r2_bz <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  b_loc <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  coefs <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  b_cov <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -101,7 +75,7 @@ Aspects of the model can be replaced with data provided to the function.</p>
 
 <dl><dt id="arg-n">n<a class="anchor" aria-label="anchor" href="#arg-n"></a></dt>
 <dd><p>The number of rows (geographies) to generate. Defaults to the number
-of rows in <code>x</code>, if it is a matrix or data frame.</p></dd>
+of rows in <code>x</code> or <code>z</code>, if they are a matrix or data frame.</p></dd>
 
 
 <dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
@@ -113,7 +87,8 @@ of singular values.</p></dd>
 <dt id="arg-n-x">n_x<a class="anchor" aria-label="anchor" href="#arg-n-x"></a></dt>
 <dd><p>The number of predictor variables. Defaults to the number of
 columns in <code>x</code>, if it is a matrix or data frame, or the length of <code>x</code>, if
-it is a vector of Dirichlet parameters.</p></dd>
+it is a vector of mean parameters for the softmax-transformed Normal
+distribution.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -124,9 +99,22 @@ predictor percentages.</p></dd>
 
 <dt id="arg-z">z<a class="anchor" aria-label="anchor" href="#arg-z"></a></dt>
 <dd><p>A matrix or data frame containing geography-level covariates, or a
-vector of singular values to use in generating the random covariates.
-Singular values default to <code>exp(-(seq_len(p) - 1)/2)</code>. They are applied
-to scale a random orthogonal matrix.</p></dd>
+vector of values to form a Toeplitz covariance matrix for the random
+covariates.</p></dd>
+
+
+<dt id="arg-r-xz">r2_xz<a class="anchor" aria-label="anchor" href="#arg-r-xz"></a></dt>
+<dd><p>The approximate \(R^2\) of the covariates <code>z</code> and predictors
+<code>x</code>. See the model specification for details. If either <code>r2_xz</code> or <code>r2_bz</code>
+are zero, then there is no confounding, and an unadjusted Goodman
+regression will estimate the global parameters correctly.</p></dd>
+
+
+<dt id="arg-r-bz">r2_bz<a class="anchor" aria-label="anchor" href="#arg-r-bz"></a></dt>
+<dd><p>The approximate \(R^2\) of the covariates <code>z</code> and unit-level
+parameters <code>b</code>. See the model specification for details. If either <code>r2_xz</code>
+or <code>r2_bz</code> are zero, then there is no confounding, and an unadjusted
+Goodman regression will estimate the global parameters correctly.</p></dd>
 
 
 <dt id="arg-b-loc">b_loc<a class="anchor" aria-label="anchor" href="#arg-b-loc"></a></dt>
@@ -136,23 +124,54 @@ Because of the truncation, this will not exactly be the mean of the
 geography-level parameters.</p></dd>
 
 
-<dt id="arg-coefs">coefs<a class="anchor" aria-label="anchor" href="#arg-coefs"></a></dt>
-<dd><p>Either A <code>p</code>-by-<code>n_x</code> matrix of coefficients for <code>z</code>, or
-The product with <code>z</code> is added to <code>ctr</code> to form the mean of the individual
-geography-level parameters. Defaults to a matrix of standard Normals.</p></dd>
-
-
 <dt id="arg-b-cov">b_cov<a class="anchor" aria-label="anchor" href="#arg-b-cov"></a></dt>
-<dd><p>The covariance matrix for geography-level parameters.
+<dd><p>The residual covariance matrix for geography-level parameters.
 Defaults to <code>0.02 * (1 + diag(n_x))</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An <code>ei_spec</code> object with additional attributes <code>b_loc</code>, <code>coefs</code>, and
-<code>b_cov</code>, <code>eta</code> (the linear predictor for <code>b</code>), and <code>est_true</code> (the mean of
-the geography-level parameters, formatted similarly to the output from
-<code><a href="ei_est.html">ei_est()</a></code>).</p>
+    <p>An <code>ei_spec</code> object with additional attributes:</p><ul><li><p><code>b_loc</code> and <code>b_cov</code></p></li>
+<li><p><code>Lambda</code> with the coefficients of <code>z</code></p></li>
+<li><p><code>eta</code>, the linear predictor for <code>b</code></p></li>
+<li><p><code>est_true</code>, the mean of the geography-level parameters, formatted
+similarly to the output from  <code><a href="ei_est.html">ei_est()</a></code></p></li>
+<li><p><code>r2_xz_act</code> and <code>r2_bz_act</code>, containing the actual (sample) \(R^2\)
+values for <code>x</code> and <code>z</code>, and <code>b</code> and <code>z</code>, respectively.</p></li>
+</ul></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>This function samples data from the following truncated Normal ecological
+model: $$
+     \begin{pmatrix}x_i\\ z_i\end{pmatrix} \stackrel{\text{iid}}{\sim}
+         \mathcal{N}_{[0,1]^{n_x} \times \mathbb{R}^p}\left(
+         \begin{pmatrix}\mu_x\\ 0\end{pmatrix},
+         \begin{pmatrix}\Sigma_x &amp; \Gamma \\ \Gamma &amp; T\end{pmatrix}\right) \\
+     \eta = z_i^\top \Lambda + \mathtt{b_{loc}} \\
+     b_i \stackrel{\text{iid}}{\sim} \mathcal{N}_{[0, 1]^{n_x}}(\eta, \mathtt{B_{cov}}) \\
+     y_i = b_i^\top x_i,
+$$ where \(\mu_x\) and \(\Sigma_x\) are the mean and covariance of the
+Normal approximation to a Dirichlet distribution with parameters supplied by
+the <code>x</code> argument below, and \(\Gamma\), \(T\), and \(\Gamma\) are
+matrices sampled to have certain properties, as described below.
+The subscripts on \(\mathcal{N}\) indicate truncation; i.e., both the
+predictors <code>x</code> and the unit-level parameters <code>b</code> are truncated to the
+<em>n_x</em>-dimensional hypercube.</p>
+<p>The matrix \(T\) is a symmetric Toeplitz matrix with diagonals provided by
+the <code>z</code> argument. Generally, a decreasing set of nonnegative values will be
+sufficient for a positive definite \(T\).</p>
+<p>The matrices \(\Gamma\) and \(\Lambda\) are initially filled with
+independent samples from a standard Normal distribution. \(Gamma\) is then
+projected so that its rows sum to zero, preserving the sum-to-1 requirement
+on <code>x</code>, and so that its columns are scaled to produce the correct \(R^2\)
+value matching <code>r2_xz</code>. The matrix \(\Lambda\) is likewise scaled to
+produce the correct \(R^2\) value matching <code>r2_bz</code>. Due to the truncation
+in the sampling of <code>x</code> and <code>b</code>, the in-sample \(R^2\) values will generally
+be slightly smaller than the provided arguments.</p>
+<p>Aspects of the model can be replaced with data provided to the function.
+If <code>x</code> or <code>z</code> is provided as a matrix or data frame, then the other value is
+sampled from its marginal distribution. If both are provided, then the first
+row of the model is skipped.</p>
     </div>
 
     <div class="section level2">
@@ -163,13 +182,13 @@ the geography-level parameters, formatted similarly to the output from
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Outcome: `y`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1     x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.470 0.557 0.443 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.306 0.986 0.013<span style="text-decoration: underline;">9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.487 0.202 0.798 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.553 0.664 0.336 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.485 0.745 0.255 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.288 0.940 0.060<span style="text-decoration: underline;">0</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.884 0.535 0.465  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.517 0.433 0.567  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.579 0.996 0.003<span style="text-decoration: underline;">77</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.263 0.807 0.193  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_synthetic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, p <span class="op">=</span> <span class="fl">2</span>, n_x <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
@@ -178,33 +197,51 @@ the geography-level parameters, formatted similarly to the output from
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Outcome: `y`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: `z1` and `z2`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        y    x1     x2     x3      z1      z2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>  0.503 0.436 0.373  0.191  -<span style="color: #BB0000;">0.258</span>  -<span style="color: #BB0000;">0.163</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>  0.494 0.487 0.350  0.164  -<span style="color: #BB0000;">0.058</span><span style="color: #BB0000; text-decoration: underline;">2</span> -<span style="color: #BB0000;">0.181</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> -<span style="color: #BB0000;">0.265</span> 0.772 0.023<span style="text-decoration: underline;">6</span> 0.204  -<span style="color: #BB0000;">0.732</span>  -<span style="color: #BB0000;">0.123</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>  1.05  0.298 0.411  0.291   0.224  -<span style="color: #BB0000;">0.099</span><span style="color: #BB0000; text-decoration: underline;">8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>  0.437 0.712 0.242  0.046<span style="text-decoration: underline;">7</span> -<span style="color: #BB0000;">0.167</span>  -<span style="color: #BB0000;">0.118</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1     x2    x3     z1     z2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.432 0.209 0.380  0.411  1.22   0.995</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.806 0.583 0.082<span style="text-decoration: underline;">5</span> 0.334  0.196 -<span style="color: #BB0000;">0.489</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.744 0.580 0.259  0.161 -<span style="color: #BB0000;">0.410</span> -<span style="color: #BB0000;">0.836</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.556 0.576 0.203  0.220  0.302  0.163</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.543 0.526 0.205  0.268  0.687  0.364</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more rows</span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Manual hyperparameters: x2 dominant and z1, z2 very correlated</span></span></span>
+<span class="r-in"><span><span class="fu">ei_synthetic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">95</span>, <span class="fl">4</span><span class="op">)</span>, z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">9.999</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> EI Specification</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> • Predictors: `x1`, `x2`, and `x3`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> • Outcome: `y`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: `z1` and `z2`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        y       x1    x2     x3     z1     z2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.994  0.003<span style="text-decoration: underline;">20</span>  0.961 0.035<span style="text-decoration: underline;">5</span> -<span style="color: #BB0000;">0.369</span> -<span style="color: #BB0000;">0.340</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.931  0.000<span style="text-decoration: underline;">921</span> 0.946 0.052<span style="text-decoration: underline;">9</span>  0.787  0.878</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.933  0.006<span style="text-decoration: underline;">33</span>  0.965 0.028<span style="text-decoration: underline;">4</span> -<span style="color: #BB0000;">2.63</span>  -<span style="color: #BB0000;">2.65</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.034<span style="text-decoration: underline;">2</span> 0.007<span style="text-decoration: underline;">63</span>  0.960 0.032<span style="text-decoration: underline;">3</span>  2.68   2.66 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.639  0.008<span style="text-decoration: underline;">83</span>  0.974 0.017<span style="text-decoration: underline;">4</span> -<span style="color: #BB0000;">1.20</span>  -<span style="color: #BB0000;">1.20</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 5 more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Condition on provided x but not z</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ei_synthetic</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">$</span><span class="va">pop_white</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">elec_1968</span><span class="op">$</span><span class="va">pop_white</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    p <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>    b_loc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.9</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    b_cov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.02</span>, <span class="fl">0.016</span>, <span class="fl">0.016</span>, <span class="fl">0.2</span><span class="op">)</span>, nrow<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> EI Specification</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Predictors: `x1` and `x2`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> • Outcome: `y`</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,143 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1     x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.419 0.716 0.284 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.351 0.819 0.181 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.501 0.538 0.462 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.358 0.721 0.279 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.305 0.976 0.024<span style="text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> • Covariates: `z1`, `z2`, `z3`, `z4`, and `z5`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,143 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       y    x1     x2     z1     z2     z3      z4     z5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 0.329 0.716 0.284   0.531  0.268  0.580 -<span style="color: #BB0000;">0.071</span><span style="color: #BB0000; text-decoration: underline;">9</span> -<span style="color: #BB0000;">0.508</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 0.312 0.819 0.181  -<span style="color: #BB0000;">0.709</span> -<span style="color: #BB0000;">0.441</span> -<span style="color: #BB0000;">0.405</span> -<span style="color: #BB0000;">0.182</span>  -<span style="color: #BB0000;">0.456</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 0.625 0.538 0.462   0.330  0.725  0.417  0.603   0.640</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 0.252 0.721 0.279  -<span style="color: #BB0000;">0.461</span> -<span style="color: #BB0000;">1.30</span>  -<span style="color: #BB0000;">0.741</span> -<span style="color: #BB0000;">0.041</span><span style="color: #BB0000; text-decoration: underline;">6</span>  0.108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 0.159 0.976 0.024<span style="text-decoration: underline;">1</span>  0.176  0.458  1.02   0.156   0.458</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,138 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
