@@ -98,7 +98,7 @@ the \code{z} argument. Generally, a decreasing set of nonnegative values will be
 sufficient for a positive definite \eqn{T}.
 
 The matrices \eqn{\Gamma} and \eqn{\Lambda} are initially filled with
-independent samples from a standard Normal distribution. \eqn{Gamma} is then
+independent samples from a standard Normal distribution. \eqn{\Gamma} is then
 projected so that its rows sum to zero, preserving the sum-to-1 requirement
 on \code{x}, and so that its columns are scaled to produce the correct \eqn{R^2}
 value matching \code{r2_xz}. The matrix \eqn{\Lambda} is likewise scaled to
