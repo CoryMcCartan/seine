@@ -56,16 +56,16 @@ overall estimates of conditional means using <code><a href="ei_est.html">ei_est(
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'formula'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, <span class="va">penalty</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'matrix'</span></span>
-<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">ei_riesz</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -80,7 +80,9 @@ overall estimates of conditional means using <code><a href="ei_est.html">ei_est(
 <li><p>A <strong>matrix</strong> of predictors.</p></li>
 <li><p>An <a href="ei_spec.html">ei_spec</a> object containing the outcome, predictor, and covariates.</p></li>
 </ul><p>Predictors must be proportions that sum to 1 across rows.
-You can use <code><a href="ei_proportions.html">ei_proportions()</a></code> to assist in preparing predictor variables.</p></dd>
+You can use <code><a href="ei_proportions.html">ei_proportions()</a></code> to assist in preparing predictor variables.
+Covariates in an <a href="ei_spec.html">ei_spec</a> object are shifted to have mean zero. If
+<code>scale=TRUE</code> (the default), they are also scaled to have unit variance.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -96,7 +98,9 @@ observation. Users can be include more than two predictors as well, e.g.
 If there are just two predictors, it is acceptable to only include one in
 the formula; the other will be formed as 1 minus the provided predictor.
 Include additional covariates separated by a vertical bar <code>|</code>.
-These covariates are strongly recommended for reliable ecological inference.</p></dd>
+These covariates are strongly recommended for reliable ecological inference.
+Covariates are shifted to have mean zero. If <code>scale=TRUE</code> (the default),
+they are also scaled to have unit variance.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -127,11 +131,16 @@ specified. Recommended value is the same penalty used in <code><a href="ei_ridge
 which is stored in the <code>penalty</code> entry of the fitted model object.</p></dd>
 
 
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
+<dd><p>If <code>TRUE</code>, scale covariates <code>z</code> to have unit variance.</p></dd>
+
+
 <dt id="arg-z">z<a class="anchor" aria-label="anchor" href="#arg-z"></a></dt>
 <dd><p>When <code>x</code> is a <strong>data frame</strong> or <strong>matrix</strong>, <code>w</code> are any covariates,
 specified as:</p><ul><li><p>A <strong>data frame</strong> with numeric columns.</p></li>
 <li><p>A <strong>matrix</strong></p></li>
-</ul><p>These are scaled internally to have mean zero and unit variance.</p></dd>
+</ul><p>These are shifted to have mean zero. If <code>scale=TRUE</code> (the default), they
+are also scaled to have unit variance.</p></dd>
 
 </dl></div>
     <div class="section level2">
