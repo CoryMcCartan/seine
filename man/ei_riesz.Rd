@@ -11,13 +11,13 @@
 \usage{
 ei_riesz(x, ...)
 
-\method{ei_riesz}{formula}(formula, data, total, weights, penalty, ...)
+\method{ei_riesz}{formula}(formula, data, total, weights, penalty, scale = TRUE, ...)
 
-\method{ei_riesz}{ei_spec}(x, weights, penalty, ...)
+\method{ei_riesz}{ei_spec}(x, weights, penalty, scale = TRUE, ...)
 
-\method{ei_riesz}{data.frame}(x, z, total, weights, penalty, ...)
+\method{ei_riesz}{data.frame}(x, z, total, weights, penalty, scale = TRUE, ...)
 
-\method{ei_riesz}{matrix}(x, z, total, weights, penalty, ...)
+\method{ei_riesz}{matrix}(x, z, total, weights, penalty, scale = TRUE, ...)
 
 \method{ei_riesz}{default}(x, ...)
 }
@@ -30,7 +30,9 @@ ei_riesz(x, ...)
 }
 
 Predictors must be proportions that sum to 1 across rows.
-You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in preparing predictor variables.}
+You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in preparing predictor variables.
+Covariates in an \link{ei_spec} object are shifted to have mean zero. If
+\code{scale=TRUE} (the default), they are also scaled to have unit variance.}
 
 \item{...}{Not currently used, but required for extensibility.}
 
@@ -42,7 +44,9 @@ observation. Users can be include more than two predictors as well, e.g.
 If there are just two predictors, it is acceptable to only include one in
 the formula; the other will be formed as 1 minus the provided predictor.
 Include additional covariates separated by a vertical bar \code{|}.
-These covariates are strongly recommended for reliable ecological inference.}
+These covariates are strongly recommended for reliable ecological inference.
+Covariates are shifted to have mean zero. If \code{scale=TRUE} (the default),
+they are also scaled to have unit variance.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
@@ -64,6 +68,8 @@ unit totals and the unknown data.}
 specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
 which is stored in the \code{penalty} entry of the fitted model object.}
 
+\item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
+
 \item{z}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{w} are any covariates,
 specified as:
 \itemize{
@@ -71,7 +77,8 @@ specified as:
 \item A \strong{matrix}
 }
 
-These are scaled internally to have mean zero and unit variance.}
+These are shifted to have mean zero. If \code{scale=TRUE} (the default), they
+are also scaled to have unit variance.}
 }
 \value{
 An \code{ei_riesz} object.

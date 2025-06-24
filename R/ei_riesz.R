@@ -44,7 +44,7 @@ ei_riesz <- function(x, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
+ei_riesz.formula <- function(formula, data, total, weights, penalty, scale=TRUE, ...) {
     f_lhs(formula) = NULL
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -58,6 +58,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
         ei_n = check_make_weights(!!enquo(total), data),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -68,7 +69,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
+ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -86,6 +87,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
         ei_n = attr(spec, "ei_n"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
@@ -95,7 +97,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.data.frame <- function(x, z, total, weights, penalty, ...) {
+ei_riesz.data.frame <- function(x, z, total, weights, penalty, scale=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -111,6 +113,7 @@ ei_riesz.data.frame <- function(x, z, total, weights, penalty, ...) {
         ei_n = check_make_weights(!!enquo(total)),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
     x = cbind(x, z)
 
@@ -120,8 +123,8 @@ ei_riesz.data.frame <- function(x, z, total, weights, penalty, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.matrix <- function(x, z, total, weights, penalty, ...) {
-    ei_riesz.data.frame(x, z, total, weights, penalty, ...)
+ei_riesz.matrix <- function(x, z, total, weights, penalty, scale=TRUE, ...) {
+    ei_riesz.data.frame(x, z, total, weights, penalty, scale, ...)
 }
 
 
@@ -153,8 +156,12 @@ ei_riesz_bridge <- function(processed, ...) {
     # normalize
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
-    z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
-    z = scale_cols(z, z_scale)
+    if (isTRUE(processed$blueprint$scale)) {
+        z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
+        z = scale_cols(z, z_scale)
+    } else {
+        rep(1, ncol(z))
+    }
 
     # NA checking
     if (any(is.na(x))) cli_abort("Missing values found in predictors.")

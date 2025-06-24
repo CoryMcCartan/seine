@@ -11,13 +11,13 @@
 \usage{
 ei_ridge(x, ...)
 
-\method{ei_ridge}{formula}(formula, data, weights, penalty = NULL, ...)
+\method{ei_ridge}{formula}(formula, data, weights, penalty = NULL, scale = TRUE, ...)
 
-\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, ...)
+\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, scale = TRUE, ...)
 
-\method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, ...)
+\method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, scale = TRUE, ...)
 
-\method{ei_ridge}{matrix}(x, y, z, weights, penalty = NULL, ...)
+\method{ei_ridge}{matrix}(x, y, z, weights, penalty = NULL, scale = TRUE, ...)
 
 \method{ei_ridge}{default}(x, ...)
 }
@@ -30,7 +30,9 @@ ei_ridge(x, ...)
 }
 
 Predictors must be proportions that sum to 1 across rows.
-You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in preparing predictor variables.}
+You can use \code{\link[=ei_proportions]{ei_proportions()}} to assist in preparing predictor variables.
+Covariates in an \link{ei_spec} object are shifted to have mean zero. If
+\code{scale=TRUE} (the default), they are also scaled to have unit variance.}
 
 \item{...}{Not currently used, but required for extensibility.}
 
@@ -42,7 +44,9 @@ observation. Users can be include more than two predictors as well, e.g.
 If there are just two predictors, it is acceptable to only include one in
 the formula; the other will be formed as 1 minus the provided predictor.
 Include additional covariates separated by a vertical bar \code{|}.
-These covariates are strongly recommended for reliable ecological inference.}
+These covariates are strongly recommended for reliable ecological inference.
+Covariates are shifted to have mean zero. If \code{scale=TRUE} (the default),
+they are also scaled to have unit variance.}
 
 \item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
 both the predictors and the outcome.}
@@ -64,6 +68,8 @@ where \eqn{\lambda} is the value of \code{penalty}.
 Keep in mind when choosing \code{penalty} manually that covariates in \code{z} are
 scaled to have mean zero and unit variance before fitting.}
 
+\item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
+
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
 \itemize{
@@ -82,7 +88,8 @@ specified as:
 \item A \strong{matrix}
 }
 
-These are scaled internally to have mean zero and unit variance.}
+These are shifted to have mean zero. If \code{scale=TRUE} (the default), they
+are also scaled to have unit variance.}
 }
 \value{
 An \code{ei_ridge} object, which supports various \link{ridge-methods}.

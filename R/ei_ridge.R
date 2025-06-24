@@ -33,6 +33,8 @@
 #'
 #'   Predictors must be proportions that sum to 1 across rows.
 #'   You can use [ei_proportions()] to assist in preparing predictor variables.
+#'   Covariates in an [ei_spec] object are shifted to have mean zero. If
+#'   `scale=TRUE` (the default), they are also scaled to have unit variance.
 #' @param y When `x` is a **data frame** or **matrix**, `y` is the outcome
 #' specified as:
 #'   * A **data frame** with numeric columns.
@@ -46,7 +48,8 @@
 #'   * A **data frame** with numeric columns.
 #'   * A **matrix**
 #'
-#'   These are scaled internally to have mean zero and unit variance.
+#'   These are shifted to have mean zero. If `scale=TRUE` (the default), they
+#'   are also scaled to have unit variance.
 #' @param data When a **formula** is used, `data` is a **data frame** containing
 #'   both the predictors and the outcome.
 #' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y`
@@ -58,6 +61,8 @@
 #'  the formula; the other will be formed as 1 minus the provided predictor.
 #'  Include additional covariates separated by a vertical bar `|`.
 #'  These covariates are strongly recommended for reliable ecological inference.
+#'  Covariates are shifted to have mean zero. If `scale=TRUE` (the default),
+#'  they are also scaled to have unit variance.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
 #'   weights for estimation. These may be the same or different from the total
 #'   number of observations in each aggregate unit (see the `total` argument to
@@ -73,6 +78,7 @@
 #'    where \eqn{\lambda} is the value of `penalty`.
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
+#' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
@@ -96,7 +102,7 @@ ei_ridge <- function(x, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
+ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -108,6 +114,7 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
         ei_x = attr(form_preds, "term.labels"),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -118,7 +125,7 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, penalty=NULL, ...) {
+ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -135,6 +142,7 @@ ei_ridge.ei_spec <- function(x, weights, penalty=NULL, ...) {
         ei_x = attr(spec, "ei_x"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
@@ -144,7 +152,7 @@ ei_ridge.ei_spec <- function(x, weights, penalty=NULL, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
+ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -159,6 +167,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
         ei_x = colnames(x),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
     x = cbind(x, z)
 
@@ -168,8 +177,8 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, ...) {
-    ei_ridge.data.frame(x, y, z, weights, penalty, ...)
+ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, scale=TRUE, ...) {
+    ei_ridge.data.frame(x, y, z, weights, penalty, scale, ...)
 }
 
 
@@ -198,8 +207,12 @@ ei_ridge_bridge <- function(processed, ...) {
     # normalize
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
-    z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
-    z = scale_cols(z, z_scale)
+    if (isTRUE(processed$blueprint$scale)) {
+        z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
+        z = scale_cols(z, z_scale)
+    } else {
+        rep(1, ncol(z))
+    }
 
     y = as.matrix(processed$outcomes)
 
