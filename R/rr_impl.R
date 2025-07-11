@@ -4,7 +4,10 @@
 ridge_naive <- function(X, y, weights, penalty=0) {
     Lambda = diag(rep(penalty, ncol(X)))
     coef = solve(crossprod(X, weights * X) + Lambda, crossprod(X, weights * y))
-    list(coef = coef, fitted = X %*% coef, penalty = penalty)
+    fitted = X %*% coef
+    sigma2 = colMeans((y - fitted)^2 * weights)
+    vcov_u = tcrossprod(solve(crossprod(X, weights * X) + Lambda, t(X)))
+    list(coef = coef, vcov = vcov, fitted = fitted, sigma2 = sigma2, penalty = penalty)
 }
 
 # Does ridge regression given SVD of design matrix
@@ -13,9 +16,13 @@ ridge_naive <- function(X, y, weights, penalty=0) {
 ridge_svd <- function(udv, y, sqrt_w, penalty=0) {
     d_pen_c = udv$d / (udv$d^2 + penalty)
     d_uy = d_pen_c * crossprod(udv$u, sqrt_w * y)
+    fitted = (udv$u / sqrt_w) %*% (udv$d * d_uy)
+    sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
     list(
         coef = udv$v %*% d_uy,
-        fitted = (udv$u / sqrt_w) %*% (udv$d * d_uy),
+        vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
+        fitted = fitted,
+        sigma2 = sigma2,
         penalty = penalty
     )
 }
@@ -35,9 +42,13 @@ ridge_auto <- function(udv, y, sqrt_w) {
 
     penalty = 10^(optimize(loo_mse, c(-8, 8), tol=0.01)$minimum)
     d_pen_c = udv$d / (udv$d^2 + penalty)
+    fitted = uow %*% (d_pen_c * udv$d * uy)
+    sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
     list(
         coef = udv$v %*% (d_pen_c * uy),
-        fitted = uow %*% (d_pen_c * udv$d * uy),
+        vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
+        fitted = fitted,
+        sigma2 = sigma2,
         penalty = penalty
     )
 }

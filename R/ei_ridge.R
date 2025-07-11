@@ -230,6 +230,8 @@ ei_ridge_bridge <- function(processed, ...) {
       coef = fit$coef,
       y = y,
       fitted = fit$fitted,
+      vcov_u = fit$vcov_u,
+      sigma2 = fit$sigma2,
       r2 = diag(as.matrix(cor(fit$fitted, y)^2)),
       penalty = fit$penalty,
       int_scale = fit$int_scale,
@@ -271,6 +273,8 @@ ei_ridge_impl <- function(x, y, z, weights, penalty=NULL) {
     }
 
     rownames(fit$coef) = colnames(xz)
+    rownames(fit$vcov_u) = colnames(fit$vcov_u) = colnames(xz)
+    names(fit$sigma2) = colnames(y)
     fit$int_scale = int_scale
 
     fit
