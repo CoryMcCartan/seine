@@ -200,7 +200,9 @@ ei_forms = function(formula) {
 
 # Helper to infer bounds
 ei_bounds = function(bounds, outcome) {
+    if (isFALSE(bounds)) return(c(-Inf, Inf))
     if (is.null(bounds)) {
+        if (is.null(outcome)) outcome = c(-Inf, Inf)
         lt_1 = all(outcome <= 1)
         gt_0 = all(outcome >= 0)
         if (lt_1 && gt_0) {
@@ -217,7 +219,7 @@ ei_bounds = function(bounds, outcome) {
             cli_abort("Lower bound must be strictly less than upper bound.", call=parent.frame())
 
         if (any(outcome < bounds[1]) || any(outcome > bounds[2])) {
-            cli_abort("Some outcomes are outside the specified bounds of
+            cli_warn("Some outcomes are outside the specified bounds of
                       [{bounds[1]}, {bounds[2]}].", call=parent.frame())
         }
         bounds

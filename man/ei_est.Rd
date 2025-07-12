@@ -61,10 +61,11 @@ errors are always returned.}
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A data frame with estimates. It has two additional attributes:
-\code{vcov}, containing the estimated covariance matrix for the estimates, and
-\code{n}, containing the number of aggregate units used in estimation (the
-number of rows in \code{data}).
+A data frame with estimates. It has class \code{ei_est}, supporting
+several methods, and two additional attributes: \code{vcov}, containing the
+estimated covariance matrix for the estimates, and \code{n}, containing the
+number of aggregate units used in estimation (the number of rows in
+\code{data}).
 }
 \description{
 Produces estimates of overall conditional means from a fitted
@@ -74,7 +75,8 @@ machine learning (DML) estimate is produced.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{as.matrix(ei_est)}: Format estimates or standard errors as a matrix
+\item \code{as.matrix(ei_est)}: Format estimates or standard errors as a matrix. Does not
+work if the object has been sorted.
 
 \item \code{vcov(ei_est)}: Extract full covariance matrix of estimates
 

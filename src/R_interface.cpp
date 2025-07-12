@@ -73,13 +73,47 @@ doubles R_draw_local(int draws, const doubles& eta, const doubles_matrix<>& L,
 }
 
 [[cpp11::register]]
-doubles_matrix<> R_proj_mvn(const doubles& eta, const doubles_matrix<>& L, const doubles& x, double eps) {
-    vec _eta = as_Col(eta);
-    mat _L = as_Mat(L);
-    vec _x = as_Col(x);
-    vec _Lx(_x.n_elem);
-    mat _L_out(_x.n_elem, _x.n_elem);
+doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l, const doubles& x, double eps) {
+    vec _eta = as_col(eta);
+    mat _l = as_mat(l);
+    vec _x = as_col(x);
+    vec _lx(_x.n_elem);
+    mat _l_out(_x.n_elem, _x.n_elem);
 
-    proj_mvn(_eta, _L, _x, eps, _Lx, _L_out);
-    return as_doubles_matrix(_L_out);
+    proj_mvn(_eta, _l, _x, eps, _lx, _l_out);
+    return as_doubles_matrix(_l_out);
+}
+
+// Returns list; 1st entry is projected means, 2nd is projected variances
+[[cpp11::register]]
+list r_proj_mvns(const doubles_matrix<>& eta, const doubles_matrix<>& l,
+                 const doubles_matrix<>& x, const doubles eps) {
+    int n = eta.nrow();
+    int c = x.ncol();
+    vec _eta(c);
+    mat _l = as_mat(l);
+    vec _x(c);
+    vec _lx(c);
+    mat _l_out(c, c);
+    writable::doubles_matrix eta_proj(n, c);
+    writable::doubles_matrix var_proj(n, c);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < c; j++) {
+            _eta(j) = eta(i, j);
+            _x(j) = x(i, j);
+            var_proj(i, j) = 0;
+        }
+
+        proj_mvn(_eta, _l, _x, eps[i], _lx, _l_out);
+
+        for (int j = 0; j < c; j++) {
+            eta_proj(i, j) = _l_out(j, c - 1);
+            for (int k = 0; k < c - 1; k++) {
+                var_proj(i, j) += _l_out(j, k)*_l_out(j, k);
+            }
+        }
+    }
+
+    return writable::list({eta_proj, var_proj});
 }

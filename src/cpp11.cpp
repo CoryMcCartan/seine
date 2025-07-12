@@ -49,10 +49,17 @@ extern "C" SEXP _seine_R_draw_local(SEXP draws, SEXP eta, SEXP L, SEXP y, SEXP X
   END_CPP11
 }
 // R_interface.cpp
-doubles_matrix<> R_proj_mvn(const doubles& eta, const doubles_matrix<>& L, const doubles& x, double eps);
-extern "C" SEXP _seine_R_proj_mvn(SEXP eta, SEXP L, SEXP x, SEXP eps) {
+doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l, const doubles& x, double eps);
+extern "C" SEXP _seine_r_proj_mvn(SEXP eta, SEXP l, SEXP x, SEXP eps) {
   BEGIN_CPP11
-    return cpp11::as_sexp(R_proj_mvn(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(L), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
+    return cpp11::as_sexp(r_proj_mvn(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(l), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
+  END_CPP11
+}
+// R_interface.cpp
+list r_proj_mvns(const doubles_matrix<>& eta, const doubles_matrix<>& l, const doubles_matrix<>& x, const doubles eps);
+extern "C" SEXP _seine_r_proj_mvns(SEXP eta, SEXP l, SEXP x, SEXP eps) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(r_proj_mvns(cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(l), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(x), cpp11::as_cpp<cpp11::decay_t<const doubles>>(eps)));
   END_CPP11
 }
 
@@ -65,9 +72,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_seine_R_ep_moments",   (DL_FUNC) &_seine_R_ep_moments,   5},
     {"_seine_R_ess_tmvn",     (DL_FUNC) &_seine_R_ess_tmvn,     4},
     {"_seine_R_llik_intonly", (DL_FUNC) &_seine_R_llik_intonly, 6},
-    {"_seine_R_proj_mvn",     (DL_FUNC) &_seine_R_proj_mvn,     4},
     {"_seine_R_sync_rng",     (DL_FUNC) &_seine_R_sync_rng,     0},
     {"_seine_R_utn_moments",  (DL_FUNC) &_seine_R_utn_moments,  2},
+    {"_seine_r_proj_mvn",     (DL_FUNC) &_seine_r_proj_mvn,     4},
+    {"_seine_r_proj_mvns",    (DL_FUNC) &_seine_r_proj_mvns,    4},
     {"run_testthat_tests",    (DL_FUNC) &run_testthat_tests,    1},
     {NULL, NULL, 0}
 };

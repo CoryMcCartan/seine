@@ -29,10 +29,11 @@
 #'   If `FALSE` (the default), no confidence intervals are calculated. Standard
 #'   errors are always returned.
 #'
-#' @returns A data frame with estimates. It has two additional attributes:
-#'   `vcov`, containing the estimated covariance matrix for the estimates, and
-#'   `n`, containing the number of aggregate units used in estimation (the
-#'   number of rows in `data`).
+#' @returns A data frame with estimates. It has class `ei_est`, supporting
+#'   several methods, and two additional attributes: `vcov`, containing the
+#'   estimated covariance matrix for the estimates, and `n`, containing the
+#'   number of aggregate units used in estimation (the number of rows in
+#'   `data`).
 #'
 #' @examples
 #' data(elec_1968)
@@ -191,7 +192,8 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
     }
 
     data = hardhat::forge(data, regr$blueprint)$predictors
-    idx_x = match(regr$blueprint$ei_x, colnames(data))
+    xcols = regr$blueprint$ei_x
+    idx_x = match(xcols, colnames(data))
     z = as.matrix(data[, -idx_x, drop=FALSE])
     x = data[, idx_x, drop=FALSE]
     n_x = length(xcols)
@@ -295,9 +297,13 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
         preds[[group]] = as.matrix(do.call(fn_pred, argl))
     }
 
+    y = as.matrix(data[, outcome])
+    yhat = as.matrix(fitted(x))
+    sigma2 = colMeans((y - yhat)^2)
     out = list(
-        y = as.matrix(data[, outcome]),
-        yhat = fitted(x),
+        y = y,
+        yhat = yhat,
+        sigma2 = sigma2,
         preds = preds,
         x = as.matrix(data[, predictors]),
         blueprint = list(ei_x = predictors),
@@ -315,7 +321,8 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
 
 # Types --------
 
-#' @describeIn ei_est Format estimates or standard errors as a matrix
+#' @describeIn ei_est Format estimates or standard errors as a matrix. Does not
+#'   work if the object has been sorted.
 #' @param x,object An object of class `ei_est`
 #' @param se If `TRUE`, return standard errors instead of estimates.
 #' @param ... Additional arguments (ignored)

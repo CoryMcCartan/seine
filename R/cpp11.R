@@ -24,6 +24,10 @@ R_draw_local <- function(draws, eta, L, y, X, warmup, tol) {
   .Call(`_seine_R_draw_local`, draws, eta, L, y, X, warmup, tol)
 }
 
-R_proj_mvn <- function(eta, L, x, eps) {
-  .Call(`_seine_R_proj_mvn`, eta, L, x, eps)
+r_proj_mvn <- function(eta, l, x, eps) {
+  .Call(`_seine_r_proj_mvn`, eta, l, x, eps)
+}
+
+r_proj_mvns <- function(eta, l, x, eps) {
+  .Call(`_seine_r_proj_mvns`, eta, l, x, eps)
 }

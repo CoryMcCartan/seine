@@ -26,7 +26,7 @@ test_that("EI formulas are parsed correctly", {
 test_that("Bounds are inferred correctly", {
     expect_error(ei_bounds(c(1, 0)), "less")
     expect_error(ei_bounds(c(1, 1)), "strictly less")
-    expect_error(ei_bounds(c(0, 1), -3:3), "outside")
+    expect_warning(ei_bounds(c(0, 1), -3:3), "outside")
 
     outcomes = data.frame(y = seq(0, 1, 0.1))
     expect_equal(ei_bounds(c(0, 1), outcomes), c(0, 1))
