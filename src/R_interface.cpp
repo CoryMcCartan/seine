@@ -96,8 +96,8 @@ list r_proj_local(const doubles_matrix<>& eta, const doubles_matrix<>& e_cov,
     vec _x(c);
     vec _lx(c);
     mat _l_out(c, c);
-    writable::doubles_matrix eta_proj(n, c);
-    writable::doubles_matrix var_proj(n, c);
+    writable::doubles_matrix<> eta_proj(n, c);
+    writable::doubles_matrix<> var_proj(n, c);
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < c; j++) {
