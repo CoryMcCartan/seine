@@ -28,6 +28,6 @@ r_proj_mvn <- function(eta, l, x, eps) {
   .Call(`_seine_r_proj_mvn`, eta, l, x, eps)
 }
 
-r_proj_mvns <- function(eta, l, x, eps) {
-  .Call(`_seine_r_proj_mvns`, eta, l, x, eps)
+r_proj_local <- function(eta, e_cov, r_cov, x, eps) {
+  .Call(`_seine_r_proj_local`, eta, e_cov, r_cov, x, eps)
 }

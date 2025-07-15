@@ -9,7 +9,8 @@ ei_sens(
   c_outcome = seq(0, 1, 0.01)^2,
   c_predictor = seq(0, 1, 0.01)^2,
   bias_bound = NULL,
-  confounding = 1
+  confounding = 1,
+  expand_ci = TRUE
 )
 }
 \arguments{
@@ -33,13 +34,17 @@ amount of bias.}
 
 \item{confounding}{The confounding parameter (\eqn{rho}), which must be
 between 0 and 1 (the adversarial worst-case).}
+
+\item{expand_ci}{If \code{TRUE} and confidence intervals are present in \code{est},
+expand the width of the intervals in each direction by the calculated bias
+bound.}
 }
 \value{
 A data frame of the same format as \code{est}, but with additional
 columns: \code{c_outcome} and \code{c_predictor}, matching all combinations of those
 arguments, and \code{bias_bound}, containing the bound on the amount of bias.
-The data frame has additional class \code{ei_est}, which supports a \code{\link[=plot]{plot()}}
-method.
+The data frame has additional class \code{ei_sens}, which supports a
+\code{\link[=plot.ei_sens]{plot.ei_sens()}} method.
 }
 \description{
 The bounds here are plug-in estimates and do not incorporate sampling
@@ -61,6 +66,11 @@ ei_sens(est, c_outcome=0.2)
 # How much variation would the regression residual need to explain of
 # Riesz representer to cause bias of 0.4?
 ei_sens(est, c_outcome=1, bias_bound=0.4)
+
+# Update confidence intervals and extract as matrix
+est = ei_est(m, rr, spec, conf_level=0.95)
+sens = ei_sens(est, c_outcome=0.5, c_predictor=0.2)
+as.matrix(sens, "conf.high")
 
 }
 \references{

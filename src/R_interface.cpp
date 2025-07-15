@@ -86,12 +86,13 @@ doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l, const
 
 // Returns list; 1st entry is projected means, 2nd is projected variances
 [[cpp11::register]]
-list r_proj_mvns(const doubles_matrix<>& eta, const doubles_matrix<>& l,
-                 const doubles_matrix<>& x, const doubles eps) {
+list r_proj_local(const doubles_matrix<>& eta, const doubles_matrix<>& e_cov,
+                  const doubles_matrix<>& r_cov,
+                  const doubles_matrix<>& x, const doubles eps) {
     int n = eta.nrow();
     int c = x.ncol();
     vec _eta(c);
-    mat _l = as_mat(l);
+    mat _l(c, c);
     vec _x(c);
     vec _lx(c);
     mat _l_out(c, c);

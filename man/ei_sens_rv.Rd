@@ -40,4 +40,7 @@ ei_sens_rv(est, 2 * std.error) # how much confounding for bias of 2 SE
 y_avg = weighted.mean(elec_1968$pres_ind_wal, elec_1968$pres_total)
 ei_sens_rv(est, estimate - y_avg)
 
+# Extract as matrix
+as.matrix(ei_sens_rv(est, 0.2), "rv")
+
 }

@@ -3,7 +3,7 @@
 #' Projects predictions from a fitted regression model onto the accounting
 #' constraint using a provided residual covariance matrix. This ensures that
 #' each set of local estimates satisfies the accounting identity. Local
-#' estimates will be truncated to variable bounds.
+#' estimates may be truncated to variable bounds.
 #'
 #' Local estimates are produced independently for each outcome variable.
 #' Truncation to bounds, if used, will in general lead to estimates that do
@@ -38,7 +38,7 @@
 #'   corresponds to the observation index in the input. It has class
 #'   `ei_est_local`, supporting several methods.
 #'
-#' @examples
+#' @examples \dontrun{
 #' data(elec_1968)
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
@@ -48,6 +48,7 @@
 #'
 #' ei_est_local(m, spec, conf_level = 0.95)
 #' suppressWarnings(ei_est_local(m, spec, bounds=c(0.01, 0.2)))
+#' }
 #' @export
 ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, unimodal=TRUE) {
     y = est_check_outcome(regr, data, NULL)
@@ -57,7 +58,7 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
     cli_warn("Local confidence intervals do not yet incorporate prediction uncertainty.",
              .frequency="regularly", .frequency_id="ei_est_local_temp")
 
-    rl = est_check_regr(regr, data, n, NULL, n_y)
+    rl = est_check_regr(regr, data, n, NULL, n_y, sd = TRUE)
     n_x = length(rl$preds)
     if (inherits(regr, "ei_wrapped") && !isFALSE(conf_level)) {
         cli_warn("Local confidence intervals with wrapped model objects
@@ -75,18 +76,20 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
     if (!is.list(r_cov)) {
         r_cov = lapply(seq_len(n_y), function(i) r_cov)
     }
-    r_cov = lapply(r_cov, function(r) {
+    # r_cov = lapply(r_cov, function(r) {
+    for (r in r_cov) {
         if (!is.matrix(r) || nrow(r) != ncol(r) || nrow(r) != n_x) {
             cli_abort("Invalid {.arg r_cov} found.")
         }
+    }
+#         t(chol(r))
+#     })
 
-        t(chol(r))
-    })
-
+    # browser()
     ests = list()
     for (k in seq_len(n_y)) {
         eta = vapply(rl$preds, function(p) p[, k], numeric(n))
-        proj = r_proj_mvns(eta, r_cov[[k]], rl$x, y[, k] - rl$yhat[, k])
+        proj = r_proj_mvn(eta, r_cov[[k]], rl$x, y[, k] - rl$yhat[, k])
 
         ests[[k]] = tibble::new_tibble(list(
             .row = rep(seq_len(n), n_x),

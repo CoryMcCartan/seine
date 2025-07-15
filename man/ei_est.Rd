@@ -17,7 +17,7 @@ ei_est(
   conf_level = FALSE
 )
 
-\method{as.matrix}{ei_est}(x, se = FALSE, ...)
+\method{as.matrix}{ei_est}(x, which = "estimate", ...)
 
 \method{vcov}{ei_est}(object, ...)
 
@@ -56,7 +56,9 @@ errors are always returned.}
 
 \item{x, object}{An object of class \code{ei_est}}
 
-\item{se}{If \code{TRUE}, return standard errors instead of estimates.}
+\item{which}{Which column of \code{ei_est} to convert to a matrix. For example,
+pass \code{which="std.error"} to return standard errors instead of estimates.
+Partial matching supported.}
 
 \item{...}{Additional arguments (ignored)}
 }
@@ -75,8 +77,7 @@ machine learning (DML) estimate is produced.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{as.matrix(ei_est)}: Format estimates or standard errors as a matrix. Does not
-work if the object has been sorted.
+\item \code{as.matrix(ei_est)}: Format estimates, standard errors, or other columns as a matrix.
 
 \item \code{vcov(ei_est)}: Extract full covariance matrix of estimates
 
@@ -96,7 +97,7 @@ ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
 as.matrix(est)
-as.matrix(est, se=TRUE)
+as.matrix(est, "std.error")
 vcov(est)[1:4, 1:4]
 
 est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))

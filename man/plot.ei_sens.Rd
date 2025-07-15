@@ -4,7 +4,7 @@
 \alias{plot.ei_sens}
 \title{Bias contour plot for ecological inference estimates}
 \usage{
-\method{plot}{ei_sens}(x, y = NULL, predictor = NULL, bounds = NULL, lwd = 1, ...)
+\method{plot}{ei_sens}(x, y = NULL, predictor = NULL, bounds = NULL, plot_se = 1:3, ..., lwd = 1)
 }
 \arguments{
 \item{x}{An \link{ei_sens} object}
@@ -13,9 +13,18 @@
 
 \item{predictor}{A predictor variable to plot, as a character vector. Defaults to first.}
 
-\item{lwd}{A scaling factor for the contour line widths}
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, which will
+affect the contours which are plotted. In general, truncation will lead to
+violations of the accounting identity. If \code{bounds = NULL} (the default),
+they will be inferred from the outcome variable: if it is contained within
+\eqn{[0, 1]}, for instance, then the bounds will be \code{c(0, 1)}. Setting
+\code{bounds = FALSE} forces unbounded estimates.}
 
-\item{...}{Ignored}
+\item{plot_se}{A vector of multiples of the standard error to plot as contours.}
+
+\item{...}{Additional arguments passed on to \code{\link[=contour]{contour()}}}
+
+\item{lwd}{A scaling factor for the contour line widths}
 }
 \description{
 TODO fill in...
@@ -27,7 +36,8 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
                total = pres_total, covariates = c(state, pop_urban, farm))
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
-sens = ei_sens(seq(0, 1, 0.01), seq(0, 1, 0.01), m, rr, spec)
+est = ei_est(m, rr, spec)
+sens = ei_sens(est)
 
 plot(sens)
 

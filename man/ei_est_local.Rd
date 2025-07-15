@@ -59,7 +59,7 @@ corresponds to the observation index in the input. It has class
 Projects predictions from a fitted regression model onto the accounting
 constraint using a provided residual covariance matrix. This ensures that
 each set of local estimates satisfies the accounting identity. Local
-estimates will be truncated to variable bounds.
+estimates may be truncated to variable bounds.
 }
 \details{
 Local estimates are produced independently for each outcome variable.
@@ -73,6 +73,7 @@ not satisfy the accounting identity.
 
 }}
 \examples{
+\dontrun{
 data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
@@ -82,4 +83,5 @@ m = ei_ridge(spec)
 
 ei_est_local(m, spec, conf_level = 0.95)
 suppressWarnings(ei_est_local(m, spec, bounds=c(0.01, 0.2)))
+}
 }

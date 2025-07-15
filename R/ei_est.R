@@ -48,7 +48,7 @@
 #' ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 #' est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
 #' as.matrix(est)
-#' as.matrix(est, se=TRUE)
+#' as.matrix(est, "std.error")
 #' vcov(est)[1:4, 1:4]
 #'
 #' est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
@@ -69,8 +69,8 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     n = nrow(y)
     n_y = ncol(y)
 
+    subset = eval_tidy(enquo(subset), data)
     if (!is.null(subset)) {
-        subset = eval_tidy(enquo(subset), data)
         if (is.logical(subset)) {
             subset = 1*subset
         } else if (is.numeric(subset)) {
@@ -179,8 +179,6 @@ est_check_riesz = function(riesz, data, weights, n, regr) {
         cli_abort("The number of weights in {.arg riesz} ({nrow(riesz)}) must
                   match the number of observations ({n}).", call=parent.frame())
     }
-    # TODO check
-    # riesz = riesz * weights
     riesz = scale_cols(riesz, 1 / colMeans(riesz))
     riesz
 }
@@ -339,17 +337,28 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
 
 # Types --------
 
-#' @describeIn ei_est Format estimates or standard errors as a matrix. Does not
-#'   work if the object has been sorted.
+#' @describeIn ei_est Format estimates, standard errors, or other columns as a matrix.
 #' @param x,object An object of class `ei_est`
-#' @param se If `TRUE`, return standard errors instead of estimates.
+#' @param which Which column of `ei_est` to convert to a matrix. For example,
+#'   pass `which="std.error"` to return standard errors instead of estimates.
+#'   Partial matching supported.
 #' @param ... Additional arguments (ignored)
 #' @export
-as.matrix.ei_est <- function(x, se=FALSE, ...) {
-    y = if (isFALSE(se)) x$estimate else x$std.error
+as.matrix.ei_est <- function(x, which="estimate", ...) {
+    nms = setdiff(names(x), c("predictor", "outcome"))
+    col = nms[pmatch(which, nms)]
+    if (is.na(col)) {
+        cli_abort(c("Unknown column {.val {which}} in {.cls ei_est} object.",
+                    ">"="Available columns: {.val {nms}}"))
+    }
+    y = x[[col]]
+
     xlab = unique(x$predictor)
     ylab = unique(x$outcome)
-    matrix(y, nrow=length(xlab), ncol=length(ylab), dimnames=list(xlab, ylab))
+    out = matrix(nrow=length(xlab), ncol=length(ylab), dimnames=list(xlab, ylab))
+    out[cbind(x$predictor, x$outcome)] = y
+    names(dimnames(out)) = c("predictor", "outcome")
+    out
 }
 
 #' @describeIn ei_est Extract full covariance matrix of estimates

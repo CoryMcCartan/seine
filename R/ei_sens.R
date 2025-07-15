@@ -21,12 +21,15 @@
 #'   amount of bias.
 #' @param confounding The confounding parameter (\eqn{rho}), which must be
 #'   between 0 and 1 (the adversarial worst-case).
+#' @param expand_ci If `TRUE` and confidence intervals are present in `est`,
+#'   expand the width of the intervals in each direction by the calculated bias
+#'   bound.
 #'
 #' @returns A data frame of the same format as `est`, but with additional
 #'   columns: `c_outcome` and `c_predictor`, matching all combinations of those
 #'   arguments, and `bias_bound`, containing the bound on the amount of bias.
-#'   The data frame has additional class `ei_est`, which supports a [plot()]
-#'   method.
+#'   The data frame has additional class `ei_sens`, which supports a
+#'   [plot.ei_sens()] method.
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
@@ -48,9 +51,14 @@
 #' # Riesz representer to cause bias of 0.4?
 #' ei_sens(est, c_outcome=1, bias_bound=0.4)
 #'
+#' # Update confidence intervals and extract as matrix
+#' est = ei_est(m, rr, spec, conf_level=0.95)
+#' sens = ei_sens(est, c_outcome=0.5, c_predictor=0.2)
+#' as.matrix(sens, "conf.high")
+#'
 #' @export
 ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
-                    bias_bound=NULL, confounding=1) {
+                    bias_bound=NULL, confounding=1, expand_ci=TRUE) {
     is_01 <- function(value, arg) {
         if (!is.numeric(value) || all(value < 0) || all(value > 1)) {
             cli_abort("{.arg {arg}} must be between 0 and 1.",
@@ -67,12 +75,12 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
     }
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
-    sens_s = attr(est, "sens_s")[idx]
+    sens_s = attr(est, "sens_s")
     bounds_inf = attr(est, "bounds_inf")
     if (is.null(bias_bound)) {
         cc = expand.grid(c_outcome=c_outcome, c_predictor=c_predictor)
         est = merge(est, cc)
-        est$bias_bound = sens_s * confounding *
+        est$bias_bound = sens_s[idx] * confounding *
             sqrt(est$c_outcome * est$c_predictor / (1 - est$c_predictor))
     } else {
         if (!is.numeric(bias_bound)) {
@@ -83,11 +91,17 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
         cc = expand.grid(c_outcome=c_outcome, c_predictor=1, bias_bound=abs(bias_bound))
         est = merge(est, cc)
 
-        cp = est$bias_bound^2 / (sens_s^2 * confounding^2 * est$c_outcome)
+        cp = est$bias_bound^2 / (sens_s[idx]^2 * confounding^2 * est$c_outcome)
         est$c_predictor = cp / (1 + cp)
     }
 
-    tibble::new_tibble(est, bounds_inf=bounds_inf, class="ei_sens")
+    if (isTRUE(expand_ci) && all(c("conf.low", "conf.high") %in% names(est))) {
+        est$conf.low = est$conf.low - est$bias_bound
+        est$conf.high = est$conf.high + est$bias_bound
+    }
+
+    tibble::new_tibble(est, bounds_inf=bounds_inf, sens_s=sens_s,
+                       class=c("ei_sens", "ei_est"))
 }
 
 #' Robustness values for ecological inference
@@ -118,6 +132,9 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 #' y_avg = weighted.mean(elec_1968$pres_ind_wal, elec_1968$pres_total)
 #' ei_sens_rv(est, estimate - y_avg)
 #'
+#' # Extract as matrix
+#' as.matrix(ei_sens_rv(est, 0.2), "rv")
+#'
 #' @export
 ei_sens_rv <- function(est, bias_bound, confounding=1) {
     bias_bound = eval_tidy(enquo(bias_bound), est)
@@ -126,7 +143,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
     }
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
-    a = bias_bound^2 / attr(sens, "S")[idx]^2 / confounding^2
+    a = bias_bound^2 / attr(est, "sens_s")[idx]^2 / confounding^2
     est$rv = 0.5 * (-a + sqrt(a^2 + 4*a))
 
     est
@@ -139,8 +156,15 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #' @param x An [ei_sens] object
 #' @param y An outcome variable, as a character vector. Defaults to first.
 #' @param predictor A predictor variable to plot, as a character vector. Defaults to first.
+#' @param bounds A vector `c(min, max)` of bounds for the outcome, which will
+#'   affect the contours which are plotted. In general, truncation will lead to
+#'   violations of the accounting identity. If `bounds = NULL` (the default),
+#'   they will be inferred from the outcome variable: if it is contained within
+#'   \eqn{[0, 1]}, for instance, then the bounds will be `c(0, 1)`. Setting
+#'   `bounds = FALSE` forces unbounded estimates.
+#' @param plot_se A vector of multiples of the standard error to plot as contours.
+#' @param ... Additional arguments passed on to [contour()]
 #' @param lwd A scaling factor for the contour line widths
-#' @param ... Ignored
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
@@ -154,12 +178,13 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'                total = pres_total, covariates = c(state, pop_urban, farm))
 #' m = ei_ridge(spec)
 #' rr = ei_riesz(spec, penalty = m$penalty)
-#' sens = ei_sens(seq(0, 1, 0.01), seq(0, 1, 0.01), m, rr, spec)
+#' est = ei_est(m, rr, spec)
+#' sens = ei_sens(est)
 #'
 #' plot(sens)
 #'
 #' @export
-plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, lwd=1, ...) {
+plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, plot_se=1:3, ..., lwd=1) {
     if (is.null(y)) y = x$outcome[1]
     if (is.null(predictor)) predictor = x$predictor[1]
 
@@ -198,9 +223,9 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, lwd=1, ...) {
 
     n_om = 3 # orders of magnitude
     breaks = diff(bounds) * (10^-seq_len(n_om) %x% c(2:4, 6:9))
-    oldmar = par()$mar
-    par(mar = c(4.2, 5.2, 3, 1.1))
-    contour(
+    oldmar = graphics::par()$mar
+    graphics::par(mar = c(4.2, 5.2, 3, 1.1))
+    graphics::contour(
         cx, cy, cz, levels=breaks, drawlabels=FALSE, col="#bbb", lwd=lwd,
         xlab = bquote(1 - {R^2}[alpha ~ "~" ~ alpha[s]]),
         ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
@@ -208,31 +233,33 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, lwd=1, ...) {
         main = paste0("Sensitivity bounds for E[", y, " | ", predictor, "]"),
         xaxs="i", yaxs="i", cex.lab=1.5
     )
-    grid()
+    graphics::grid()
 
     breaks = c(10^-seq_len(n_om) %x% c(1, 5), 1)
     labels = as.character(breaks)
-    special = c(abs(bounds - x$estimate[1]), x$std.error[1] * 1:3)
+    special = c(abs(bounds - x$estimate[1]), x$std.error[1] * plot_se)
     dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
     labels[dists < 0.05] = ""
-    contour(
+    graphics::contour(
         cx, cy, cz, levels=breaks, labels=labels,
         lwd = lwd * c(rep(c(1.6, 1.0), n_om), 1.6),
         labcex=0.8, col = "#444", add=TRUE, method="edge"
     )
-    contour(
+    graphics::contour(
         cx, cy, cz, lwd=2*lwd, labcex=1.0, col="#a42",
         levels = abs(bounds - x$estimate[1]),
         labels = paste("Estimate =", bounds),
         add=TRUE, method="edge"
     )
-    contour(
-        cx, cy, cz, lwd=2*lwd, lty="dashed", labcex=1.0, col="#46b",
-        levels = x$std.error[1] * 1:3,
-        labels = paste("\u00b1", 1:3, "SE"),
-        add=TRUE, method="edge"
-    )
-    par(mar = oldmar)
+    if (length(plot_se) > 0) {
+        graphics::contour(
+            cx, cy, cz, lwd=2*lwd, lty="dashed", labcex=1.0, col="#46b",
+            levels = x$std.error[1] * plot_se,
+            labels = paste("\u00b1", plot_se, "SE"),
+            add=TRUE, method="edge"
+        )
+    }
+    graphics::par(mar = oldmar)
 }
 
 
