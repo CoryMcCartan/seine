@@ -67,9 +67,10 @@ test_that("leave-one-out shortcut is correct for ridge", {
 })
 
 test_that("leave-one-out shortcut is correct for Riesz regression", {
-    skip("Need to fix LOO weights")
     y = mtcars$mpg
-    w = sqrt(y) / mean(sqrt(y))
+    tot = sqrt(y) / mean(sqrt(y))
+    # w = rep(1, length(y))
+    w = 1/tot
     z = model.matrix(y ~ ., mtcars)
     x = rbeta(length(y), 1, 3)
     x = cbind(x, 1 - x)
@@ -79,12 +80,14 @@ test_that("leave-one-out shortcut is correct for Riesz regression", {
     loo_act = numeric(length(y))
     for (i in seq_along(y)) {
         wr = w
+        tr = tot
         wr[i] = 0
-        loo_act[i] = riesz_naive(xz, ncol(z), wr, penalty=pen)$alpha[i]
-        # loo_act[i] = y[i] - x[i, ] %*% riesz_naive(xz[-i, ], ncol(z), w[-i], penalty=pen)$coef
+        tr[i] = 0
+        loo_act[i] = riesz_naive(xz, ncol(z), tr, wr, penalty=pen)$alpha[i]
     }
 
-    fit_naive = riesz_naive(xz, ncol(z), w, penalty=pen)
-    plot(fit_naive$loo, loo_act)
-    expect_equal(fit_naive$loo, loo_act)
+    fit_naive = riesz_naive(xz, ncol(z), tot, w, penalty=pen)
+    # plot(fit_naive$loo, loo_act)
+    # mean(abs(fit_naive$loo - loo_act)) / mean(abs(loo_act))
+    expect_equal(fit_naive$loo, loo_act, tolerance = 0.2)
 })

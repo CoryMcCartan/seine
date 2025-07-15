@@ -172,6 +172,7 @@ ei_riesz_bridge <- function(processed, ...) {
     new_ei_riesz(
         weights = fit$alpha,
         weights_loo = fit$loo,
+        nu2 = fit$nu2,
         penalty = penalty,
         z_shift = z_shift,
         z_scale = z_scale,
@@ -192,15 +193,18 @@ ei_riesz_impl <- function(x, z, total, weights, penalty) {
 
     alpha = matrix(nrow=nrow(x), ncol=ncol(x))
     loo = matrix(nrow=nrow(x), ncol=ncol(x))
+    nu2 = numeric(ncol(x))
     for (group in seq_len(ncol(x))) {
         fit = riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
         alpha[, group] = fit$alpha * int_scale * w
         loo[, group] = fit$loo * int_scale * w
+        nu2[group] = fit$nu2  * int_scale^2
     }
     colnames(alpha) = colnames(x)
     colnames(loo) = colnames(x)
+    names(nu2) = colnames(x)
 
-    list(alpha = alpha, loo = loo)
+    list(alpha = alpha, loo = loo, nu2 = nu2)
 }
 
 # Model type ------------------------------------------------------------------
@@ -246,7 +250,6 @@ weights.ei_riesz <- function(object, group=TRUE, loo=FALSE, ...) {
     }
 
     if (isTRUE(loo)) {
-        cli_abort("Leave-one-out weights are not correct at this time.", call=parent.frame())
         object$weights_loo[, group]
     } else {
         object$weights[, group]

@@ -1,0 +1,211 @@
+#' Conduct a sensitivity analysis for estimated ecological quantities
+#'
+#' The bounds here are plug-in estimates and do not incorporate sampling
+#' uncertainty. As such, they may fail to cover the true value in finite
+#' samples, even under large enough sensitivity parameters; see Section 5 of
+#' Chernozhukov et al (2022).
+#'
+#' @param regr A fitted regression model, from [ei_ridge()], or another kind
+#'    of regression model wrapped with [ei_wrap_model()].
+#' @param riesz A fitted Riesz representer, from [ei_riesz()], or a matrix of
+#'    Riesz weights
+#' @param data The data frame, matrix, or [ei_spec] object that was used to fit
+#'   the regression or Riesz representer.
+#' @param subset <[`data-masking`][rlang::args_data_masking]> An optional
+#'   indexing vector describing the subset of units over which to calculate
+#'   estimates. Not that the subset will not apply to the estimate of
+#'   \eqn{\sigma^2\nu^2}, the constant that scales the sensitivity bounds.
+#' @param c_outcome The (nonparametric) partial \eqn{R^2} of the omitted
+#'   variables with the outcome variables. Must be between 0 and 1.
+#'   Can be a vector, in which case all combinations of values with
+#'   `c_predictor` are used.
+#' @param c_predictor How much variation latent variables create in the Riesz
+#'   representer, i.e. \eqn{1-R^2} of the true Riesz representer on the
+#'   estimated one without the omitted variable. Must be between 0 and 1.
+#'   Can be a vector, in which case all combinations of values with `c_outcome`
+#'   are used.
+#' @param bias_bound If provided, overrides `c_predictor` and finds values of
+#'   `c_predictor` that correspond to (the absolute value of) the provided
+#'   amount of bias.
+#' @param confounding The confounding parameter (\eqn{rho}), which must be
+#'   between 0 and 1 (the adversarial worst-case).
+#' @param conf_level A numeric specifying the level for confidence intervals.
+#'   If `FALSE` (the default), no confidence intervals are calculated. Standard
+#'   errors are always returned.
+#'
+#' @returns A data frame of the same format `ei_est()`, but with additional
+#'   columns: `c_outcome` and `c_predictor`, matching all combinations of those
+#'   arguments, and `bias_bound`, containing the bound on the amount of bias.
+#'   The data frame has additional class `ei_est`, which supports a [plot()]
+#'   method.
+#'
+#' @references
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' *Long story short: Omitted variable bias in causal machine learning*
+#' (No. w30302). National Bureau of Economic Research.
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+#'                total = pres_total, covariates = c(state, pop_urban, farm))
+#' m = ei_ridge(spec)
+#' rr = ei_riesz(spec, penalty = m$penalty)
+#'
+#' ei_sens(m, rr, spec, c_outcome=0.2)
+#'
+#' # How much variation would the regression residual need to explain of
+#' # Riesz representer to cause bias of 0.4?
+#' ei_sens(m, rr, spec, c_outcome=1, bias_bound=0.4)
+#'
+#' @export
+ei_sens <- function(
+        regr, riesz, data, subset=NULL,
+        c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
+        bias_bound=NULL, confounding=1, conf_level = FALSE
+) {
+    is_01 <- function(value, arg) {
+        if (!is.numeric(value) || all(value < 0) || all(value > 1)) {
+            cli_abort("{.arg {arg}} must be between 0 and 1.",
+                      call = parent.frame())
+        }
+    }
+
+    is_01(c_outcome, "c_outcome")
+    is_01(c_predictor, "c_predictor")
+    is_01(confounding, "confounding")
+    if (length(confounding) != 1) {
+        cli_abort("{.arg confounding} must be a single value between 0 and 1.",
+                  call = parent.frame())
+    }
+
+    est = ei_est(regr, riesz, data, subset=subset, conf_level=conf_level)
+    if (is.null(bias_bound)) {
+        cc = expand.grid(c_outcome=c_outcome, c_predictor=c_predictor)
+        est = merge(est, cc)
+        est$bias_bound = sqrt(regr$sigma2[est$outcome] * riesz$nu2[est$predictor]) *
+            counfounding * sqrt(est$c_outcome * est$c_predictor / (1 - est$c_predictor))
+    } else {
+        if (!is.numeric(bias_bound)) {
+            cli_abort("If provided, {.arg bias_bound} must be a numeric vector.",
+                      call = parent.frame())
+        }
+
+        cc = expand.grid(c_outcome=c_outcome, c_predictor=1, bias_bound=abs(bias_bound))
+        est = merge(est, cc)
+
+        cp = est$bias_bound^2 / (regr$sigma2[est$outcome] * riesz$nu2[est$predictor] *
+                                     confounding^2 * est$c_outcome)
+        est$c_predictor = cp / (1 + cp)
+    }
+
+    attr(est, "S") = sqrt(riesz$nu2 %o% regr$sigma2) * confounding
+    attr(est, "bounds_inf") = ei_bounds(NULL, regr$y)
+
+    tibble::new_tibble(est, class="ei_sens")
+}
+
+#' Bias contour plot for ecological inference estimates
+#'
+#' TODO fill in...
+#'
+#' @param x An [ei_sens] object
+#' @param y An outcome variable, as a character vector. Defaults to first.
+#' @param predictor A predictor variable to plot, as a character vector. Defaults to first.
+#' @param lwd A scaling factor for the contour line widths
+#' @param ... Ignored
+#'
+#' @references
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' *Long story short: Omitted variable bias in causal machine learning*
+#' (No. w30302). National Bureau of Economic Research.
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+#'                total = pres_total, covariates = c(state, pop_urban, farm))
+#' m = ei_ridge(spec)
+#' rr = ei_riesz(spec, penalty = m$penalty)
+#' sens = ei_sens(seq(0, 1, 0.01), seq(0, 1, 0.01), m, rr, spec)
+#'
+#' plot(sens)
+#'
+#' @export
+plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, lwd=1, ...) {
+    if (is.null(y)) y = x$outcome[1]
+    if (is.null(predictor)) predictor = x$predictor[1]
+
+    if (!is.character(y) && length(y) != 1) {
+        cli_abort("{.arg y} must be a character vector with a single outcome name.",
+                  call = parent.frame())
+    }
+    if (!y %in% x$outcome) {
+        cli_abort("{.arg y} must be one of the outcomes in {.arg x}.",
+                  call = parent.frame())
+    }
+    if (!is.character(predictor) && length(predictor) != 1) {
+        cli_abort("{.arg predictor} must be a character vector with a single predictor name.",
+                  call = parent.frame())
+    }
+    preds = unique(x$predictor)
+    if (!predictor %in% preds) {
+        cli_abort("{.arg predictor} must be one of the predictors in {.arg x}.",
+                  call = parent.frame())
+    }
+
+    x = x[x$outcome == y & x$predictor == predictor, ]
+    cx = unique(x$c_outcome)
+    cy = unique(x$c_predictor)
+
+    if (!all(diff(cx) > 0) || !all(diff(cy) > 0)) {
+        cli_abort("{.arg x} must be sorted by {.var c_outcome} and {.var c_predictor}.",
+                  call = parent.frame())
+    }
+    cz = matrix(x$bias_bound, nrow=length(cx), byrow = TRUE)
+
+    if (is.null(bounds)) {
+        bounds = attr(x, "bounds_inf")
+    }
+    bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
+
+    n_om = 3 # orders of magnitude
+    breaks = diff(bounds) * (10^-seq_len(n_om) %x% c(2:4, 6:9))
+    oldmar = par()$mar
+    par(mar = c(4.2, 5.2, 3, 1.1))
+    contour(
+        cx, cy, cz, levels=breaks, drawlabels=FALSE, col="#bbb", lwd=lwd,
+        xlab = bquote(1 - {R^2}[alpha ~ "~" ~ alpha[s]]),
+        ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
+                            .(paste(preds, collapse = " + ")) ~ " + covariates" ]),
+        main = paste0("Sensitivity bounds for E[", y, " | ", predictor, "]"),
+        xaxs="i", yaxs="i", cex.lab=1.5
+    )
+    grid()
+
+    breaks = c(10^-seq_len(n_om) %x% c(1, 5), 1)
+    labels = as.character(breaks)
+    special = c(abs(bounds - x$estimate[1]), x$std.error[1] * 1:3)
+    dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
+    labels[dists < 0.05] = ""
+    contour(
+        cx, cy, cz, levels=breaks, labels=labels,
+        lwd = lwd * c(rep(c(1.6, 1.0), n_om), 1.6),
+        labcex=0.8, col = "#444", add=TRUE, method="edge"
+    )
+    contour(
+        cx, cy, cz, lwd=2*lwd, labcex=1.0, col="#a42",
+        levels = abs(bounds - x$estimate[1]),
+        labels = paste("Estimate =", bounds),
+        add=TRUE, method="edge"
+    )
+    contour(
+        cx, cy, cz, lwd=2*lwd, lty="dashed", labcex=1.0, col="#46b",
+        levels = x$std.error[1] * 1:3,
+        labels = paste("\u00b1", 1:3, "SE"),
+        add=TRUE, method="edge"
+    )
+    par(mar = oldmar)
+}
+
+

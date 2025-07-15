@@ -5,8 +5,10 @@ ridge_naive <- function(X, y, weights, penalty=0) {
     Lambda = diag(rep(penalty, ncol(X)))
     coef = solve(crossprod(X, weights * X) + Lambda, crossprod(X, weights * y))
     fitted = X %*% coef
+    # Neyman-orthogonal estimate of residual variance
     sigma2 = colMeans((y - fitted)^2 * weights)
     vcov_u = tcrossprod(solve(crossprod(X, weights * X) + Lambda, t(X)))
+
     list(coef = coef, vcov = vcov, fitted = fitted, sigma2 = sigma2, penalty = penalty)
 }
 
@@ -17,7 +19,9 @@ ridge_svd <- function(udv, y, sqrt_w, penalty=0) {
     d_pen_c = udv$d / (udv$d^2 + penalty)
     d_uy = d_pen_c * crossprod(udv$u, sqrt_w * y)
     fitted = (udv$u / sqrt_w) %*% (udv$d * d_uy)
+    # Neyman-orthogonal estimate of residual variance
     sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
+
     list(
         coef = udv$v %*% d_uy,
         vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
@@ -44,6 +48,7 @@ ridge_auto <- function(udv, y, sqrt_w) {
     d_pen_c = udv$d / (udv$d^2 + penalty)
     fitted = uow %*% (d_pen_c * udv$d * uy)
     sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
+
     list(
         coef = udv$v %*% (d_pen_c * uy),
         vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
@@ -80,9 +85,12 @@ riesz_naive <- function(xz, p, total, weights, group=1, penalty=0) {
     XXinv = solve(crossprod(xz, weights*xz) + Lambda)
     xzAinv = xz %*% XXinv[, use]
     alpha = c(xzAinv %*% Dz)
+
     h1m = 1 - ridge_hat_naive(xz, weights, XXinv, penalty)
-    loo = c((alpha - rowSums(xzAinv * xz[, use] * weights)) / h1m)
-    list(alpha = alpha, loo = loo)
+    xzi = xz[, use] * total / mean(xz[, group] * total)
+    loo = c((alpha - rowSums(xzAinv * xzi)) / h1m)
+
+    list(alpha = alpha, loo = loo, nu2 = NA)
 }
 
 # Closed-form Riesz regression via SVD
@@ -95,7 +103,13 @@ riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
 
     xzAinv = (udv$u / sqrt_w) %*% (d_pen * t(udv$v[use, ]))
     alpha = xzAinv %*% Dz
+
     h1m = 1 - ridge_hat_svd(udv, penalty)
-    loo = rowSums(-xzAinv * shift_cols(xz[, use] * weights, Dz)) / h1m
-    list(alpha = alpha, loo = loo)
+    xzi = xz[, use] * total / mean(xz[, group] * total)
+    loo = rowSums(-xzAinv * shift_cols(xzi, Dz)) / h1m
+
+    # Neyman-orthogonal estimate of criterion fn
+    nu2 = sum(crossprod(Dz, udv$v[use, ])^2 * (2/(udv$d^2 + penalty) - d_pen^2)) / nrow(xz)
+
+    list(alpha = alpha, loo = loo, nu2 = nu2)
 }

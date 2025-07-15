@@ -199,12 +199,12 @@ ei_forms = function(formula) {
 }
 
 # Helper to infer bounds
-ei_bounds = function(bounds, outcome) {
+ei_bounds = function(bounds, outcome, clamp=1e-3) {
     if (isFALSE(bounds)) return(c(-Inf, Inf))
     if (is.null(bounds)) {
         if (is.null(outcome)) outcome = c(-Inf, Inf)
-        lt_1 = all(outcome <= 1)
-        gt_0 = all(outcome >= 0)
+        lt_1 = all(outcome <= 1 + clamp)
+        gt_0 = all(outcome >= -clamp)
         if (lt_1 && gt_0) {
             c(0, 1)
         } else if (gt_0) {

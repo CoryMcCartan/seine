@@ -69,7 +69,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     n = nrow(y)
     n_y = ncol(y)
 
-    if (!missing(subset)) {
+    if (!is.null(subset)) {
         subset = eval_tidy(enquo(subset), data)
         if (is.logical(subset)) {
             subset = 1*subset
@@ -176,7 +176,7 @@ est_check_riesz = function(riesz, data, weights, n, regr) {
     riesz
 }
 
-est_check_regr = function(regr, data, n, xcols, n_y) {
+est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
     if (is.null(regr)) {
         preds = lapply(xcols, function(.) matrix(0, nrow=n, ncol=n_y))
         names(preds) = xcols
@@ -204,15 +204,24 @@ est_check_regr = function(regr, data, n, xcols, n_y) {
     z = scale_cols(z, regr$z_scale)
     if (any(is.na(z)))
         cli_abort("Missing values found in covariates.", call=parent.frame())
+    z = cbind(regr$int_scale, z)
 
     preds = list()
+    sds = if (sd) matrix(nrow = n, ncol = n_x^2) else
     for (group in seq_along(xcols)) {
-        use = n_x + p*(group-1) + seq_len(p)
-        preds[[xcols[group]]] = shift_cols(z %*% regr$coef[use, ],
-                                           regr$coef[group, ] * -regr$int_scale)
+        use = c(group, n_x + p*(group-1) + seq_len(p))
+        preds[[xcols[group]]] = z %*% regr$coef[use, ]
+
+        if (sd) {
+            for (g2 in seq_len(group)) {
+                use2 = c(g2, n_x + p*(g2-1) + seq_len(p))
+                sds[, (group - 1)*n_x + g2] = rowSums(z * (z %*% regr$vcov_u[use, use2]))
+                sds[, (g2 - 1)*n_x + group] = sds[, (group - 1)*n_x + g2]
+            }
+        }
     }
 
-    list(yhat=regr$fitted, preds=preds, x=x)
+    list(yhat=regr$fitted, preds=preds, sds=sds, x=x)
 }
 
 #' Wrap another predictive model for use in `ei_est`
