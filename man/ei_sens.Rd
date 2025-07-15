@@ -5,31 +5,16 @@
 \title{Conduct a sensitivity analysis for estimated ecological quantities}
 \usage{
 ei_sens(
-  regr,
-  riesz,
-  data,
-  subset = NULL,
+  est,
   c_outcome = seq(0, 1, 0.01)^2,
   c_predictor = seq(0, 1, 0.01)^2,
   bias_bound = NULL,
-  confounding = 1,
-  conf_level = FALSE
+  confounding = 1
 )
 }
 \arguments{
-\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
-of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.}
-
-\item{riesz}{A fitted Riesz representer, from \code{\link[=ei_riesz]{ei_riesz()}}, or a matrix of
-Riesz weights}
-
-\item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
-the regression or Riesz representer.}
-
-\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
-indexing vector describing the subset of units over which to calculate
-estimates. Not that the subset will not apply to the estimate of
-\eqn{\sigma^2\nu^2}, the constant that scales the sensitivity bounds.}
+\item{est}{A set of estimates from \code{\link[=ei_est]{ei_est()}} using both regression and Riesz
+representer.}
 
 \item{c_outcome}{The (nonparametric) partial \eqn{R^2} of the omitted
 variables with the outcome variables. Must be between 0 and 1.
@@ -48,13 +33,9 @@ amount of bias.}
 
 \item{confounding}{The confounding parameter (\eqn{rho}), which must be
 between 0 and 1 (the adversarial worst-case).}
-
-\item{conf_level}{A numeric specifying the level for confidence intervals.
-If \code{FALSE} (the default), no confidence intervals are calculated. Standard
-errors are always returned.}
 }
 \value{
-A data frame of the same format \code{ei_est()}, but with additional
+A data frame of the same format as \code{est}, but with additional
 columns: \code{c_outcome} and \code{c_predictor}, matching all combinations of those
 arguments, and \code{bias_bound}, containing the bound on the amount of bias.
 The data frame has additional class \code{ei_est}, which supports a \code{\link[=plot]{plot()}}
@@ -73,12 +54,13 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
                total = pres_total, covariates = c(state, pop_urban, farm))
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
+est = ei_est(m, rr, spec)
 
-ei_sens(m, rr, spec, c_outcome=0.2)
+ei_sens(est, c_outcome=0.2)
 
 # How much variation would the regression residual need to explain of
 # Riesz representer to cause bias of 0.4?
-ei_sens(m, rr, spec, c_outcome=1, bias_bound=0.4)
+ei_sens(est, c_outcome=1, bias_bound=0.4)
 
 }
 \references{

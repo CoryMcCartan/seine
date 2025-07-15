@@ -5,16 +5,8 @@
 #' samples, even under large enough sensitivity parameters; see Section 5 of
 #' Chernozhukov et al (2022).
 #'
-#' @param regr A fitted regression model, from [ei_ridge()], or another kind
-#'    of regression model wrapped with [ei_wrap_model()].
-#' @param riesz A fitted Riesz representer, from [ei_riesz()], or a matrix of
-#'    Riesz weights
-#' @param data The data frame, matrix, or [ei_spec] object that was used to fit
-#'   the regression or Riesz representer.
-#' @param subset <[`data-masking`][rlang::args_data_masking]> An optional
-#'   indexing vector describing the subset of units over which to calculate
-#'   estimates. Not that the subset will not apply to the estimate of
-#'   \eqn{\sigma^2\nu^2}, the constant that scales the sensitivity bounds.
+#' @param est A set of estimates from [ei_est()] using both regression and Riesz
+#'   representer.
 #' @param c_outcome The (nonparametric) partial \eqn{R^2} of the omitted
 #'   variables with the outcome variables. Must be between 0 and 1.
 #'   Can be a vector, in which case all combinations of values with
@@ -29,11 +21,8 @@
 #'   amount of bias.
 #' @param confounding The confounding parameter (\eqn{rho}), which must be
 #'   between 0 and 1 (the adversarial worst-case).
-#' @param conf_level A numeric specifying the level for confidence intervals.
-#'   If `FALSE` (the default), no confidence intervals are calculated. Standard
-#'   errors are always returned.
 #'
-#' @returns A data frame of the same format `ei_est()`, but with additional
+#' @returns A data frame of the same format as `est`, but with additional
 #'   columns: `c_outcome` and `c_predictor`, matching all combinations of those
 #'   arguments, and `bias_bound`, containing the bound on the amount of bias.
 #'   The data frame has additional class `ei_est`, which supports a [plot()]
@@ -51,19 +40,17 @@
 #'                total = pres_total, covariates = c(state, pop_urban, farm))
 #' m = ei_ridge(spec)
 #' rr = ei_riesz(spec, penalty = m$penalty)
+#' est = ei_est(m, rr, spec)
 #'
-#' ei_sens(m, rr, spec, c_outcome=0.2)
+#' ei_sens(est, c_outcome=0.2)
 #'
 #' # How much variation would the regression residual need to explain of
 #' # Riesz representer to cause bias of 0.4?
-#' ei_sens(m, rr, spec, c_outcome=1, bias_bound=0.4)
+#' ei_sens(est, c_outcome=1, bias_bound=0.4)
 #'
 #' @export
-ei_sens <- function(
-        regr, riesz, data, subset=NULL,
-        c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
-        bias_bound=NULL, confounding=1, conf_level = FALSE
-) {
+ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
+                    bias_bound=NULL, confounding=1) {
     is_01 <- function(value, arg) {
         if (!is.numeric(value) || all(value < 0) || all(value > 1)) {
             cli_abort("{.arg {arg}} must be between 0 and 1.",
@@ -79,12 +66,14 @@ ei_sens <- function(
                   call = parent.frame())
     }
 
-    est = ei_est(regr, riesz, data, subset=subset, conf_level=conf_level)
+    idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
+    sens_s = attr(est, "sens_s")[idx]
+    bounds_inf = attr(est, "bounds_inf")
     if (is.null(bias_bound)) {
         cc = expand.grid(c_outcome=c_outcome, c_predictor=c_predictor)
         est = merge(est, cc)
-        est$bias_bound = sqrt(regr$sigma2[est$outcome] * riesz$nu2[est$predictor]) *
-            counfounding * sqrt(est$c_outcome * est$c_predictor / (1 - est$c_predictor))
+        est$bias_bound = sens_s * confounding *
+            sqrt(est$c_outcome * est$c_predictor / (1 - est$c_predictor))
     } else {
         if (!is.numeric(bias_bound)) {
             cli_abort("If provided, {.arg bias_bound} must be a numeric vector.",
@@ -94,15 +83,53 @@ ei_sens <- function(
         cc = expand.grid(c_outcome=c_outcome, c_predictor=1, bias_bound=abs(bias_bound))
         est = merge(est, cc)
 
-        cp = est$bias_bound^2 / (regr$sigma2[est$outcome] * riesz$nu2[est$predictor] *
-                                     confounding^2 * est$c_outcome)
+        cp = est$bias_bound^2 / (sens_s^2 * confounding^2 * est$c_outcome)
         est$c_predictor = cp / (1 + cp)
     }
 
-    attr(est, "S") = sqrt(riesz$nu2 %o% regr$sigma2) * confounding
-    attr(est, "bounds_inf") = ei_bounds(NULL, regr$y)
+    tibble::new_tibble(est, bounds_inf=bounds_inf, class="ei_sens")
+}
 
-    tibble::new_tibble(est, class="ei_sens")
+#' Robustness values for ecological inference
+#'
+#' TODO fill in...
+#'
+#' @param bias_bound <[`data-masking`][rlang::args_data_masking]> A bias bound:
+#'   an amount of bias which is considered substantial. Evaluated in the context
+#'   of `est`, so that one can to refer to `std.error` and `estimate` as needed.
+#' @inheritParams ei_sens
+#'
+#' @returns A data frame of the same format as `est`, but with a new `rv` column
+#'   containing the robustness values.
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+#'                total = pres_total, covariates = c(state, pop_urban, farm))
+#' m = ei_ridge(spec)
+#' rr = ei_riesz(spec, penalty = m$penalty)
+#' est = ei_est(m, rr, spec)
+#'
+#' ei_sens_rv(est, 0.1) # how much confounding for bias of 0.1
+#' ei_sens_rv(est, 2 * std.error) # how much confounding for bias of 2 SE
+#'
+#' # How much confounding to equalize all estimates (no polarization)
+#' y_avg = weighted.mean(elec_1968$pres_ind_wal, elec_1968$pres_total)
+#' ei_sens_rv(est, estimate - y_avg)
+#'
+#' @export
+ei_sens_rv <- function(est, bias_bound, confounding=1) {
+    bias_bound = eval_tidy(enquo(bias_bound), est)
+    if (!is.numeric(bias_bound)) {
+        cli_abort("{.arg bias_bound} must be numeric.", call = parent.frame())
+    }
+
+    idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
+    a = bias_bound^2 / attr(sens, "S")[idx]^2 / confounding^2
+    est$rv = 0.5 * (-a + sqrt(a^2 + 4*a))
+
+    est
 }
 
 #' Bias contour plot for ecological inference estimates
@@ -165,7 +192,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, lwd=1, ...) {
     cz = matrix(x$bias_bound, nrow=length(cx), byrow = TRUE)
 
     if (is.null(bounds)) {
-        bounds = attr(x, "bounds_inf")
+        bounds = ei_bounds(attr(x, "bounds_inf"), NULL)
     }
     bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
 

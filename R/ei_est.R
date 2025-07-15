@@ -98,6 +98,13 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     w = check_make_weights(!!enquo(total), data, n)
     w = subset * w / mean(subset * w)
 
+    # save data for sensitivity analysis
+    if (inherits(riesz, "ei_riesz") && inherits(regr, "ei_ridge")) {
+        sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
+    } else {
+        sens_s = NULL
+    }
+
     # build predictions and RR
     riesz = est_check_riesz(riesz, data, w, n, regr)
     rl = est_check_regr(regr, data, n, colnames(riesz), n_y)
@@ -129,6 +136,8 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))
     attr(out, "vcov") = vcov
     attr(out, "n") = sum(subset)
+    attr(out, "sens_s") = sens_s
+    attr(out, "bounds_inf") = ei_bounds(NULL, rl$y)
 
     out
 }
