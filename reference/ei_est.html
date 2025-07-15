@@ -70,7 +70,7 @@ machine learning (DML) estimate is produced.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_est'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">x</span>, se <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">x</span>, which <span class="op">=</span> <span class="st">"estimate"</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_est'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -131,8 +131,10 @@ errors are always returned.</p></dd>
 <dd><p>An object of class <code>ei_est</code></p></dd>
 
 
-<dt id="arg-se">se<a class="anchor" aria-label="anchor" href="#arg-se"></a></dt>
-<dd><p>If <code>TRUE</code>, return standard errors instead of estimates.</p></dd>
+<dt id="arg-which">which<a class="anchor" aria-label="anchor" href="#arg-which"></a></dt>
+<dd><p>Which column of <code>ei_est</code> to convert to a matrix. For example,
+pass <code>which="std.error"</code> to return standard errors instead of estimates.
+Partial matching supported.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -141,15 +143,16 @@ errors are always returned.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with estimates. It has two additional attributes:
-<code>vcov</code>, containing the estimated covariance matrix for the estimates, and
-<code>n</code>, containing the number of aggregate units used in estimation (the
-number of rows in <code>data</code>).</p>
+    <p>A data frame with estimates. It has class <code>ei_est</code>, supporting
+several methods, and two additional attributes: <code>vcov</code>, containing the
+estimated covariance matrix for the estimates, and <code>n</code>, containing the
+number of aggregate units used in estimation (the number of rows in
+<code>data</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="methods-by-generic-">Methods (by generic)<a class="anchor" aria-label="anchor" href="#methods-by-generic-"></a></h2>
 
-<ul><li><p><code>as.matrix(ei_est)</code>: Format estimates or standard errors as a matrix</p></li>
+<ul><li><p><code>as.matrix(ei_est)</code>: Format estimates, standard errors, or other columns as a matrix.</p></li>
 <li><p><code>vcov(ei_est)</code>: Extract full covariance matrix of estimates</p></li>
 <li><p><code>nobs(ei_est)</code>: Extract number of units covered by estimates</p></li>
 </ul></div>
@@ -198,15 +201,17 @@ number of rows in <code>data</code>).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs      0.001<span style="text-decoration: underline;">17</span>  0.013<span style="text-decoration: underline;">4</span>  </span>
 <span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu">ei_est</span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># Double/debiased ML estimate</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         dem_hum    rep_nix    ind_wal          abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.2296810  0.3814135  0.3873821 0.0015233731</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.5856278 -0.0768011  0.4901049 0.0010683650</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other 1.6370000  0.5979725 -1.2351002 0.0001277371</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, se<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          dem_hum    rep_nix    ind_wal          abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.02346882 0.03061363 0.02459608 0.0002801522</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.04997948 0.02670867 0.05056769 0.0005101309</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other 0.47024050 0.33462988 0.55488723 0.0058597394</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor   dem_hum    rep_nix    ind_wal          abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.2296810  0.3814135  0.3873821 0.0015233731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.5856278 -0.0768011  0.4901049 0.0010683650</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     other 1.6370000  0.5979725 -1.2351002 0.0001277371</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, <span class="st">"std.error"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor    dem_hum    rep_nix    ind_wal          abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.02346882 0.03061363 0.02459608 0.0002801522</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.04997948 0.02670867 0.05056769 0.0005101309</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     other 0.47024050 0.33462988 0.55488723 0.0058597394</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               white:dem_hum black:dem_hum other:dem_hum white:rep_nix</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white:dem_hum  0.0005507857  0.0004144159   0.002191216  0.0006103741</span>
@@ -216,10 +221,11 @@ number of rows in <code>data</code>).</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu">ei_est</span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span>, subset <span class="op">=</span> <span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"Alabama"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           dem_hum     rep_nix    ind_wal         abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white 0.006649839  0.16292434  0.8158650 0.014560791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black 0.733211508 -0.04036185  0.2995285 0.007621831</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other 1.803101753  0.16471677 -0.9702721 0.002453595</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor     dem_hum     rep_nix    ind_wal         abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.006649839  0.16292434  0.8158650 0.014560791</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.733211508 -0.04036185  0.2995285 0.007621831</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     other 1.803101753  0.16471677 -0.9702721 0.002453595</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 67</span>
 </code></pre></div>
