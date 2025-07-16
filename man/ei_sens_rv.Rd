@@ -14,7 +14,7 @@ representer.}
 an amount of bias which is considered substantial. Evaluated in the context
 of \code{est}, so that one can to refer to \code{std.error} and \code{estimate} as needed.}
 
-\item{confounding}{The confounding parameter (\eqn{rho}), which must be
+\item{confounding}{The confounding parameter (\eqn{\rho}), which must be
 between 0 and 1 (the adversarial worst-case).}
 }
 \value{
@@ -43,4 +43,9 @@ ei_sens_rv(est, estimate - y_avg)
 # Extract as matrix
 as.matrix(ei_sens_rv(est, 0.2), "rv")
 
+}
+\references{
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+\emph{Long story short: Omitted variable bias in causal machine learning}
+(No. w30302). National Bureau of Economic Research.
 }

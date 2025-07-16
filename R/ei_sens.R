@@ -1,9 +1,31 @@
 #' Conduct a sensitivity analysis for estimated ecological quantities
 #'
+#' Relates confounding of an omitted variable with predictor or outcome to
+#' bias in ecological estimates, using the nonparametric sensitivity analysis
+#' of Chernozhukov et al. (2022).
+#'
+#' The parameter `c_predictor` equals \eqn{1 - R^2_{\alpha\sim\alpha_s}}, where
+#' \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
+#' representer with the observed covariates. The RR can be equivalently
+#' expressed as \deqn{
+#'   \alpha = \partial_x \log f(X\mid Z, U),
+#' } where \eqn{U} is the unobserved confounder and \eqn{f} is the conditional
+#' density. The corresponding `c_predictor` is then \deqn{
+#'   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
+#'   \frac{\mathbb{E}[(\partial_x \log f(X\mid Z))^2]}{
+#'   \mathbb{E}[(\partial_x \log f(X\mid Z, U))^2]}.
+#' } When \eqn{X\mid Z,U} and \eqn{X\mid Z} are homoscedastic Gaussian, this
+#' simplifies to \deqn{
+#'   1 - R^2_{\alpha\sim\alpha_s} =
+#'   1 - \frac{\mathbb{E}[X - \mathbb{E}[X\mid Z, U]]^2}{
+#'   \mathbb{E}[X - \mathbb{E}[X\mid Z]]^2}
+#'   = R^2_{X\sim U\mid Z}.
+#' }
+#'
 #' The bounds here are plug-in estimates and do not incorporate sampling
 #' uncertainty. As such, they may fail to cover the true value in finite
 #' samples, even under large enough sensitivity parameters; see Section 5 of
-#' Chernozhukov et al (2022).
+#' Chernozhukov et al. (2022).
 #'
 #' @param est A set of estimates from [ei_est()] using both regression and Riesz
 #'   representer.
@@ -19,7 +41,7 @@
 #' @param bias_bound If provided, overrides `c_predictor` and finds values of
 #'   `c_predictor` that correspond to (the absolute value of) the provided
 #'   amount of bias.
-#' @param confounding The confounding parameter (\eqn{rho}), which must be
+#' @param confounding The confounding parameter (\eqn{\rho}), which must be
 #'   between 0 and 1 (the adversarial worst-case).
 #' @param expand_ci If `TRUE` and confidence intervals are present in `est`,
 #'   expand the width of the intervals in each direction by the calculated bias
@@ -115,6 +137,11 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 #'
 #' @returns A data frame of the same format as `est`, but with a new `rv` column
 #'   containing the robustness values.
+#'
+#' @references
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' *Long story short: Omitted variable bias in causal machine learning*
+#' (No. w30302). National Bureau of Economic Research.
 #'
 #' @examples
 #' data(elec_1968)
