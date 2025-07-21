@@ -123,6 +123,31 @@ validate_ei_spec = function(x) {
     invisible(x)
 }
 
+reconstruct_ei_spec = function(data, old) {
+    if (!missing(old)) {
+        if (is.null(attr(data, "ei_x"))) {
+            attr(data, "ei_x") = attr(old, "ei_x")
+        }
+        if (is.null(attr(data, "ei_y"))) {
+            attr(data, "ei_y") = attr(old, "ei_y")
+        }
+        if (is.null(attr(data, "ei_z"))) {
+            attr(data, "ei_z") = attr(old, "ei_z")
+        }
+        if (is.null(attr(data, "ei_n"))) {
+            attr(data, "ei_n") = attr(old, "ei_n")
+        }
+    }
+
+    attr(data, "ei_z") = intersect(attr(data, "ei_z"), names(data))
+
+    if (!inherits(data, "ei_spec")) {
+        class(data) = c("ei_spec", class(data))
+    }
+
+    data
+}
+
 
 #' @export
 print.ei_spec = function(x, ..., n=5) {

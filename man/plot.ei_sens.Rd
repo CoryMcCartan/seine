@@ -4,7 +4,16 @@
 \alias{plot.ei_sens}
 \title{Bias contour plot for ecological inference estimates}
 \usage{
-\method{plot}{ei_sens}(x, y = NULL, predictor = NULL, bounds = NULL, plot_se = 1:3, ..., lwd = 1)
+\method{plot}{ei_sens}(
+  x,
+  y = NULL,
+  predictor = NULL,
+  bounds = NULL,
+  bench = NULL,
+  plot_se = 1:3,
+  ...,
+  lwd = 1
+)
 }
 \arguments{
 \item{x}{An \link{ei_sens} object}
@@ -20,6 +29,8 @@ they will be inferred from the outcome variable: if it is contained within
 \eqn{[0, 1]}, for instance, then the bounds will be \code{c(0, 1)}. Setting
 \code{bounds = FALSE} forces unbounded estimates.}
 
+\item{bench}{A data frame of benchmark values, from \code{\link[=ei_bench]{ei_bench()}}, to plot.}
+
 \item{plot_se}{A vector of multiples of the standard error to plot as contours.}
 
 \item{...}{Additional arguments passed on to \code{\link[=contour]{contour()}}}
@@ -27,7 +38,11 @@ they will be inferred from the outcome variable: if it is contained within
 \item{lwd}{A scaling factor for the contour line widths}
 }
 \description{
-TODO fill in...
+Displays bias bound as a function of \code{c_outcome} and \code{c_predictor} in
+\code{\link[=ei_sens]{ei_sens()}} on a contour plot. Bounds on the outcome, and standard errors of
+the point estimate, can be overlaid as contours on the plot to aid in
+interpretation. Benchmarked values of \code{c_outcome} and \code{c_predictor} based on
+the observed covariates can also be overlaid.
 }
 \examples{
 data(elec_1968)
@@ -41,6 +56,7 @@ sens = ei_sens(est)
 
 plot(sens)
 
+plot(sens, bench = ei_bench(spec))
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).

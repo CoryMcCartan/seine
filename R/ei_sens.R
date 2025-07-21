@@ -8,19 +8,21 @@
 #' \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
 #' representer with the observed covariates. The RR can be equivalently
 #' expressed as \deqn{
-#'   \alpha = \partial_x \log f(X\mid Z, U),
+#'   \alpha = \partial_{\bar x_j} \log f(\bar x_j\mid z, u),
 #' } where \eqn{U} is the unobserved confounder and \eqn{f} is the conditional
 #' density. The corresponding `c_predictor` is then \deqn{
 #'   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
-#'   \frac{\mathbb{E}[(\partial_x \log f(X\mid Z))^2]}{
-#'   \mathbb{E}[(\partial_x \log f(X\mid Z, U))^2]}.
-#' } When \eqn{X\mid Z,U} and \eqn{X\mid Z} are homoscedastic Gaussian, this
-#' simplifies to \deqn{
-#'   1 - R^2_{\alpha\sim\alpha_s} =
-#'   1 - \frac{\mathbb{E}[X - \mathbb{E}[X\mid Z, U]]^2}{
-#'   \mathbb{E}[X - \mathbb{E}[X\mid Z]]^2}
-#'   = R^2_{X\sim U\mid Z}.
+#'   \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
+#'   \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
 #' }
+#' # When \eqn{\bar X_j\mid Z,U} and \eqn{\bar X_j\mid Z} are homoscedastic
+#' # Gaussian with the same variance, and each unit has the same population, this
+#' # simplifies to \deqn{
+#' #   1 - R^2_{\alpha\sim\alpha_s} =
+#' #   1 - \frac{\mathbb{E}[X - \mathbb{E}[X\mid Z, U]]^2}{
+#' #   \mathbb{E}[X - \mathbb{E}[X\mid Z]]^2}
+#' #   = R^2_{X\sim U\mid Z}.
+#' # }
 #'
 #' The bounds here are plug-in estimates and do not incorporate sampling
 #' uncertainty. As such, they may fail to cover the true value in finite
@@ -128,7 +130,12 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 
 #' Robustness values for ecological inference
 #'
-#' TODO fill in...
+#' The robustness value is the minimum bound for both `c_outcome` and
+#' `c_predictor` in [ei_sens()] such that the bias bound is a certain value.
+#' For example, if the provided bias bound is 0.5, meaning a bias of magnitude
+#' 0.5 would be considered problematic, then the robustness value is the minimum
+#' amount of confounding of outcome and predictor (more specifically, the Riesz
+#' representer) that would lead to bias of magnitude 0.5.
 #'
 #' @param bias_bound <[`data-masking`][rlang::args_data_masking]> A bias bound:
 #'   an amount of bias which is considered substantial. Evaluated in the context
@@ -178,7 +185,11 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 
 #' Bias contour plot for ecological inference estimates
 #'
-#' TODO fill in...
+#' Displays bias bound as a function of `c_outcome` and `c_predictor` in
+#' [ei_sens()] on a contour plot. Bounds on the outcome, and standard errors of
+#' the point estimate, can be overlaid as contours on the plot to aid in
+#' interpretation. Benchmarked values of `c_outcome` and `c_predictor` based on
+#' the observed covariates can also be overlaid.
 #'
 #' @param x An [ei_sens] object
 #' @param y An outcome variable, as a character vector. Defaults to first.
@@ -189,6 +200,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'   they will be inferred from the outcome variable: if it is contained within
 #'   \eqn{[0, 1]}, for instance, then the bounds will be `c(0, 1)`. Setting
 #'   `bounds = FALSE` forces unbounded estimates.
+#' @param bench A data frame of benchmark values, from [ei_bench()], to plot.
 #' @param plot_se A vector of multiples of the standard error to plot as contours.
 #' @param ... Additional arguments passed on to [contour()]
 #' @param lwd A scaling factor for the contour line widths
@@ -210,8 +222,10 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'
 #' plot(sens)
 #'
+#' plot(sens, bench = ei_bench(spec), plot_se=NULL)
 #' @export
-plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, plot_se=1:3, ..., lwd=1) {
+plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
+                         plot_se=1:3, ..., lwd=1) {
     if (is.null(y)) y = x$outcome[1]
     if (is.null(predictor)) predictor = x$predictor[1]
 
@@ -269,7 +283,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, plot_se=1:3, ..
     labels[dists < 0.05] = ""
     graphics::contour(
         cx, cy, cz, levels=breaks, labels=labels,
-        lwd = lwd * c(rep(c(1.6, 1.0), n_om), 1.6),
+        lwd = lwd * c(rep(c(1.4, 1.0), n_om), 1.4),
         labcex=0.8, col = "#444", add=TRUE, method="edge"
     )
     graphics::contour(
@@ -286,7 +300,106 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, plot_se=1:3, ..
             add=TRUE, method="edge"
         )
     }
+    if (!missing(bench)) {
+        if (!inherits(bench, "ei_bench")) {
+            cli_abort("{.arg bench} must be an {.cls ei_bench} object.",
+                      call = parent.frame())
+        }
+
+        bench = bench[bench$outcome == y & bench$predictor == predictor, ]
+        points(bench$c_predictor, bench$c_outcome, pch=3, cex=1.5)
+    }
     graphics::par(mar = oldmar)
 }
 
+#' Benchmark sensitivity parameters from observed covariates
+#'
+#' Produces a table of benchmark values for `c_outcome` and `c_predictor` in
+#' [ei_sens()] for each covariate, following the methodology of Chernozhukov
+#' et al. (2022).
+#'
+#' @param spec An [ei_spec] object.
+#' @param preproc An optional function which takes in a `ei_spec` object (`spec`
+#'   with one covariate removed) and returns a modified object that includes
+#'   modified object. Useful to apply any preprocessing, such as a basis
+#'   transformation, as part of the benchmarking process.
+#'
+#' @references
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' *Long story short: Omitted variable bias in causal machine learning*
+#' (No. w30302). National Bureau of Economic Research.
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+#'                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
+#'
+#' ei_bench(spec)
+#'
+#' # preprocess to add all 2-way interactions
+#' ei_bench(spec, preproc = function(s) {
+#'     z_cols = match(attr(s, "ei_z"), names(s))
+#'     s_out = s[-z_cols]
+#'     z_new = model.matrix(~ .^2 - 1, data = s[z_cols])
+#'     s_out = cbind(s_out, z_new)
+#'     ei_spec(s_out, white:other, pres_ind_wal,
+#'             total = attr(s, "ei_n"), covariates = colnames(z_new))
+#' })
+#' @export
+ei_bench <- function(spec, preproc = NULL) {
+    validate_ei_spec(spec)
+
+    if (!missing(preproc)) {
+        if (!is.function(preproc)) {
+            cli_abort("{.arg preproc} must be a function.")
+        }
+    } else {
+        preproc = function(x) x
+    }
+
+    n_x = length(attr(spec, "ei_x"))
+    n_y = length(attr(spec, "ei_y"))
+    var_resid = function(regr) {
+        apply(regr$y - regr$fitted, 2, var)
+    }
+
+    spec_proc = preproc(spec)
+    regr0 = ei_ridge(spec_proc)
+    riesz0 = ei_riesz(spec_proc, penalty=regr$penalty)
+    est0 = ei_est(regr0, riesz0, spec_proc)
+    vy = apply(regr0$y, 2, var)
+    var_resid0 = var_resid(regr0)
+    r2_out0 = 1 - var_resid0 / vy
+
+    covs = attr(spec, "ei_z")
+    benches = lapply(covs, function(cv) {
+        spec_loo = reconstruct_ei_spec(spec[setdiff(names(spec), cv)], spec)
+        spec_loo = preproc(spec_loo)
+
+        regr_loo = ei_ridge(spec_loo)
+        riesz_loo = ei_riesz(spec_loo, penalty=regr$penalty)
+        est_loo = ei_est(regr_loo, riesz_loo, spec_loo)
+        var_resid_loo = var_resid(regr_loo)
+        r2_out_loo = 1 - var_resid_loo / vy
+        r2_riesz = riesz_loo$nu2 / riesz0$nu2
+
+        c_outcome = pmin((r2_out0 - r2_out_loo) / r2_out0, 1)
+        c_predictor = pmin((1 - r2_riesz) / r2_riesz, 1)
+        est_chg = est_loo$estimate - est0$estimate
+        confounding = est_chg / rep(sqrt(var_resid_loo - var_resid0), each=n_x) /
+            rep(sqrt(riesz0$nu2 - riesz_loo$nu2), n_y)
+        confounding = pmax(pmin(confounding, 1), -1)
+
+        est_loo$covariate = cv
+        est_loo = est_loo[c("covariate", "predictor", "outcome")]
+        est_loo$c_outcome = rep(c_outcome, each=n_x)
+        est_loo$c_predictor = rep(c_predictor, n_y)
+        est_loo$confounding = confounding
+        est_loo$est_chg = est_chg
+        est_loo
+    })
+
+    tibble::new_tibble(do.call(rbind, benches), class="ei_bench")
+}
 

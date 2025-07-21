@@ -56,25 +56,29 @@ The parameter \code{c_predictor} equals \eqn{1 - R^2_{\alpha\sim\alpha_s}}, wher
 \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
 representer with the observed covariates. The RR can be equivalently
 expressed as \deqn{
-  \alpha = \partial_x \log f(X\mid Z, U),
+  \alpha = \partial_{\bar x_j} \log f(\bar x_j\mid z, u),
 } where \eqn{U} is the unobserved confounder and \eqn{f} is the conditional
 density. The corresponding \code{c_predictor} is then \deqn{
   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
-  \frac{\mathbb{E}[(\partial_x \log f(X\mid Z))^2]}{
-  \mathbb{E}[(\partial_x \log f(X\mid Z, U))^2]}.
-} When \eqn{X\mid Z,U} and \eqn{X\mid Z} are homoscedastic Gaussian, this
-simplifies to \deqn{
-  1 - R^2_{\alpha\sim\alpha_s} =
-  1 - \frac{\mathbb{E}[X - \mathbb{E}[X\mid Z, U]]^2}{
-  \mathbb{E}[X - \mathbb{E}[X\mid Z]]^2}
-  = R^2_{X\sim U\mid Z}.
+  \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
+  \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
+}
+}
+\section{When yoFuNkkJUocMnbjtrgBqaXCtKzjK52Wz-8- and yoFuNkkJUocMnbjtrgBqaXCtKzjK52Wz-9- are homoscedastic}{
+
 }
 
+\section{Gaussian with the same variance, and each unit has the same population, this}{
+
+}
+
+\section{simplifies to yoFuNkkJUocMnbjtrgBqaXCtKzjK52Wz-10-}{
 The bounds here are plug-in estimates and do not incorporate sampling
 uncertainty. As such, they may fail to cover the true value in finite
 samples, even under large enough sensitivity parameters; see Section 5 of
 Chernozhukov et al. (2022).
 }
+
 \examples{
 data(elec_1968)
 

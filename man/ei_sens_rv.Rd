@@ -22,7 +22,12 @@ A data frame of the same format as \code{est}, but with a new \code{rv} column
 containing the robustness values.
 }
 \description{
-TODO fill in...
+The robustness value is the minimum bound for both \code{c_outcome} and
+\code{c_predictor} in \code{\link[=ei_sens]{ei_sens()}} such that the bias bound is a certain value.
+For example, if the provided bias bound is 0.5, meaning a bias of magnitude
+0.5 would be considered problematic, then the robustness value is the minimum
+amount of confounding of outcome and predictor (more specifically, the Riesz
+representer) that would lead to bias of magnitude 0.5.
 }
 \examples{
 data(elec_1968)
