@@ -75,8 +75,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
 
     form = as.formula(paste0(
         paste0(attr(spec, "ei_y"), collapse=" + "), " ~ ",
-        paste0(attr(spec, "ei_x"), collapse=" + "), " + ",
-        paste0(attr(spec, "ei_z"), collapse=" + ")
+        paste0(c(attr(spec, "ei_x"), attr(spec, "ei_z")), collapse=" + ")
     ))
 
     bp = hardhat::new_default_formula_blueprint(

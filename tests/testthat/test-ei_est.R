@@ -50,3 +50,16 @@ test_that("Shrinkage has the expected effect", {
     expect_lt(mean(est_w$std.error), mean(est_w0$std.error))
     # expect_lt(mean(est_d$std.error), mean(est_d0$std.error))
 })
+
+test_that("Estimation methods work with no predictors", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+                   total = pres_total)
+    m = ei_ridge(spec)
+    rr = ei_riesz(spec, penalty=m$penalty)
+
+    expect_no_error({
+        est_p = ei_est(m, data=spec)
+        est_w = ei_est(rr, data=spec)
+        est_d = ei_est(m, rr, data=spec)
+    })
+})

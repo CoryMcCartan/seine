@@ -79,15 +79,15 @@ ridge_hat_naive <- function(
 riesz_naive <- function(xz, p, total, weights, group=1, penalty=0) {
     n_x = ncol(xz) %/% (1L + p)
     use = c(group, n_x + p*(group-1) + seq_len(p))
-    Dz = crossprod(xz[, use], total) / mean(xz[, group] * total)
+    Dz = crossprod(xz[, use, drop=FALSE], total) / mean(xz[, group] * total)
     Lambda = diag(rep(penalty, ncol(xz)))
 
     XXinv = solve(crossprod(xz, weights*xz) + Lambda)
-    xzAinv = xz %*% XXinv[, use]
+    xzAinv = xz %*% XXinv[, use, drop=FALSE]
     alpha = c(xzAinv %*% Dz)
 
     h1m = 1 - ridge_hat_naive(xz, weights, XXinv, penalty)
-    xzi = xz[, use] * total / mean(xz[, group] * total)
+    xzi = xz[, use, drop=FALSE] * total / mean(xz[, group] * total)
     loo = c((alpha - rowSums(xzAinv * xzi)) / h1m)
 
     list(alpha = alpha, loo = loo, nu2 = NA)
@@ -98,18 +98,19 @@ riesz_naive <- function(xz, p, total, weights, group=1, penalty=0) {
 riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
     n_x = ncol(xz) %/% (1L + p)
     use = c(group, n_x + p*(group-1) + seq_len(p))
-    Dz = colSums(xz[, use] * total) / mean(xz[, group] * total)
+    Dz = colSums(xz[, use, drop=FALSE] * total) / mean(xz[, group] * total)
     d_pen = c(udv$d / (udv$d^2 + penalty))
 
-    xzAinv = (udv$u / sqrt_w) %*% (d_pen * t(udv$v[use, ]))
+    xzAinv = (udv$u / sqrt_w) %*% (d_pen * t(udv$v[use, , drop=FALSE]))
     alpha = xzAinv %*% Dz
 
     h1m = 1 - ridge_hat_svd(udv, penalty)
-    xzi = xz[, use] * total / mean(xz[, group] * total)
+    xzi = xz[, use, drop=FALSE] * total / mean(xz[, group] * total)
     loo = rowSums(-xzAinv * shift_cols(xzi, Dz)) / h1m
 
     # Neyman-orthogonal estimate of criterion fn
-    nu2 = sum(crossprod(Dz, udv$v[use, ])^2 * (2/(udv$d^2 + penalty) - d_pen^2)) / nrow(xz)
+    nu2 = sum(crossprod(Dz, udv$v[use, , drop=FALSE])^2 *
+                  (2/(udv$d^2 + penalty) - d_pen^2)) / nrow(xz)
 
     list(alpha = alpha, loo = loo, nu2 = nu2)
 }
