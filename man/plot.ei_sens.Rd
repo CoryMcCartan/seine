@@ -11,8 +11,11 @@
   bounds = NULL,
   bench = NULL,
   plot_se = 1:3,
+  contour_exp = -2:-1,
   ...,
-  lwd = 1
+  lwd = 1,
+  pch = 8,
+  cex = 1
 )
 }
 \arguments{
@@ -33,9 +36,16 @@ they will be inferred from the outcome variable: if it is contained within
 
 \item{plot_se}{A vector of multiples of the standard error to plot as contours.}
 
+\item{contour_exp}{Powers of 10 for which to plot contours of the bias bound.}
+
 \item{...}{Additional arguments passed on to \code{\link[=contour]{contour()}}}
 
-\item{lwd}{A scaling factor for the contour line widths}
+\item{lwd}{Scaling factor for the contour line widths}
+
+\item{pch}{The point type (see \code{\link[=points]{points()}}) for the benchmark values, if
+provided}
+
+\item{cex}{Scaling factor for the benchmark points and labels, if provided}
 }
 \description{
 Displays bias bound as a function of \code{c_outcome} and \code{c_predictor} in
@@ -56,7 +66,7 @@ sens = ei_sens(est)
 
 plot(sens)
 
-plot(sens, bench = ei_bench(spec))
+plot(sens, bench = ei_bench(spec), plot_se=NULL)
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).

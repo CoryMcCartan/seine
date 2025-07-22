@@ -202,8 +202,12 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'   `bounds = FALSE` forces unbounded estimates.
 #' @param bench A data frame of benchmark values, from [ei_bench()], to plot.
 #' @param plot_se A vector of multiples of the standard error to plot as contours.
+#' @param contour_exp Powers of 10 for which to plot contours of the bias bound.
 #' @param ... Additional arguments passed on to [contour()]
-#' @param lwd A scaling factor for the contour line widths
+#' @param lwd Scaling factor for the contour line widths
+#' @param cex Scaling factor for the benchmark points and labels, if provided
+#' @param pch The point type (see [points()]) for the benchmark values, if
+#'   provided
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
@@ -225,7 +229,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #' plot(sens, bench = ei_bench(spec), plot_se=NULL)
 #' @export
 plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
-                         plot_se=1:3, ..., lwd=1) {
+                         plot_se=1:3, contour_exp=-2:-1, ..., lwd=1, pch=8, cex=1) {
     if (is.null(y)) y = x$outcome[1]
     if (is.null(predictor)) predictor = x$predictor[1]
 
@@ -262,32 +266,32 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
     }
     bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
 
-    n_om = 3 # orders of magnitude
-    breaks = diff(bounds) * (10^-seq_len(n_om) %x% c(2:4, 6:9))
+    breaks = diff(bounds) * (10^contour_exp %x% c(2:4, 6:9))
     oldmar = graphics::par()$mar
     graphics::par(mar = c(4.2, 5.2, 3, 1.1))
     graphics::contour(
-        cx, cy, cz, levels=breaks, drawlabels=FALSE, col="#bbb", lwd=lwd,
+        cx, cy, cz, levels=breaks, drawlabels=FALSE, col="#d0d0d0", lwd=lwd,
         xlab = bquote(1 - {R^2}[alpha ~ "~" ~ alpha[s]]),
-        ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
-                            .(paste(preds, collapse = " + ")) ~ " + covariates" ]),
+        ylab = bquote({R^2}[.(y) ~ "~ confounder | predictors, covariates"]),
+        # ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
+        #                .(paste(preds, collapse = ", ")) ~ ", covariates" ]),
         main = paste0("Sensitivity bounds for E[", y, " | ", predictor, "]"),
         xaxs="i", yaxs="i", cex.lab=1.5
     )
-    graphics::grid()
+    graphics::grid(col="#dfdfdf")
 
-    breaks = c(10^-seq_len(n_om) %x% c(1, 5), 1)
+    breaks = c(10^contour_exp %x% c(1, 5), 1)
     labels = as.character(breaks)
     special = c(abs(bounds - x$estimate[1]), x$std.error[1] * plot_se)
     dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
     labels[dists < 0.05] = ""
     graphics::contour(
         cx, cy, cz, levels=breaks, labels=labels,
-        lwd = lwd * c(rep(c(1.4, 1.0), n_om), 1.4),
-        labcex=0.8, col = "#444", add=TRUE, method="edge"
+        lwd = lwd * c(rep(c(1.4, 1.0), length(contour_exp)), 1.4),
+        labcex=0.8, col = "#666", add=TRUE, method="edge"
     )
     graphics::contour(
-        cx, cy, cz, lwd=2*lwd, labcex=1.0, col="#a42",
+        cx, cy, cz, lwd=2*lwd, labcex=0.85*cex, col="#a42",
         levels = abs(bounds - x$estimate[1]),
         labels = paste("Estimate =", bounds),
         add=TRUE, method="edge"
@@ -307,7 +311,11 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
         }
 
         bench = bench[bench$outcome == y & bench$predictor == predictor, ]
-        points(bench$c_predictor, bench$c_outcome, pch=3, cex=1.5)
+        points(bench$c_predictor, bench$c_outcome,
+               col="#a42", pch=pch, cex=1.5*cex)
+        tpos = ifelse(bench$c_predictor < bench$c_outcome, 4, 3)
+        text(bench$c_predictor, bench$c_outcome, bench$covariate,
+             pos=tpos, cex=0.85*cex, font=2)
     }
     graphics::par(mar = oldmar)
 }
