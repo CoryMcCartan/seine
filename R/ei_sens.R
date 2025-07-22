@@ -15,14 +15,6 @@
 #'   \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
 #'   \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
 #' }
-#' # When \eqn{\bar X_j\mid Z,U} and \eqn{\bar X_j\mid Z} are homoscedastic
-#' # Gaussian with the same variance, and each unit has the same population, this
-#' # simplifies to \deqn{
-#' #   1 - R^2_{\alpha\sim\alpha_s} =
-#' #   1 - \frac{\mathbb{E}[X - \mathbb{E}[X\mid Z, U]]^2}{
-#' #   \mathbb{E}[X - \mathbb{E}[X\mid Z]]^2}
-#' #   = R^2_{X\sim U\mid Z}.
-#' # }
 #'
 #' The bounds here are plug-in estimates and do not incorporate sampling
 #' uncertainty. As such, they may fail to cover the true value in finite
@@ -311,11 +303,11 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
         }
 
         bench = bench[bench$outcome == y & bench$predictor == predictor, ]
-        points(bench$c_predictor, bench$c_outcome,
-               col="#a42", pch=pch, cex=1.5*cex)
+        graphics::points(bench$c_predictor, bench$c_outcome,
+                         col="#a42", pch=pch, cex=1.5*cex)
         tpos = ifelse(bench$c_predictor < bench$c_outcome, 4, 3)
-        text(bench$c_predictor, bench$c_outcome, bench$covariate,
-             pos=tpos, cex=0.85*cex, font=2)
+        graphics::text(bench$c_predictor, bench$c_outcome, bench$covariate,
+                       pos=tpos, cex=0.85*cex, font=2)
     }
     graphics::par(mar = oldmar)
 }
@@ -374,7 +366,7 @@ ei_bench <- function(spec, preproc = NULL) {
 
     spec_proc = preproc(spec)
     regr0 = ei_ridge(spec_proc)
-    riesz0 = ei_riesz(spec_proc, penalty=regr$penalty)
+    riesz0 = ei_riesz(spec_proc, penalty=regr0$penalty)
     est0 = ei_est(regr0, riesz0, spec_proc)
     vy = apply(regr0$y, 2, var)
     var_resid0 = var_resid(regr0)
@@ -386,7 +378,7 @@ ei_bench <- function(spec, preproc = NULL) {
         spec_loo = preproc(spec_loo)
 
         regr_loo = ei_ridge(spec_loo)
-        riesz_loo = ei_riesz(spec_loo, penalty=regr$penalty)
+        riesz_loo = ei_riesz(spec_loo, penalty=regr_loo$penalty)
         est_loo = ei_est(regr_loo, riesz_loo, spec_loo)
         var_resid_loo = var_resid(regr_loo)
         r2_out_loo = 1 - var_resid_loo / vy

@@ -63,22 +63,12 @@ density. The corresponding \code{c_predictor} is then \deqn{
   \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
   \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
 }
-}
-\section{When uZBbGevmjQ6amJv8SeuwFybxD4HJ2m1g-8- and uZBbGevmjQ6amJv8SeuwFybxD4HJ2m1g-9- are homoscedastic}{
 
-}
-
-\section{Gaussian with the same variance, and each unit has the same population, this}{
-
-}
-
-\section{simplifies to uZBbGevmjQ6amJv8SeuwFybxD4HJ2m1g-10-}{
 The bounds here are plug-in estimates and do not incorporate sampling
 uncertainty. As such, they may fail to cover the true value in finite
 samples, even under large enough sensitivity parameters; see Section 5 of
 Chernozhukov et al. (2022).
 }
-
 \examples{
 data(elec_1968)
 
