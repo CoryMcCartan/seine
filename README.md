@@ -95,8 +95,7 @@ with demonstrations of data preprocessing and sensitivity analysis.
 ## Name
 
 In addition to being an acronym for “semiparametric ecological
-inference,” *i *seine\*\* refers to a type of fishing net, which is used
-to catch fish like tuna in aggregate. A net also is visually similar to
-the tomography lines which are commonly used to visualize the
-interaction of the latent data and the accounting identity in 2×2
-ecological inference.
+inference,” **seine** refers to a type of fishing net, which is used to
+catch fish like tuna in aggregate. A net also is visually similar to the
+tomography lines which are commonly used to visualize the interaction of
+the latent data and the accounting identity in 2×2 ecological inference.
