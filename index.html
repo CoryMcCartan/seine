@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Semiparametric Ecological Inference • seine</title>
+<title>An R package for analyzing aggregate data and performing ecological inference • seine</title>
 <!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
   window.MathJax = {
     chtml: {
@@ -16,9 +16,15 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Semiparametric Ecological Inference">
-<meta name="description" content="Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan &amp; Kuriwaki (2025) &lt;arxiv:2507.XXXXX&gt;, which generalize ecological regression as introduced by Goodman (1953) &lt;doi:10.2307/2088121&gt;. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, and sensitivity analysis.">
-<meta property="og:description" content="Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan &amp; Kuriwaki (2025) &lt;arxiv:2507.XXXXX&gt;, which generalize ecological regression as introduced by Goodman (1953) &lt;doi:10.2307/2088121&gt;. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, and sensitivity analysis.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="An R package for analyzing aggregate data and performing ecological inference">
+<meta name="description" content="The 'seine' R package allows researchers to learn individual-level
+associations from aggregate-level data while controlling for confounding
+variables with machine learning.
+">
+<meta property="og:description" content="The 'seine' R package allows researchers to learn individual-level
+associations from aggregate-level data while controlling for confounding
+variables with machine learning.
+">
 <meta property="og:image" content="https://corymccartan.com/seine/logo.svg">
 <!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
 window.dataLayer = window.dataLayer || [];
@@ -45,6 +51,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/seine.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
@@ -69,11 +76,22 @@ gtag('config', 'G-2KH5JZ6JS1');
 </div>
 <!-- badges: start -->
 
-<div class="section level2">
-<h2 id="this-software-is-experimental">This software is experimental<a class="anchor" aria-label="anchor" href="#this-software-is-experimental"></a>
+<p>Ecological inference (EI) is the statistical problem of learning individual-level associations from aggregate-level data. Without certain <em>identifying assumptions</em> and proper <em>estimation methods</em>, researchers can easily draw incorrect conclusions from aggregate data, finding patterns where none exist, missing important individual-level patterns, or even concluding an effect runs in the opposite direction than it actually does. This is known as the <em>ecological fallacy</em>.</p>
+<p>The <strong>seine</strong> package allows researchers to perform modern ecological inference quickly, accurately, and transparently.</p>
+<ul>
+<li>
+<em>Double/debiased machine learning</em> allows for controlling for confounding covariates, which increases the plausibility of identifying assumptions.</li>
+<li>
+<em>Sensitivity analysis</em> and <em>benchmarking</em> let researchers understand how violations of their assumptions will affect results.</li>
+<li>A <em>tidy interface</em> makes the package modular and easy to use, and works well with pipe-based workflows.</li>
+<li>
+<em>Minimal dependencies</em> and efficient estimation routines keep everything <em>fast</em> and lightweight.</li>
+</ul>
+<h2 id="seine-semiparametric-ecological-inference--1">
+<span style="text-color: red">This software is experimental</span>
+<a class="anchor" aria-label="anchor" href="#seine-semiparametric-ecological-inference--1"></a>
 </h2>
 <p><strong>seine</strong> and the underlying statistical methods are under active development. The package is not currently recommended for non-expert use.</p>
-</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -84,6 +102,37 @@ gtag('config', 'G-2KH5JZ6JS1');
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
+<p>The package contains county-level data from the 1968 U.S. presidential election for southern states, where Hubert Humphrey (Democrat) ran against Richard Nixon (Republican) and George Wallace (independent; segregationist).</p>
+<p>In this data, one might be interested in estimating vote choice by race. To do so, <strong>seine</strong> provides both a formula interface and a tidy interface through a new <code><a href="reference/ei_spec.html">ei_spec()</a></code> object. Here, we’ll demonstrate the latter.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/CoryMcCartan/seine" class="external-link">seine</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="reference/ei_spec.html">ei_spec</a></span><span class="op">(</span></span>
+<span>    <span class="va">elec_1968</span>, </span>
+<span>    predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span>
+<span>    outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_ind_wal</span>, </span>
+<span>    total <span class="op">=</span> <span class="va">pres_total</span>,</span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, <span class="va">inc_00_03k</span><span class="op">:</span><span class="va">inc_25_99k</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span><span class="va">rr</span> <span class="op">=</span> <span class="fu"><a href="reference/ei_riesz.html">ei_riesz</a></span><span class="op">(</span><span class="va">spec</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/ei_est.html">ei_est</a></span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 9 × 6</span></span>
+<span><span class="co">#&gt;   predictor outcome estimate std.error conf.low conf.high</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 white     dem_hum   0.291     0.0229   0.246     0.336 </span></span>
+<span><span class="co">#&gt; 2 black     dem_hum   0.285     0.0433   0.200     0.369 </span></span>
+<span><span class="co">#&gt; 3 other     dem_hum   3.80      1.14     1.57      6.03  </span></span>
+<span><span class="co">#&gt; 4 white     rep_nix   0.436     0.0360   0.365     0.506 </span></span>
+<span><span class="co">#&gt; 5 black     rep_nix  -0.0290    0.0313  -0.0903    0.0322</span></span>
+<span><span class="co">#&gt; 6 other     rep_nix  -3.86      1.16    -6.14     -1.58  </span></span>
+<span><span class="co">#&gt; 7 white     ind_wal   0.272     0.0195   0.234     0.310 </span></span>
+<span><span class="co">#&gt; 8 black     ind_wal   0.740     0.0632   0.616     0.864 </span></span>
+<span><span class="co">#&gt; 9 other     ind_wal   1.01      1.52    -1.97      4.00</span></span></code></pre></div>
+<p>This workflow is explained in more detail in the <a href="./articles/seine.html">package vignette</a>, along with demonstrations of data preprocessing and sensitivity analysis.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

@@ -35,7 +35,8 @@ gtag('config', 'G-2KH5JZ6JS1');
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/seine.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -96,8 +97,7 @@ the observed covariates can also be overlaid.</p>
 
 <dt id="arg-bounds">bounds<a class="anchor" aria-label="anchor" href="#arg-bounds"></a></dt>
 <dd><p>A vector <code>c(min, max)</code> of bounds for the outcome, which will
-affect the contours which are plotted. In general, truncation will lead to
-violations of the accounting identity. If <code>bounds = NULL</code> (the default),
+affect the contours which are plotted. If <code>bounds = NULL</code> (the default),
 they will be inferred from the outcome variable: if it is contained within
 \([0, 1]\), for instance, then the bounds will be <code>c(0, 1)</code>. Setting
 <code>bounds = FALSE</code> forces unbounded estimates.</p></dd>
