@@ -19,15 +19,15 @@ actually does. This is known as the *ecological fallacy*.
 The **seine** package allows researchers to perform modern ecological
 inference quickly, accurately, and transparently.
 
-- *Double/debiased machine learning* allows for controlling for
+- **Double/debiased machine learning** allows for controlling for
   confounding covariates, which increases the plausibility of
   identifying assumptions.
-- *Sensitivity analysis* and *benchmarking* let researchers understand
-  how violations of their assumptions will affect results.
-- A *tidy interface* makes the package modular and easy to use, and
+- **Sensitivity analysis** and **benchmarking** let researchers
+  understand how violations of their assumptions will affect results.
+- A **tidy interface** makes the package modular and easy to use, and
   works well with pipe-based workflows.
-- *Minimal dependencies* and efficient estimation routines keep
-  everything *fast* and lightweight.
+- **Minimal dependencies** and efficient estimation routines keep
+  everything **fast** and lightweight.
 
 <h2>
 
