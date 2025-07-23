@@ -13,6 +13,12 @@ template:
 
        gtag('config', 'G-2KH5JZ6JS1');
        </script>
+home:
+  title: An R package for analyzing aggregate data and performing ecological inference
+  description: |
+    The 'seine' R package allows researchers to learn individual-level
+    associations from aggregate-level data while controlling for confounding
+    variables with machine learning.
 reference:
 - title: Ecological inference
   desc: Estimate global and local quantities and perform sensitivity analyses

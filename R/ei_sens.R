@@ -187,8 +187,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #' @param y An outcome variable, as a character vector. Defaults to first.
 #' @param predictor A predictor variable to plot, as a character vector. Defaults to first.
 #' @param bounds A vector `c(min, max)` of bounds for the outcome, which will
-#'   affect the contours which are plotted. In general, truncation will lead to
-#'   violations of the accounting identity. If `bounds = NULL` (the default),
+#'   affect the contours which are plotted. If `bounds = NULL` (the default),
 #'   they will be inferred from the outcome variable: if it is contained within
 #'   \eqn{[0, 1]}, for instance, then the bounds will be `c(0, 1)`. Setting
 #'   `bounds = FALSE` forces unbounded estimates.

@@ -26,8 +26,7 @@
 \item{predictor}{A predictor variable to plot, as a character vector. Defaults to first.}
 
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, which will
-affect the contours which are plotted. In general, truncation will lead to
-violations of the accounting identity. If \code{bounds = NULL} (the default),
+affect the contours which are plotted. If \code{bounds = NULL} (the default),
 they will be inferred from the outcome variable: if it is contained within
 \eqn{[0, 1]}, for instance, then the bounds will be \code{c(0, 1)}. Setting
 \code{bounds = FALSE} forces unbounded estimates.}

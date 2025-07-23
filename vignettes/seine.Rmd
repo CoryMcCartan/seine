@@ -1,0 +1,49 @@
+---
+title: "Analyzing aggregate data with `seine`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analyzing aggregate data with `seine`}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Ecological inference (EI) is the statistical problem of learning individual-level
+associations from aggregate-level data.
+EI commonly arises when two datasets are joined using a shared geographic
+identifier, and when individual data are not released for privacy reasons.
+To take some recent examples from the *New York Times*:
+
+- [Estimating COIVD vaccine uptake by political beliefs](https://www.nytimes.com/interactive/2021/04/17/us/vaccine-hesitancy-politics.html)
+
+- [Understanding which demographics supported a progressive mayoral candidate](https://www.nytimes.com/interactive/2025/06/25/nyregion/nyc-mayor-election-results-map-mamdani-cuomo.html)
+
+- [Evaluating the differential impact of tariffs on political partisans](https://www.nytimes.com/interactive/2025/03/15/business/economy/tariffs-trump-maps-voters.html)
+
+EI is also used in public health and epidemiology, and is widely applied in
+litigation under the federal Voting Rights Act of 1965 (VRA) to establish the
+presence of racially polarized voting.
+
+# Avoiding the ecological fallacy
+
+# Preparing data
+
+```{r setup}
+library(seine)
+```
+
+# Estimation
+
+## The big picture
+
+## Fitting the regression and Riesz representer
+
+## DML for ecological estimates
+
+# Sensitivity Analysis

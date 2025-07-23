@@ -25,6 +25,8 @@ Imports:
     tibble,
     hardhat
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0),
     xml2
 LinkingTo: 
@@ -39,3 +41,4 @@ LazyData: true
 Config/testthat/edition: 3
 URL: https://github.com/CoryMcCartan/seine, https://corymccartan.com/seine/
 BugReports: https://github.com/CoryMcCartan/seine/issues
+VignetteBuilder: knitr
