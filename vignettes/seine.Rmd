@@ -1,8 +1,8 @@
 ---
-title: "Analyzing aggregate data with `seine`"
+title: "Analyzing aggregate data with **seine**"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Analyzing aggregate data with `seine`}
+  %\VignetteIndexEntry{Analyzing aggregate data with 'seine'}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,9 +21,7 @@ identifier, and when individual data are not released for privacy reasons.
 To take some recent examples from the *New York Times*:
 
 - [Estimating COIVD vaccine uptake by political beliefs](https://www.nytimes.com/interactive/2021/04/17/us/vaccine-hesitancy-politics.html)
-
 - [Understanding which demographics supported a progressive mayoral candidate](https://www.nytimes.com/interactive/2025/06/25/nyregion/nyc-mayor-election-results-map-mamdani-cuomo.html)
-
 - [Evaluating the differential impact of tariffs on political partisans](https://www.nytimes.com/interactive/2025/03/15/business/economy/tariffs-trump-maps-voters.html)
 
 EI is also used in public health and epidemiology, and is widely applied in

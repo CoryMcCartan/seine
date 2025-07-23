@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# **seine**: Semiparametric Ecological Inference <a href="https://corymccartan.com/seine/"><img src="man/figures/logo.svg" align="right" height="144" /></a>
+# <span style="color: #425682"><b>seine</b></span>: Semiparametric Ecological Inference <a href="https://corymccartan.com/seine/"><img src="man/figures/logo.svg" align="right" height="144" /></a>
 
 <!-- badges: start -->
 
@@ -31,7 +31,7 @@ inference quickly, accurately, and transparently.
 
 <h2>
 
-<span style="text-color: red">This software is experimental</span>
+<span style="color: #e06666"><b>This software is experimental</b></span>
 </h2>
 
 **seine** and the underlying statistical methods are under active
@@ -89,5 +89,14 @@ ei_est(regr = m, riesz = rr, data = spec, conf_level = 0.95)
 ```
 
 This workflow is explained in more detail in the [package
-vignette](./articles/seine.html), along with demonstrations of data
-preprocessing and sensitivity analysis.
+vignette](https://corymccartan.com/seine/articles/seine.html), along
+with demonstrations of data preprocessing and sensitivity analysis.
+
+## Name
+
+In addition to being an acronym for “semiparametric ecological
+inference,” *i *seine\*\* refers to a type of fishing net, which is used
+to catch fish like tuna in aggregate. A net also is visually similar to
+the tomography lines which are commonly used to visualize the
+interaction of the latent data and the accounting identity in 2×2
+ecological inference.
