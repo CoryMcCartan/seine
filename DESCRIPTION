@@ -18,12 +18,12 @@ Depends:
 Imports:
     rlang,
     cli,
-    graphics,
-    utils,
-    stats,
     tidyselect,
     tibble,
-    hardhat
+    hardhat,
+    graphics,
+    utils,
+    stats
 Suggests: 
     knitr,
     rmarkdown,

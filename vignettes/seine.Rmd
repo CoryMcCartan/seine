@@ -1,8 +1,8 @@
 ---
-title: "Analyzing aggregate data with **seine**"
+title: "Analyzing aggregate data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Analyzing aggregate data with 'seine'}
+  %\VignetteIndexEntry{Analyzing aggregate data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -28,20 +28,457 @@ EI is also used in public health and epidemiology, and is widely applied in
 litigation under the federal Voting Rights Act of 1965 (VRA) to establish the
 presence of racially polarized voting.
 
-# Avoiding the ecological fallacy
-
 # Preparing data
+
+As an example of an ecological analysis, we will use the `elec_1968` data
+included in the package.
+The data contain county-level election returns from Southern states in the 1968
+U.S. presidential election along with a number of covariates taken from the 1970
+U.S. census.
+The counties here are the **aggregation units**; in other analyses, states,
+precincts, or cities might be the aggregation units.
 
 ```{r setup}
 library(seine)
+data(elec_1968)
+
+print(elec_1968)
 ```
 
-# Estimation
+We are interested in estimating the individual-level association between
+race and presidential vote choice.
+The **outcome** variables are the proportion of votes cast for each candidate:
+`pres_dem_hum`, `pres_rep_nix`, `pres_ind_wal`, and `pres_abs`, where the latter
+are abstentions and ballots cast for other candidates.
+The **predictor** variables are the proportions of the voting-age population in
+each racial group: `vap_white`, `vap_black`, and `vap_other`.
+The data also contain a number of **covariates**, such as education and income,
+which we discuss below.
 
-## The big picture
+Ideally, these would be the proportion of each racial group within the
+population that actually cast a ballot for President.
+Since those proportions are unobserved, they would have to be estimated using a
+first stage of ecological inference with an outcome variable measuring turnout.
+Alternatively, one could include non-voters as another category of outcome
+variable, so that both outcome and predictor variables are proportions relative
+to the total voting-age population.
+For demonstration purposes, we will ignore this issue and proceed as if turnout
+were uniform across racial groups in every county.
 
-## Fitting the regression and Riesz representer
+These data have already been cleaned.
+Often, outcomes and predictors are measured as counts, or may have been rounded,
+so that they do not sum to exactly 1.
+**seine** provides the `ei_proportions()` function to assist in preprocessing.
+To see this in action, suppose we wanted to set up the turnout problem mentioned
+in the previous paragraph.
+The `ei_proportions()` function would let us create a new turnout proportion
+variable from our existing data.
+```{r}
+elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total, 
+                                .total = vap, clamp = 0.01)
+
+subset(elec_1968_turn, select = c(fips, state, county, turnout, vap, .other))
+```
+The function normalizes `pres_total` by `vap` and stores the result in a column
+labeled `turnout`.
+It also stores the remaining proportion (i.e., the non-voters) in the `.other`
+column, by default.
+In this data, there is one county which had higher turnout than 1970 VAP.
+The `clamp = 0.01` argument tells `ei_proportions()` to allow that kind of
+excess up to 1% of the total, and round those proportions down to 1.
+Any proportions in excess of 1.01 would throw an error.
+You can read about other functionality and customization of `ei_proportions()`
+in the function's documentation.
+
+# Avoiding the ecological fallacy
+
+The core challenge of ecological inference is that only marginal proportions are
+observed (racial groups, candidate vote shares), but we are interested in joint
+data (candidate vote shares *within* each racial group).
+The key to overcoming this challenge is assuming some kind of homogeneity across
+aggregation units.
+Enough homogeneity means that information can be shared across aggregation units
+to estimate the missing joint proportions.
+
+More precisely, a researcher needs to believe that **coarsening at random**
+(CAR) holds in order to conduct EI.
+Coarsening at random means that unobserved joint data of interest are
+mean-independent of the predictors and the number of people in each aggregation
+unit, given covariates.^[A slightly weaker assumption is possible; see the
+methodology paper (McCartan and Kuriwaki 2025) for details.]
+
+In these data, CAR means that once we know a set of covariate values for a
+county, such as its education and age, learning about the racial composition of
+the county does not change our beliefs about the candidate preference within
+each racial group or the total turnout.
+
+For example, take the three counties shown below, which have been selected by a
+clustering algorithm to be similar on the observed covariates: urbanity,
+agriculture, education, and income.
+
+```{r echo=FALSE}
+set.seed(35005)
+subs = subset(elec_1968, select=c(state, county, pop_city:pop_rural, farm:educ_coll, 
+                                  inc_00_03k:inc_25_99k, vap_white:vap_other, pres_total))
+km = kmeans(model.matrix(~ 0 + . - county - vap_white - vap_black - 
+                             vap_other - pres_total, subs), centers = 400)
+cl = which.max(tapply(subs$vap_black, km$cluster, mad)) # largest Black sd
+d_z = subset(subs, km$cluster == cl, c(state, county, pop_urban, farm, educ_elem:inc_25_99k))
+d_xn = subset(subs, km$cluster == cl, c(state, county, vap_white:pres_total))
+
+knitr::kable(d_z, digits=4)
+```
+
+CAR means that the preference for, e.g., George Wallace among White voters in
+these counties is roughly the same and is unrelated to the fact that the
+demographics are quite different between the counties:
+
+```{r echo=FALSE}
+knitr::kable(d_xn, digits=4)
+```
+
+If we believed that in the majority-Black Charles City County, racial resentment
+might increase the preference for Wallace compared to the heavily majority-White
+Greene County, then CAR would be violated.
+
+For now, we will proceed under the CAR assumption, though there are serious
+reasons to doubt its applicability in these data.
+Later, we'll discuss how to conduct a [sensitivity analysis](#sensitivity-analysis)
+to evaluate how possible violations might affect our conclusions.
+
+# Ecological estimation
+
+Once we've evaluated the CAR assumption, we can proceed with estimation.
+**seine** implements double/debiased machine learning (DML), which means we fit two
+models before combining them for a final estimate:
+
+1. A **regression** model of the outcome variables on the predictor variables
+   and covariates
+1. A **Riesz representer** model, which yields a special set of "weights" that
+   can be used in estimation.
+   
+By carefully combining the fitted regression and Riesz representer, we can
+reduce the sensitivity to biases in each component.
+
+## Setup
+
+**seine** provides both a formula interface and a tidy interface
+through a new `ei_spec()` object.
+We recommend the `ei_spec()` approach for most analyses, since it dovetails 
+well with the other estimation and sensitivity functions.
+We will demonstrate both approaches here, however.
+
+To create an EI *specification*, we call `ei_spec()` and use `tidyselect` syntax
+to specify the outcome, predictors, covariates, and the column with the total
+number of people in each aggregation unit.
+
+```{r}
+spec = ei_spec(
+    elec_1968, 
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs, 
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+                   inc_00_03k:inc_25_99k)
+)
+
+print(spec)
+```
+
+An `ei_spec` object is just a data frame with some additional metadata about
+these variables.
+
+## Fitting the regression
+
+Any machine learning method can be used to fit the regression model.
+However, due to the aggregation process that led to our data, there is certain
+structure in the regression function that can be leveraged for improved
+estimation.
+We recommend using `ei_ridge()` to fit the regression model, because it will
+automatically use this structure, and automatically determine the ridge penalty
+using a closed-form expression for the leave-one-out errors.
+To make the regression nonparametric, basis expansions such as kernel functions,
+polynomials, or splines can be used.
+The [`bases`](https://cran.r-project.org/package=bases) package and the built-in
+`splines` package provide functions that carry out these expansions and can be
+used inside model formulas.
+
+Using the tidy interface, fitting the regression is as simple as calling
+`ei_ridge()` on the `ei_spec` object:
+
+```{r}
+m = ei_ridge(spec)
+
+print(m)
+```
+
+We can see that `ei_ridge()` has automatically selected a small ridge penalty.
+By default, all covariates are centered and scaled to have unit variance.
+This is generally appropriate when penalizing all coefficients equally, as is
+done by `ei_ridge()`.
+But in some cases it may not be appropriate, and this behavior can be suppressed
+by providing `scale = FALSE`.
+
+Alternatively, we could use the formula interface, which would also let us
+specify our own interaction terms; here, we interact `state` with all other
+variables.
+Formulas in **seine** require the user separate the predictors and covariates by
+a vertical bar.
+
+```{r}
+m_form = ei_ridge(
+    cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~ 
+        vap_white + vap_black + vap_other | 
+        state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
+                     inc_03_08k + inc_08_25k + inc_25_99k),
+    data = elec_1968, total = pres_total
+)
+
+print(m_form)
+```
+
+The `summary()` method of fitted regression objects shows summary statistics
+for fitted values, which can help diagnose misspecification, and shows the
+$R^2$ values for each outcome variable.
+Here, racial demographics and covariates explain a substantial amount of the
+total variation in vote shares.
+The fitted values are almost all between 0 and 1, but the presence of some
+negative predictions indicates there is at least some model misspecification.
+
+```{r}
+summary(m)
+```
+
+## Fitting the Riesz representer
+
+The Riesz representer is less familiar, but no less easy to fit.
+Using the tidy interface, we simply pass the `ei_spec` object to `ei_riesz()`.
+Unlike `ei_ridge()`, `ei_riesz()` requires a penalty to be specified.
+A good default is to use the same penalty as was used in the regression.
+
+```{r}
+rr = ei_riesz(spec, penalty = m$penalty)
+```
+
+We could also use the formula interface.
+It is critical to provide exactly the same formula and data to both `ei_ridge()`
+and `ei_riesz()` (though the Riesz representer does not use the outcome
+variable); the tidy interface obviates the need to worry about this.
+
+```{r}
+rr_form = ei_riesz(
+    ~ vap_white + vap_black + vap_other | 
+        state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
+                     inc_03_08k + inc_08_25k + inc_25_99k),
+    data = elec_1968, total = pres_total, penalty = m_form$penalty
+)
+```
+
+As with the regression model, the `summary()` function provides useful 
+information for evaluating the Riesz representer.
+
+```{r}
+summary(rr)
+```
+
+Large second moments of the Riesz representer are indicative of a more difficult
+EI problem, likely due to limited variation in the predictor, given covariates.
+Here we see that there is very little information for the `other` group, and the
+representer is highly variable.
+Comparing the in-sample and leave-one-out second moments can also help identify
+cases of possible overfitting, where a higher penalty may be useful.
 
 ## DML for ecological estimates
 
-# Sensitivity Analysis
+With the regression function and Riesz representer now fitted, we are ready to 
+combine them to estimate our quantities of interest: vote choice by race.
+This is accomplished with the `ei_est()` function, which takes in both fitted
+models and the original `ei_spec` object, and returns a tidy data frame of
+estimates.
+The `conf_level` argument is optional and produces confidence intervals of
+the specified width from the asymptotic Normal approximation.
+
+```{r}
+est = ei_est(m, rr, spec, conf_level = 0.95)
+print(est)
+```
+
+The same call works with the formula interface.
+
+```{r}
+est_form = ei_est(m_form, rr_form, elec_1968)
+```
+
+Occasionally, it is helpful to examine the estimates in a different format.
+The `as.matrix()` method works on `ei_est` objects and can be used on any
+column of the object, such as the estimate or standard error.
+The full (asymptotic) covariance matrix of all estimates is also accessible
+via `vcov()`.
+
+```{r}
+as.matrix(est)
+
+as.matrix(est, which = "conf.low")
+```
+
+Sometimes, estimates within a set of geographies are of interest.
+The `subset=` argument to `ei_est()` allows for producing estimates in these
+smaller areas.
+
+```{r}
+as.matrix(ei_est(m, rr, spec, subset = (state == "Mississippi")))
+```
+
+Finally, `ei_est()` actually also works with a regression model alone, or a
+Riesz representer alone.
+However, these estimates are not debiased, and may have higher error.
+They generally have improperly calibrated confidence intervals.
+
+```{r}
+# Not recommended
+est_m = ei_est(regr = m, data = spec)
+est_rr = ei_est(riesz = rr, data = spec)
+
+sd(est_m$estimate - est_rr$estimate) # estimates (here) are close
+sd(est_m$std.error - est_rr$std.error) # standard errors are very different
+```
+
+<!--# Future: local estimates -->
+
+# Sensitivity analysis
+
+The entire analysis so far has rested on the critical CAR assumption.
+In practice, no such independence assumption ever holds exactly.
+Thus, it is important to evaluate how sensitive the results are to violations
+of that identifying assumption.
+
+**seine** provides a number of tools to do this.
+All are based on a nonparametric sensitivity framework developed by Chernozhukov
+et al. (2024).
+This framework considers the relationship between an unobserved confounding
+variable and the outcome and predictors, measured in terms of certain partial
+$R^2$ values.
+Essentially, the stronger the relationship, the more confounding is present
+and the more biased the original estimates are.
+
+The `ei_sens()` function provides a simple interface to this framework.
+Users provide values for sensitivity parameters, and a bound on the absolute
+bias is returned.
+In the following example, we investigate the effect of an omitted confounder
+that explains 50% of the residual variation in the outcome and 20% of the
+variation in the Riesz representer, compared to the true representer.
+
+```{r}
+ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
+```
+
+We can also work backwards and ask what one of the sensitivity parameters would
+have to be in order to produce a certain amount of bias.
+For example, if we assumed a worst-case scenario where the confounder explains
+the entire outcome (`c_outcome = 1`), we can ask how strongly that confounder
+would need to be related to the Riesz representer to produce a bias of up to 
+5pp.
+
+```{r}
+ei_sens(est, c_outcome = 1, bias_bound = 0.05)
+```
+
+For most predictors and outcomes, the answer is not very much!
+
+The `c_outcome` parameter is relatively easy to understand, but `c_predictor`
+is more difficult to interpret (though see the methodology paper for more
+discussion).
+To help understand plausible values of these parameters, we can conduct a 
+**benchmarking analysis** that treats each of our *observed* covariates in turn
+as a hypothetical *unobserved* confounder, and then calculates the values of the
+sensitivity parameters in that instance.
+Because of the amount of automated inference behind the scenes, this analysis
+only works using the tidy estimation framework.
+
+```{r}
+bench = ei_bench(spec)
+
+subset(bench, predictor == "white" & outcome == "dem_hum")
+```
+
+The table above shows the benchmark values for each covariate for the White
+preference for Humphrey estimand.
+The `confounding` column is an additional component of the sensitivity analysis
+that is discussed in the paper; the default value is 1, which is a conservative
+worst-case bound.
+The benchmark values here show that `state` is far and away the strongest
+observed confounder, whose inclusion changes the estimate by 6.5pp.
+If the unobserved confounders were as strong as `state`, we might expect a
+significant amount of bias, as we will see next.
+
+Rather than perform this sensitivity analysis on a single set of sensitivity
+parameters, we can run it across all combinations of parameter values, and
+visualize the results on a **bias contour plot.**
+We can further overlay the benchmarking values to help interpret the results.
+
+```{r}
+#| fig.alt: >
+#|   Bias contour plot for the White preference for Humphrey
+sens = ei_sens(est) # the default evaluates on a grid of parameters
+plot(sens, bench = bench)
+```
+
+The contour lines indicate how much bias could result from an unobserved 
+confounder with the specified sensitivity parameters.
+The blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
+This is a helpful value to compare against, because bias of that size
+corresponds to a predictable drop in coverage rates of confidence intervals.
+For example, bias of 1 standard error means that a confidence interval with 
+95% nominal coverage will actually have coverage of only around 80%.
+
+The red asterisks indicate the benchmark values for each covariate.
+Most are clustered in the lower-left corner and can't be distinguished. In
+contrast, the benchmark for `state` shows that an unobserved confounder of that
+strength could lead to bias of around 15pp, which is substantial compared to the
+estimate itself, which is 22.5pp.
+
+Finally, it can be helpful to summarize the sensitivity analysis by a single
+number.
+The `ei_sens_rv()` function calculates the **robustness value**, which measures
+the minimum strength of an unobserved confounder that would lead to a bias of
+a given amount.
+Here, we might consider a bias of one standard error to be problematic, due
+to its implications for the coverage of our confidence intervals.
+
+```{r}
+ei_sens_rv(est, bias_bound = 1 * std.error)
+```
+
+All of the robustness values (one for each predictor/outcome combination) are
+relatively small, indicating low robustness (high sensitivity).
+In particular, they are all far smaller than the amount of confounding
+benchmarked by the observed `state` variable.
+
+Alternatively, we might be interested in bias that would be sufficient to
+eliminate any evidence of racially polarized voting---i.e., to equalize the
+vote shares across racial groups.
+For clarity, we'll show this analysis for just the Humphrey vote.
+
+```{r}
+hum_avg = weighted.mean(elec_1968$pres_dem_hum, elec_1968$pres_total)
+est_hum = subset(est, outcome == "dem_hum")
+ei_sens_rv(est_hum, bias_bound = estimate - hum_avg)
+```
+
+We see that it would take a larger amount of confounding, compared to the
+previous analysis, to eliminate evidence of racially polarized voting for
+Humprhey.
+
+As with any single-number summary, it is important to consider sensitivity
+beyond the single value, by using the contour plot and the benchmarking
+analysis.
+
+# References
+
+McCartan, C. and Kuriwaki, S. (2025+).
+*Estimation of conditional means from aggregate data.*
+Working paper.
+
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
+*Long story short: Omitted variable bias in causal machine learning*
+(No. w30302). National Bureau of Economic Research.

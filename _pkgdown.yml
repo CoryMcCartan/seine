@@ -14,7 +14,7 @@ template:
        gtag('config', 'G-2KH5JZ6JS1');
        </script>
 home:
-  title: An R package for analyzing aggregate data and performing ecological inference
+  title: "seine: Analyzing aggregate data"
   description: |
     The 'seine' R package allows researchers to learn individual-level
     associations from aggregate-level data while controlling for confounding

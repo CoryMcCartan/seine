@@ -30,7 +30,8 @@ The **seine** package allows researchers to perform modern ecological inference
 quickly, accurately, and transparently.
 
 - **Double/debiased machine learning** allows for controlling for confounding 
-  covariates, which increases the plausibility of identifying assumptions.
+  covariates, which increases the plausibility of identifying assumptions, and
+  avoids strong parametric assumptions.
 - **Sensitivity analysis** and **benchmarking** let researchers understand how
   violations of their assumptions will affect results.
 - A **tidy interface** makes the package modular and easy to use, and works well
@@ -70,7 +71,8 @@ spec = ei_spec(
     predictors = vap_white:vap_other,
     outcome = pres_dem_hum:pres_ind_wal, 
     total = pres_total,
-    covariates = c(farm:educ_coll, inc_00_03k:inc_25_99k)
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+                   inc_00_03k:inc_25_99k)
 )
 
 m = ei_ridge(spec)
@@ -79,8 +81,8 @@ rr = ei_riesz(spec, penalty = m$penalty)
 ei_est(regr = m, riesz = rr, data = spec, conf_level = 0.95)
 ```
 
-This workflow is explained in more detail in the [package vignette](https://corymccartan.com/seine/articles/seine.html), along
-with demonstrations of data preprocessing and sensitivity analysis.
+This workflow is explained in more detail on the [Get Started](https://corymccartan.com/seine/articles/seine.html) 
+page, along with demonstrations of data preprocessing and sensitivity analysis.
 
 ## Name
 

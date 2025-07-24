@@ -17,7 +17,7 @@ transformation, as part of the benchmarking process.}
 \description{
 Produces a table of benchmark values for \code{c_outcome} and \code{c_predictor} in
 \code{\link[=ei_sens]{ei_sens()}} for each covariate, following the methodology of Chernozhukov
-et al. (2022).
+et al. (2024).
 }
 \examples{
 data(elec_1968)
@@ -38,7 +38,7 @@ ei_bench(spec, preproc = function(s) {
 })
 }
 \references{
-Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 \emph{Long story short: Omitted variable bias in causal machine learning}
 (No. w30302). National Bureau of Economic Research.
 }

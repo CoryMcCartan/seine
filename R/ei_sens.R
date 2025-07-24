@@ -2,7 +2,7 @@
 #'
 #' Relates confounding of an omitted variable with predictor or outcome to
 #' bias in ecological estimates, using the nonparametric sensitivity analysis
-#' of Chernozhukov et al. (2022).
+#' of Chernozhukov et al. (2024).
 #'
 #' The parameter `c_predictor` equals \eqn{1 - R^2_{\alpha\sim\alpha_s}}, where
 #' \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
@@ -19,7 +19,7 @@
 #' The bounds here are plug-in estimates and do not incorporate sampling
 #' uncertainty. As such, they may fail to cover the true value in finite
 #' samples, even under large enough sensitivity parameters; see Section 5 of
-#' Chernozhukov et al. (2022).
+#' Chernozhukov et al. (2024).
 #'
 #' @param est A set of estimates from [ei_est()] using both regression and Riesz
 #'   representer.
@@ -48,7 +48,7 @@
 #'   [plot.ei_sens()] method.
 #'
 #' @references
-#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 #' *Long story short: Omitted variable bias in causal machine learning*
 #' (No. w30302). National Bureau of Economic Research.
 #'
@@ -138,7 +138,7 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 #'   containing the robustness values.
 #'
 #' @references
-#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 #' *Long story short: Omitted variable bias in causal machine learning*
 #' (No. w30302). National Bureau of Economic Research.
 #'
@@ -201,7 +201,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'   provided
 #'
 #' @references
-#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 #' *Long story short: Omitted variable bias in causal machine learning*
 #' (No. w30302). National Bureau of Economic Research.
 #'
@@ -242,6 +242,11 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
                   call = parent.frame())
     }
 
+    if (is.null(bounds)) {
+        bounds = ei_bounds(attr(x, "bounds_inf"), NULL)
+    }
+    bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
+
     x = x[x$outcome == y & x$predictor == predictor, ]
     cx = unique(x$c_outcome)
     cy = unique(x$c_predictor)
@@ -252,12 +257,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
     }
     cz = matrix(x$bias_bound, nrow=length(cx), byrow = TRUE)
 
-    if (is.null(bounds)) {
-        bounds = ei_bounds(attr(x, "bounds_inf"), NULL)
-    }
-    bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
-
-    breaks = diff(bounds) * (10^contour_exp %x% c(2:4, 6:9))
+    breaks = 10^contour_exp %x% c(2:4, 6:9)
     oldmar = graphics::par()$mar
     graphics::par(mar = c(4.2, 5.2, 3, 1.1))
     graphics::contour(
@@ -315,7 +315,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
 #'
 #' Produces a table of benchmark values for `c_outcome` and `c_predictor` in
 #' [ei_sens()] for each covariate, following the methodology of Chernozhukov
-#' et al. (2022).
+#' et al. (2024).
 #'
 #' @param spec An [ei_spec] object.
 #' @param preproc An optional function which takes in a `ei_spec` object (`spec`
@@ -324,7 +324,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
 #'   transformation, as part of the benchmarking process.
 #'
 #' @references
-#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+#' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 #' *Long story short: Omitted variable bias in causal machine learning*
 #' (No. w30302). National Bureau of Economic Research.
 #'
@@ -386,8 +386,9 @@ ei_bench <- function(spec, preproc = NULL) {
         c_outcome = pmin((r2_out0 - r2_out_loo) / r2_out0, 1)
         c_predictor = pmin((1 - r2_riesz) / r2_riesz, 1)
         est_chg = est_loo$estimate - est0$estimate
-        confounding = est_chg / rep(sqrt(var_resid_loo - var_resid0), each=n_x) /
-            rep(sqrt(riesz0$nu2 - riesz_loo$nu2), n_y)
+        sd_diff = sqrt(pmax(var_resid_loo - var_resid0, 0))
+        nu_diff = sqrt(pmax(riesz0$nu2 - riesz_loo$nu2, 0))
+        confounding = est_chg / rep(sd_diff, each=n_x) / rep(nu_diff, n_y)
         confounding = pmax(pmin(confounding, 1), -1)
 
         est_loo$covariate = cv

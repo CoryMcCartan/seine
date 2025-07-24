@@ -68,7 +68,7 @@ plot(sens)
 plot(sens, bench = ei_bench(spec), plot_se=NULL)
 }
 \references{
-Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 \emph{Long story short: Omitted variable bias in causal machine learning}
 (No. w30302). National Bureau of Economic Research.
 }

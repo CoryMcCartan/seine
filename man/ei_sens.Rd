@@ -49,7 +49,7 @@ The data frame has additional class \code{ei_sens}, which supports a
 \description{
 Relates confounding of an omitted variable with predictor or outcome to
 bias in ecological estimates, using the nonparametric sensitivity analysis
-of Chernozhukov et al. (2022).
+of Chernozhukov et al. (2024).
 }
 \details{
 The parameter \code{c_predictor} equals \eqn{1 - R^2_{\alpha\sim\alpha_s}}, where
@@ -67,7 +67,7 @@ density. The corresponding \code{c_predictor} is then \deqn{
 The bounds here are plug-in estimates and do not incorporate sampling
 uncertainty. As such, they may fail to cover the true value in finite
 samples, even under large enough sensitivity parameters; see Section 5 of
-Chernozhukov et al. (2022).
+Chernozhukov et al. (2024).
 }
 \examples{
 data(elec_1968)
@@ -91,7 +91,7 @@ as.matrix(sens, "conf.high")
 
 }
 \references{
-Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2022).
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 \emph{Long story short: Omitted variable bias in causal machine learning}
 (No. w30302). National Bureau of Economic Research.
 }
