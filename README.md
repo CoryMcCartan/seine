@@ -21,7 +21,9 @@ inference quickly, accurately, and transparently.
 
 - **Double/debiased machine learning** allows for controlling for
   confounding covariates, which increases the plausibility of
-  identifying assumptions.
+  identifying assumptions. Machine learning can be used to estimate the
+  key regression model and avoid strong parametric assumptions made by
+  existing EI methods.
 - **Sensitivity analysis** and **benchmarking** let researchers
   understand how violations of their assumptions will affect results.
 - A **tidy interface** makes the package modular and easy to use, and
@@ -67,7 +69,8 @@ spec = ei_spec(
     predictors = vap_white:vap_other,
     outcome = pres_dem_hum:pres_ind_wal, 
     total = pres_total,
-    covariates = c(farm:educ_coll, inc_00_03k:inc_25_99k)
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+                   inc_00_03k:inc_25_99k)
 )
 
 m = ei_ridge(spec)
@@ -77,19 +80,19 @@ ei_est(regr = m, riesz = rr, data = spec, conf_level = 0.95)
 #> # A tibble: 9 × 6
 #>   predictor outcome estimate std.error conf.low conf.high
 #>   <chr>     <chr>      <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 white     dem_hum   0.291     0.0229   0.246     0.336 
-#> 2 black     dem_hum   0.285     0.0433   0.200     0.369 
-#> 3 other     dem_hum   3.80      1.14     1.57      6.03  
-#> 4 white     rep_nix   0.436     0.0360   0.365     0.506 
-#> 5 black     rep_nix  -0.0290    0.0313  -0.0903    0.0322
-#> 6 other     rep_nix  -3.86      1.16    -6.14     -1.58  
-#> 7 white     ind_wal   0.272     0.0195   0.234     0.310 
-#> 8 black     ind_wal   0.740     0.0632   0.616     0.864 
-#> 9 other     ind_wal   1.01      1.52    -1.97      4.00
+#> 1 white     dem_hum   0.225     0.0241   0.178     0.273 
+#> 2 black     dem_hum   0.584     0.0601   0.467     0.702 
+#> 3 other     dem_hum   2.92      0.744    1.47      4.38  
+#> 4 white     rep_nix   0.435     0.0365   0.363     0.506 
+#> 5 black     rep_nix  -0.0242    0.0367  -0.0962    0.0477
+#> 6 other     rep_nix  -4.75      0.991   -6.69     -2.81  
+#> 7 white     ind_wal   0.339     0.0197   0.300     0.377 
+#> 8 black     ind_wal   0.437     0.0436   0.351     0.522 
+#> 9 other     ind_wal   2.84      0.840    1.20      4.49
 ```
 
-This workflow is explained in more detail in the [package
-vignette](https://corymccartan.com/seine/articles/seine.html), along
+This workflow is explained in more detail on the [Get
+Started](https://corymccartan.com/seine/articles/seine.html) page, along
 with demonstrations of data preprocessing and sensitivity analysis.
 
 ## Name

@@ -30,8 +30,9 @@ The **seine** package allows researchers to perform modern ecological inference
 quickly, accurately, and transparently.
 
 - **Double/debiased machine learning** allows for controlling for confounding 
-  covariates, which increases the plausibility of identifying assumptions, and
-  avoids strong parametric assumptions.
+  covariates, which increases the plausibility of identifying assumptions.
+  Machine learning can be used to estimate the key regression model and avoid
+  strong parametric assumptions made by existing EI methods.
 - **Sensitivity analysis** and **benchmarking** let researchers understand how
   violations of their assumptions will affect results.
 - A **tidy interface** makes the package modular and easy to use, and works well
