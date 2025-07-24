@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Analyzing aggregate data with **seine** • seine</title>
+<title>Analyzing aggregate data • seine</title>
 <!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
   window.MathJax = {
     chtml: {
@@ -16,7 +16,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Analyzing aggregate data with **seine**">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Analyzing aggregate data">
 <!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -63,7 +63,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>Analyzing aggregate data with **seine**</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>Analyzing aggregate data</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/CoryMcCartan/seine/blob/main/vignettes/seine.Rmd" class="external-link"><code>vignettes/seine.Rmd</code></a></small>
@@ -90,35 +90,675 @@ the differential impact of tariffs on political partisans</a></li>
 applied in litigation under the federal Voting Rights Act of 1965 (VRA)
 to establish the presence of racially polarized voting.</p>
 <div class="section level2">
-<h2 id="avoiding-the-ecological-fallacy">Avoiding the ecological fallacy<a class="anchor" aria-label="anchor" href="#avoiding-the-ecological-fallacy"></a>
-</h2>
-</div>
-<div class="section level2">
 <h2 id="preparing-data">Preparing data<a class="anchor" aria-label="anchor" href="#preparing-data"></a>
 </h2>
+<p>As an example of an ecological analysis, we will use the
+<code>elec_1968</code> data included in the package. The data contain
+county-level election returns from Southern states in the 1968 U.S.
+presidential election along with a number of covariates taken from the
+1970 U.S. census. The counties here are the <strong>aggregation
+units</strong>; in other analyses, states, precincts, or cities might be
+the aggregation units.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/CoryMcCartan/seine" class="external-link">seine</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/CoryMcCartan/seine" class="external-link">seine</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1,143 × 41</span></span></span>
+<span><span class="co">#&gt;    fips  state  abbr  region division county    pop pop_city pop_urban pop_rural</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01001 Alaba… AL    South  East So… Autau…  <span style="text-decoration: underline;">24</span>460        0     0.536     0.464</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 01003 Alaba… AL    South  East So… Baldw…  <span style="text-decoration: underline;">59</span>382        0     0.266     0.734</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 01005 Alaba… AL    South  East So… Barbo…  <span style="text-decoration: underline;">22</span>543        0     0.404     0.596</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 01007 Alaba… AL    South  East So… Bibb …  <span style="text-decoration: underline;">13</span>812        0     0         1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 01009 Alaba… AL    South  East So… Bloun…  <span style="text-decoration: underline;">26</span>853        0     0.163     0.837</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 01011 Alaba… AL    South  East So… Bullo…  <span style="text-decoration: underline;">11</span>824        0     0.366     0.634</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 01013 Alaba… AL    South  East So… Butle…  <span style="text-decoration: underline;">22</span>007        0     0.365     0.635</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 01015 Alaba… AL    South  East So… Calho… <span style="text-decoration: underline;">103</span>092        0     0.641     0.359</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 01017 Alaba… AL    South  East So… Chamb…  <span style="text-decoration: underline;">36</span>356        0     0.437     0.563</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 01019 Alaba… AL    South  East So… Chero…  <span style="text-decoration: underline;">15</span>606        0     0         1    </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1,133 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 31 more variables: pop_white &lt;dbl&gt;, pop_black &lt;dbl&gt;, pop_aian &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   pop_asian &lt;dbl&gt;, pop_hisp &lt;dbl&gt;, vap &lt;dbl&gt;, vap_white &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   vap_black &lt;dbl&gt;, vap_other &lt;dbl&gt;, farm &lt;dbl&gt;, nonfarm &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   educ_elem &lt;dbl&gt;, educ_hsch &lt;dbl&gt;, educ_coll &lt;dbl&gt;, cvap &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   cvap_white &lt;dbl&gt;, cvap_black &lt;dbl&gt;, cvap_other &lt;dbl&gt;, inc_00_03k &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   inc_03_08k &lt;dbl&gt;, inc_08_25k &lt;dbl&gt;, inc_25_99k &lt;dbl&gt;, pres_dem_hum &lt;dbl&gt;, …</span></span></span></code></pre></div>
+<p>We are interested in estimating the individual-level association
+between race and presidential vote choice. The <strong>outcome</strong>
+variables are the proportion of votes cast for each candidate:
+<code>pres_dem_hum</code>, <code>pres_rep_nix</code>,
+<code>pres_ind_wal</code>, and <code>pres_abs</code>, where the latter
+are abstentions and ballots cast for other candidates. The
+<strong>predictor</strong> variables are the proportions of the
+voting-age population in each racial group: <code>vap_white</code>,
+<code>vap_black</code>, and <code>vap_other</code>. The data also
+contain a number of <strong>covariates</strong>, such as education and
+income, which we discuss below.</p>
+<p>Ideally, these would be the proportion of each racial group within
+the population that actually cast a ballot for President. Since those
+proportions are unobserved, they would have to be estimated using a
+first stage of ecological inference with an outcome variable measuring
+turnout. Alternatively, one could include non-voters as another category
+of outcome variable, so that both outcome and predictor variables are
+proportions relative to the total voting-age population. For
+demonstration purposes, we will ignore this issue and proceed as if
+turnout were uniform across racial groups in every county.</p>
+<p>These data have already been cleaned. Often, outcomes and predictors
+are measured as counts, or may have been rounded, so that they do not
+sum to exactly 1. <strong>seine</strong> provides the
+<code><a href="../reference/ei_proportions.html">ei_proportions()</a></code> function to assist in preprocessing. To
+see this in action, suppose we wanted to set up the turnout problem
+mentioned in the previous paragraph. The <code><a href="../reference/ei_proportions.html">ei_proportions()</a></code>
+function would let us create a new turnout proportion variable from our
+existing data.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">elec_1968_turn</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_proportions.html">ei_proportions</a></span><span class="op">(</span><span class="va">elec_1968</span>, turnout <span class="op">=</span> <span class="va">pres_total</span>, </span>
+<span>                                .total <span class="op">=</span> <span class="va">vap</span>, clamp <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">elec_1968_turn</span>, select <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fips</span>, <span class="va">state</span>, <span class="va">county</span>, <span class="va">turnout</span>, <span class="va">vap</span>, <span class="va">.other</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1,143 × 6</span></span></span>
+<span><span class="co">#&gt;    fips  state   county          turnout   vap .other</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01001 Alabama Autauga County    0.606 <span style="text-decoration: underline;">12</span>744  0.394</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 01003 Alabama Baldwin County    0.568 <span style="text-decoration: underline;">33</span>012  0.432</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 01005 Alabama Barbour County    0.645 <span style="text-decoration: underline;">12</span>370  0.355</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 01007 Alabama Bibb County       0.601  <span style="text-decoration: underline;">7</span>575  0.399</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 01009 Alabama Blount County     0.566 <span style="text-decoration: underline;">15</span>856  0.434</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 01011 Alabama Bullock County    0.721  <span style="text-decoration: underline;">6</span>019  0.279</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 01013 Alabama Butler County     0.593 <span style="text-decoration: underline;">12</span>341  0.407</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 01015 Alabama Calhoun County    0.484 <span style="text-decoration: underline;">55</span>547  0.516</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 01017 Alabama Chambers County   0.504 <span style="text-decoration: underline;">21</span>117  0.496</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 01019 Alabama Cherokee County   0.614  <span style="text-decoration: underline;">9</span>215  0.386</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1,133 more rows</span></span></span></code></pre></div>
+<p>The function normalizes <code>pres_total</code> by <code>vap</code>
+and stores the result in a column labeled <code>turnout</code>. It also
+stores the remaining proportion (i.e., the non-voters) in the
+<code>.other</code> column, by default. In this data, there is one
+county which had higher turnout than 1970 VAP. The
+<code>clamp = 0.01</code> argument tells <code><a href="../reference/ei_proportions.html">ei_proportions()</a></code>
+to allow that kind of excess up to 1% of the total, and round those
+proportions down to 1. Any proportions in excess of 1.01 would throw an
+error. You can read about other functionality and customization of
+<code><a href="../reference/ei_proportions.html">ei_proportions()</a></code> in the function’s documentation.</p>
 </div>
 <div class="section level2">
-<h2 id="estimation">Estimation<a class="anchor" aria-label="anchor" href="#estimation"></a>
+<h2 id="avoiding-the-ecological-fallacy">Avoiding the ecological fallacy<a class="anchor" aria-label="anchor" href="#avoiding-the-ecological-fallacy"></a>
 </h2>
+<p>The core challenge of ecological inference is that only marginal
+proportions are observed (racial groups, candidate vote shares), but we
+are interested in joint data (candidate vote shares <em>within</em> each
+racial group). The key to overcoming this challenge is assuming some
+kind of homogeneity across aggregation units. Enough homogeneity means
+that information can be shared across aggregation units to estimate the
+missing joint proportions.</p>
+<p>More precisely, a researcher needs to believe that <strong>coarsening
+at random</strong> (CAR) holds in order to conduct EI. Coarsening at
+random means that unobserved joint data of interest are mean-independent
+of the predictors and the number of people in each aggregation unit,
+given covariates.<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;A slightly weaker assumption is possible; see the
+methodology paper (McCartan and Kuriwaki 2025) for details.&lt;/p&gt;"><sup>1</sup></a></p>
+<p>In these data, CAR means that once we know a set of covariate values
+for a county, such as its education and age, learning about the racial
+composition of the county does not change our beliefs about the
+candidate preference within each racial group or the total turnout.</p>
+<p>For example, take the three counties shown below, which have been
+selected by a clustering algorithm to be similar on the observed
+covariates: urbanity, agriculture, education, and income.</p>
+<table class="table">
+<colgroup>
+<col width="7%">
+<col width="16%">
+<col width="8%">
+<col width="5%">
+<col width="8%">
+<col width="8%">
+<col width="8%">
+<col width="9%">
+<col width="9%">
+<col width="9%">
+<col width="9%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">state</th>
+<th align="left">county</th>
+<th align="right">pop_urban</th>
+<th align="right">farm</th>
+<th align="right">educ_elem</th>
+<th align="right">educ_hsch</th>
+<th align="right">educ_coll</th>
+<th align="right">inc_00_03k</th>
+<th align="right">inc_03_08k</th>
+<th align="right">inc_08_25k</th>
+<th align="right">inc_25_99k</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Virginia</td>
+<td align="left">Charles City County</td>
+<td align="right">0</td>
+<td align="right">0.0409</td>
+<td align="right">0.5401</td>
+<td align="right">0.3669</td>
+<td align="right">0.0930</td>
+<td align="right">0.1778</td>
+<td align="right">0.4486</td>
+<td align="right">0.3570</td>
+<td align="right">0.0166</td>
+</tr>
+<tr class="even">
+<td align="left">Virginia</td>
+<td align="left">Greene County</td>
+<td align="right">0</td>
+<td align="right">0.0737</td>
+<td align="right">0.5827</td>
+<td align="right">0.3517</td>
+<td align="right">0.0656</td>
+<td align="right">0.1736</td>
+<td align="right">0.3832</td>
+<td align="right">0.4368</td>
+<td align="right">0.0064</td>
+</tr>
+<tr class="odd">
+<td align="left">Virginia</td>
+<td align="left">Louisa County</td>
+<td align="right">0</td>
+<td align="right">0.0620</td>
+<td align="right">0.5300</td>
+<td align="right">0.3964</td>
+<td align="right">0.0736</td>
+<td align="right">0.1823</td>
+<td align="right">0.4200</td>
+<td align="right">0.3814</td>
+<td align="right">0.0163</td>
+</tr>
+</tbody>
+</table>
+<p>CAR means that the preference for, e.g., George Wallace among White
+voters in these counties is roughly the same and is unrelated to the
+fact that the demographics are quite different between the counties:</p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="12%">
+<col width="28%">
+<col width="14%">
+<col width="14%">
+<col width="14%">
+<col width="15%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">state</th>
+<th align="left">county</th>
+<th align="right">vap_white</th>
+<th align="right">vap_black</th>
+<th align="right">vap_other</th>
+<th align="right">pres_total</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Virginia</td>
+<td align="left">Charles City County</td>
+<td align="right">0.2138</td>
+<td align="right">0.7000</td>
+<td align="right">0.0862</td>
+<td align="right">1960</td>
+</tr>
+<tr class="even">
+<td align="left">Virginia</td>
+<td align="left">Greene County</td>
+<td align="right">0.9073</td>
+<td align="right">0.0917</td>
+<td align="right">0.0010</td>
+<td align="right">1549</td>
+</tr>
+<tr class="odd">
+<td align="left">Virginia</td>
+<td align="left">Louisa County</td>
+<td align="right">0.6669</td>
+<td align="right">0.3318</td>
+<td align="right">0.0014</td>
+<td align="right">3964</td>
+</tr>
+</tbody>
+</table>
+<p>If we believed that in the majority-Black Charles City County, racial
+resentment might increase the preference for Wallace compared to the
+heavily majority-White Greene County, then CAR would be violated.</p>
+<p>For now, we will proceed under the CAR assumption, though there are
+serious reasons to doubt its applicability in these data. Later, we’ll
+discuss how to conduct a <a href="#sensitivity-analysis">sensitivity
+analysis</a> to evaluate how possible violations might affect our
+conclusions.</p>
+</div>
+<div class="section level2">
+<h2 id="ecological-estimation">Ecological estimation<a class="anchor" aria-label="anchor" href="#ecological-estimation"></a>
+</h2>
+<p>Once we’ve evaluated the CAR assumption, we can proceed with
+estimation. <strong>seine</strong> implements double/debiased machine
+learning (DML), which means we fit two models before combining them for
+a final estimate:</p>
+<ol style="list-style-type: decimal">
+<li>A <strong>regression</strong> model of the outcome variables on the
+predictor variables and covariates</li>
+<li>A <strong>Riesz representer</strong> model, which yields a special
+set of “weights” that can be used in estimation.</li>
+</ol>
+<p>By carefully combining the fitted regression and Riesz representer,
+we can reduce the sensitivity to biases in each component.</p>
 <div class="section level3">
-<h3 id="the-big-picture">The big picture<a class="anchor" aria-label="anchor" href="#the-big-picture"></a>
+<h3 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h3>
+<p><strong>seine</strong> provides both a formula interface and a tidy
+interface through a new <code><a href="../reference/ei_spec.html">ei_spec()</a></code> object. We recommend the
+<code><a href="../reference/ei_spec.html">ei_spec()</a></code> approach for most analyses, since it dovetails
+well with the other estimation and sensitivity functions. We will
+demonstrate both approaches here, however.</p>
+<p>To create an EI <em>specification</em>, we call
+<code><a href="../reference/ei_spec.html">ei_spec()</a></code> and use <code>tidyselect</code> syntax to specify
+the outcome, predictors, covariates, and the column with the total
+number of people in each aggregation unit.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_spec.html">ei_spec</a></span><span class="op">(</span></span>
+<span>    <span class="va">elec_1968</span>, </span>
+<span>    predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span>
+<span>    outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_abs</span>, </span>
+<span>    total <span class="op">=</span> <span class="va">pres_total</span>,</span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">pop_city</span><span class="op">:</span><span class="va">pop_rural</span>, <span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, </span>
+<span>                   <span class="va">inc_00_03k</span><span class="op">:</span><span class="va">inc_25_99k</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span><span class="co">#&gt; EI Specification</span></span>
+<span><span class="co">#&gt; • Predictors: `white`, `black`, and `other`</span></span>
+<span><span class="co">#&gt; • Outcome: `dem_hum`, `rep_nix`, `ind_wal`, and `abs`</span></span>
+<span><span class="co">#&gt; • Covariates: `state`, `pop_city`, `pop_urban`, `pop_rural`, `farm`, `nonfarm`, `educ_elem`, `educ_hsch`, `educ_coll`, `inc_00_03k`, `inc_03_08k`, `inc_08_25k`, and `inc_25_99k`</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1,143 × 20</span></span></span>
+<span><span class="co">#&gt;   white  black    other dem_hum rep_nix ind_wal     abs state pop_city pop_urban</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.761 0.237  0.001<span style="text-decoration: underline;">73</span>   0.199   0.077<span style="text-decoration: underline;">3</span>   0.711 0.012<span style="text-decoration: underline;">2</span>  Alab…        0     0.536</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0.860 0.137  0.003<span style="text-decoration: underline;">06</span>   0.105   0.115    0.764 0.016<span style="text-decoration: underline;">1</span>  Alab…        0     0.266</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.610 0.389  0.000<span style="text-decoration: underline;">808</span>  0.242   0.048<span style="text-decoration: underline;">9</span>   0.687 0.021<span style="text-decoration: underline;">8</span>  Alab…        0     0.404</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.783 0.216  0.001<span style="text-decoration: underline;">06</span>   0.141   0.057<span style="text-decoration: underline;">1</span>   0.799 0.002<span style="text-decoration: underline;">90</span> Alab…        0     0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 0.981 0.018<span style="text-decoration: underline;">1</span> 0.000<span style="text-decoration: underline;">757</span>  0.037<span style="text-decoration: underline;">5</span>  0.222    0.727 0.013<span style="text-decoration: underline;">4</span>  Alab…        0     0.163</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1,138 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 10 more variables: pop_rural &lt;dbl&gt;, farm &lt;dbl&gt;, nonfarm &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   educ_elem &lt;dbl&gt;, educ_hsch &lt;dbl&gt;, educ_coll &lt;dbl&gt;, inc_00_03k &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   inc_03_08k &lt;dbl&gt;, inc_08_25k &lt;dbl&gt;, inc_25_99k &lt;dbl&gt;</span></span></span></code></pre></div>
+<p>An <code>ei_spec</code> object is just a data frame with some
+additional metadata about these variables.</p>
 </div>
 <div class="section level3">
-<h3 id="fitting-the-regression-and-riesz-representer">Fitting the regression and Riesz representer<a class="anchor" aria-label="anchor" href="#fitting-the-regression-and-riesz-representer"></a>
+<h3 id="fitting-the-regression">Fitting the regression<a class="anchor" aria-label="anchor" href="#fitting-the-regression"></a>
 </h3>
+<p>Any machine learning method can be used to fit the regression model.
+However, due to the aggregation process that led to our data, there is
+certain structure in the regression function that can be leveraged for
+improved estimation. We recommend using <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code> to fit
+the regression model, because it will automatically use this structure,
+and automatically determine the ridge penalty using a closed-form
+expression for the leave-one-out errors. To make the regression
+nonparametric, basis expansions such as kernel functions, polynomials,
+or splines can be used. The <a href="https://cran.r-project.org/package=bases" class="external-link"><code>bases</code></a>
+package and the built-in <code>splines</code> package provide functions
+that carry out these expansions and can be used inside model
+formulas.</p>
+<p>Using the tidy interface, fitting the regression is as simple as
+calling <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code> on the <code>ei_spec</code> object:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="co">#&gt; An ecological inference model with 4 outcomes, 3 groups, and 1143 observations</span></span>
+<span><span class="co">#&gt; Fit with penalty = 0.0432704</span></span></code></pre></div>
+<p>We can see that <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code> has automatically selected a
+small ridge penalty. By default, all covariates are centered and scaled
+to have unit variance. This is generally appropriate when penalizing all
+coefficients equally, as is done by <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code>. But in some
+cases it may not be appropriate, and this behavior can be suppressed by
+providing <code>scale = FALSE</code>.</p>
+<p>Alternatively, we could use the formula interface, which would also
+let us specify our own interaction terms; here, we interact
+<code>state</code> with all other variables. Formulas in
+<strong>seine</strong> require the user separate the predictors and
+covariates by a vertical bar.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pres_dem_hum</span>, <span class="va">pres_rep_nix</span>, <span class="va">pres_ind_wal</span>, <span class="va">pres_abs</span><span class="op">)</span> <span class="op">~</span> </span>
+<span>        <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> </span>
+<span>        <span class="va">state</span> <span class="op">*</span> <span class="op">(</span><span class="va">pop_urban</span> <span class="op">+</span> <span class="va">pop_rural</span> <span class="op">+</span> <span class="va">farm</span> <span class="op">+</span> <span class="va">educ_hsch</span> <span class="op">+</span> <span class="va">educ_coll</span> <span class="op">+</span></span>
+<span>                     <span class="va">inc_03_08k</span> <span class="op">+</span> <span class="va">inc_08_25k</span> <span class="op">+</span> <span class="va">inc_25_99k</span><span class="op">)</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">elec_1968</span>, total <span class="op">=</span> <span class="va">pres_total</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_form</span><span class="op">)</span></span>
+<span><span class="co">#&gt; An ecological inference model with 4 outcomes, 3 groups, and 1143 observations</span></span>
+<span><span class="co">#&gt; Fit with penalty = 5.22561</span></span></code></pre></div>
+<p>The <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method of fitted regression objects shows
+summary statistics for fitted values, which can help diagnose
+misspecification, and shows the <span class="math inline">\(R^2\)</span>
+values for each outcome variable. Here, racial demographics and
+covariates explain a substantial amount of the total variation in vote
+shares. The fitted values are almost all between 0 and 1, but the
+presence of some negative predictions indicates there is at least some
+model misspecification.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Fitted values:</span></span>
+<span><span class="co">#&gt;     dem_hum           rep_nix           ind_wal              abs            </span></span>
+<span><span class="co">#&gt;  Min.   :0.01289   Min.   :-0.0296   Min.   :-0.01479   Min.   :-0.0012395  </span></span>
+<span><span class="co">#&gt;  1st Qu.:0.23672   1st Qu.: 0.1911   1st Qu.: 0.26210   1st Qu.:-0.0001323  </span></span>
+<span><span class="co">#&gt;  Median :0.29178   Median : 0.3110   Median : 0.37332   Median : 0.0001229  </span></span>
+<span><span class="co">#&gt;  Mean   :0.30163   Mean   : 0.2970   Mean   : 0.40004   Mean   : 0.0013323  </span></span>
+<span><span class="co">#&gt;  3rd Qu.:0.37902   3rd Qu.: 0.3890   3rd Qu.: 0.53561   3rd Qu.: 0.0005280  </span></span>
+<span><span class="co">#&gt;  Max.   :0.70426   Max.   : 0.6481   Max.   : 0.84246   Max.   : 0.0142096  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; R-squared by outcome:</span></span>
+<span><span class="co">#&gt;   dem_hum   rep_nix   ind_wal       abs </span></span>
+<span><span class="co">#&gt; 0.6880171 0.7165231 0.8114222 0.5441581</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="fitting-the-riesz-representer">Fitting the Riesz representer<a class="anchor" aria-label="anchor" href="#fitting-the-riesz-representer"></a>
+</h3>
+<p>The Riesz representer is less familiar, but no less easy to fit.
+Using the tidy interface, we simply pass the <code>ei_spec</code> object
+to <code><a href="../reference/ei_riesz.html">ei_riesz()</a></code>. Unlike <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code>,
+<code><a href="../reference/ei_riesz.html">ei_riesz()</a></code> requires a penalty to be specified. A good
+default is to use the same penalty as was used in the regression.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rr</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_riesz.html">ei_riesz</a></span><span class="op">(</span><span class="va">spec</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span></code></pre></div>
+<p>We could also use the formula interface. It is critical to provide
+exactly the same formula and data to both <code><a href="../reference/ei_ridge.html">ei_ridge()</a></code> and
+<code><a href="../reference/ei_riesz.html">ei_riesz()</a></code> (though the Riesz representer does not use the
+outcome variable); the tidy interface obviates the need to worry about
+this.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rr_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_riesz.html">ei_riesz</a></span><span class="op">(</span></span>
+<span>    <span class="op">~</span> <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> </span>
+<span>        <span class="va">state</span> <span class="op">*</span> <span class="op">(</span><span class="va">pop_urban</span> <span class="op">+</span> <span class="va">pop_rural</span> <span class="op">+</span> <span class="va">farm</span> <span class="op">+</span> <span class="va">educ_hsch</span> <span class="op">+</span> <span class="va">educ_coll</span> <span class="op">+</span></span>
+<span>                     <span class="va">inc_03_08k</span> <span class="op">+</span> <span class="va">inc_08_25k</span> <span class="op">+</span> <span class="va">inc_25_99k</span><span class="op">)</span>,</span>
+<span>    data <span class="op">=</span> <span class="va">elec_1968</span>, total <span class="op">=</span> <span class="va">pres_total</span>, penalty <span class="op">=</span> <span class="va">m_form</span><span class="op">$</span><span class="va">penalty</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>As with the regression model, the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> function
+provides useful information for evaluating the Riesz representer.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rr</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Second moment of representer:</span></span>
+<span><span class="co">#&gt;        white        black        other </span></span>
+<span><span class="co">#&gt;     15.01799    228.39141 103472.19420 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Second moment of representer (leave-one-out):</span></span>
+<span><span class="co">#&gt;        white        black        other </span></span>
+<span><span class="co">#&gt;     17.25841    257.75390 144881.23787</span></span></code></pre></div>
+<p>Large second moments of the Riesz representer are indicative of a
+more difficult EI problem, likely due to limited variation in the
+predictor, given covariates. Here we see that there is very little
+information for the <code>other</code> group, and the representer is
+highly variable. Comparing the in-sample and leave-one-out second
+moments can also help identify cases of possible overfitting, where a
+higher penalty may be useful.</p>
 </div>
 <div class="section level3">
 <h3 id="dml-for-ecological-estimates">DML for ecological estimates<a class="anchor" aria-label="anchor" href="#dml-for-ecological-estimates"></a>
 </h3>
+<p>With the regression function and Riesz representer now fitted, we are
+ready to combine them to estimate our quantities of interest: vote
+choice by race. This is accomplished with the <code><a href="../reference/ei_est.html">ei_est()</a></code>
+function, which takes in both fitted models and the original
+<code>ei_spec</code> object, and returns a tidy data frame of estimates.
+The <code>conf_level</code> argument is optional and produces confidence
+intervals of the specified width from the asymptotic Normal
+approximation.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">est</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 6</span></span></span>
+<span><span class="co">#&gt;    predictor outcome estimate std.error  conf.low conf.high</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.225    0.024<span style="text-decoration: underline;">1</span>    0.178      0.273  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.584    0.060<span style="text-decoration: underline;">1</span>    0.467      0.702  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> other     dem_hum  2.92     0.744     1.47       4.38   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.435    0.036<span style="text-decoration: underline;">5</span>    0.363      0.506  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.036<span style="text-decoration: underline;">7</span>   -<span style="color: #BB0000;">0.096</span><span style="color: #BB0000; text-decoration: underline;">2</span>     0.047<span style="text-decoration: underline;">7</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> other     rep_nix -<span style="color: #BB0000;">4.75</span>     0.991    -<span style="color: #BB0000;">6.69</span>      -<span style="color: #BB0000;">2.81</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.339    0.019<span style="text-decoration: underline;">7</span>    0.300      0.377  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>    0.351      0.522  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> other     ind_wal  2.84     0.840     1.20       4.49   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  0.000<span style="text-decoration: underline;">692</span>   0.002<span style="text-decoration: underline;">20</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> black     abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">957</span>   0.005<span style="text-decoration: underline;">32</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">4</span></span></span></code></pre></div>
+<p>The same call works with the formula interface.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">est_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m_form</span>, <span class="va">rr_form</span>, <span class="va">elec_1968</span><span class="op">)</span></span></code></pre></div>
+<p>Occasionally, it is helpful to examine the estimates in a different
+format. The <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code> method works on <code>ei_est</code>
+objects and can be used on any column of the object, such as the
+estimate or standard error. The full (asymptotic) covariance matrix of
+all estimates is also accessible via <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          outcome</span></span>
+<span><span class="co">#&gt; predictor   dem_hum     rep_nix   ind_wal          abs</span></span>
+<span><span class="co">#&gt;     white 0.2253004  0.43469163 0.3385627  0.001445307</span></span>
+<span><span class="co">#&gt;     black 0.5844989 -0.02422778 0.4365898  0.003139145</span></span>
+<span><span class="co">#&gt;     other 2.9232285 -4.74841187 2.8437828 -0.018599469</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, which <span class="op">=</span> <span class="st">"conf.low"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          outcome</span></span>
+<span><span class="co">#&gt; predictor   dem_hum     rep_nix   ind_wal           abs</span></span>
+<span><span class="co">#&gt;     white 0.1780894  0.36318338 0.2998869  0.0006917330</span></span>
+<span><span class="co">#&gt;     black 0.4666862 -0.09617439 0.3512261  0.0009571476</span></span>
+<span><span class="co">#&gt;     other 1.4658425 -6.69044611 1.1971298 -0.0705544420</span></span></code></pre></div>
+<p>Sometimes, estimates within a set of geographies are of interest. The
+<code>subset=</code> argument to <code><a href="../reference/ei_est.html">ei_est()</a></code> allows for
+producing estimates in these smaller areas.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, subset <span class="op">=</span> <span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"Mississippi"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          outcome</span></span>
+<span><span class="co">#&gt; predictor     dem_hum     rep_nix   ind_wal          abs</span></span>
+<span><span class="co">#&gt;     white 0.002209141  0.19864269 0.7995612 -0.000413015</span></span>
+<span><span class="co">#&gt;     black 0.738043281  0.01895925 0.2413356  0.001661887</span></span>
+<span><span class="co">#&gt;     other 1.405217200 -2.76253073 2.3609276 -0.003614053</span></span></code></pre></div>
+<p>Finally, <code><a href="../reference/ei_est.html">ei_est()</a></code> actually also works with a regression
+model alone, or a Riesz representer alone. However, these estimates are
+not debiased, and may have higher error. They generally have improperly
+calibrated confidence intervals.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Not recommended</span></span>
+<span><span class="va">est_m</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span></span>
+<span><span class="va">est_rr</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span>riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">est_m</span><span class="op">$</span><span class="va">estimate</span> <span class="op">-</span> <span class="va">est_rr</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span> <span class="co"># estimates (here) are close</span></span>
+<span><span class="co">#&gt; [1] 0.005069123</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">est_m</span><span class="op">$</span><span class="va">std.error</span> <span class="op">-</span> <span class="va">est_rr</span><span class="op">$</span><span class="va">std.error</span><span class="op">)</span> <span class="co"># standard errors are very different</span></span>
+<span><span class="co">#&gt; [1] 1.331431</span></span></code></pre></div>
+<!--# Future: local estimates -->
 </div>
 </div>
 <div class="section level2">
-<h2 id="sensitivity-analysis">Sensitivity Analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
+<h2 id="sensitivity-analysis">Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
 </h2>
+<p>The entire analysis so far has rested on the critical CAR assumption.
+In practice, no such independence assumption ever holds exactly. Thus,
+it is important to evaluate how sensitive the results are to violations
+of that identifying assumption.</p>
+<p><strong>seine</strong> provides a number of tools to do this. All are
+based on a nonparametric sensitivity framework developed by Chernozhukov
+et al. (2024). This framework considers the relationship between an
+unobserved confounding variable and the outcome and predictors, measured
+in terms of certain partial <span class="math inline">\(R^2\)</span>
+values. Essentially, the stronger the relationship, the more confounding
+is present and the more biased the original estimates are.</p>
+<p>The <code><a href="../reference/ei_sens.html">ei_sens()</a></code> function provides a simple interface to
+this framework. Users provide values for sensitivity parameters, and a
+bound on the absolute bias is returned. In the following example, we
+investigate the effect of an omitted confounder that explains 50% of the
+residual variation in the outcome and 20% of the variation in the Riesz
+representer, compared to the true representer.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span>, c_outcome <span class="op">=</span> <span class="fl">0.5</span>, c_predictor <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 9</span></span></span>
+<span><span class="co">#&gt;    predictor outcome estimate std.error conf.low conf.high c_outcome c_predictor</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.225    0.024<span style="text-decoration: underline;">1</span>    7.52<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   0.375         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.584    0.060<span style="text-decoration: underline;">1</span>    9.78<span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   1.07          0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> other     dem_hum  2.92     0.744    -<span style="color: #BB0000;">9.98</span><span style="color: #949494;">e</span>+0  15.8           0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.435    0.036<span style="text-decoration: underline;">5</span>    2.44<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.626         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.036<span style="text-decoration: underline;">7</span>   -<span style="color: #BB0000;">5.24</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.476         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> other     rep_nix -<span style="color: #BB0000;">4.75</span>     0.991    -<span style="color: #BB0000;">2.00</span><span style="color: #949494;">e</span>+1  10.5           0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.339    0.019<span style="text-decoration: underline;">7</span>    1.72<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.505         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>   -<span style="color: #BB0000;">1.06</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.979         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> other     ind_wal  2.84     0.840    -<span style="color: #BB0000;">1.30</span><span style="color: #949494;">e</span>+1  18.7           0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span> -<span style="color: #BB0000;">3.79</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-3</span>   0.006<span style="text-decoration: underline;">68</span>       0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> black     abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>  -<span style="color: #BB0000;">1.51</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-2</span>   0.021<span style="text-decoration: underline;">4</span>        0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">5.69</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.532         0.5         0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: bias_bound &lt;dbl&gt;</span></span></span></code></pre></div>
+<p>We can also work backwards and ask what one of the sensitivity
+parameters would have to be in order to produce a certain amount of
+bias. For example, if we assumed a worst-case scenario where the
+confounder explains the entire outcome (<code>c_outcome = 1</code>), we
+can ask how strongly that confounder would need to be related to the
+Riesz representer to produce a bias of up to 5pp.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span>, c_outcome <span class="op">=</span> <span class="fl">1</span>, bias_bound <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 9</span></span></span>
+<span><span class="co">#&gt;    predictor outcome estimate std.error conf.low conf.high c_outcome c_predictor</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.225    0.024<span style="text-decoration: underline;">1</span>     0.128     0.323          1  0.028<span style="text-decoration: underline;">7</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.584    0.060<span style="text-decoration: underline;">1</span>     0.417     0.752          1  0.002<span style="text-decoration: underline;">29</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> other     dem_hum  2.92     0.744      1.42      4.43           1  0.000<span style="text-decoration: underline;">002</span>39</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.435    0.036<span style="text-decoration: underline;">5</span>     0.313     0.556          1  0.021<span style="text-decoration: underline;">4</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.036<span style="text-decoration: underline;">7</span>    -<span style="color: #BB0000;">0.146</span>     0.097<span style="text-decoration: underline;">7</span>         1  0.001<span style="text-decoration: underline;">70</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> other     rep_nix -<span style="color: #BB0000;">4.75</span>     0.991     -<span style="color: #BB0000;">6.74</span>     -<span style="color: #BB0000;">2.76</span>           1  0.000<span style="text-decoration: underline;">001</span>77</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.339    0.019<span style="text-decoration: underline;">7</span>     0.250     0.427          1  0.018<span style="text-decoration: underline;">9</span>    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>     0.301     0.572          1  0.001<span style="text-decoration: underline;">49</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> other     ind_wal  2.84     0.840      1.15      4.54           1  0.000<span style="text-decoration: underline;">001</span>55</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">3</span>    0.052<span style="text-decoration: underline;">2</span>         1  0.940     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> black     abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">0</span>    0.055<span style="text-decoration: underline;">3</span>         1  0.547     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>    -<span style="color: #BB0000;">0.121</span>     0.083<span style="text-decoration: underline;">4</span>         1  0.001<span style="text-decoration: underline;">26</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: bias_bound &lt;dbl&gt;</span></span></span></code></pre></div>
+<p>For most predictors and outcomes, the answer is not very much!</p>
+<p>The <code>c_outcome</code> parameter is relatively easy to
+understand, but <code>c_predictor</code> is more difficult to interpret
+(though see the methodology paper for more discussion). To help
+understand plausible values of these parameters, we can conduct a
+<strong>benchmarking analysis</strong> that treats each of our
+<em>observed</em> covariates in turn as a hypothetical
+<em>unobserved</em> confounder, and then calculates the values of the
+sensitivity parameters in that instance. Because of the amount of
+automated inference behind the scenes, this analysis only works using
+the tidy estimation framework.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bench</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bench.html">ei_bench</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">bench</span>, <span class="va">predictor</span> <span class="op">==</span> <span class="st">"white"</span> <span class="op">&amp;</span> <span class="va">outcome</span> <span class="op">==</span> <span class="st">"dem_hum"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 13 × 7</span></span></span>
+<span><span class="co">#&gt;    covariate  predictor outcome  c_outcome c_predictor confounding    est_chg</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> state      white     dem_hum  0.683        0.301          0.381  0.065<span style="text-decoration: underline;">5</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> pop_city   white     dem_hum  0.000<span style="text-decoration: underline;">041</span>1    0.059<span style="text-decoration: underline;">1</span>         1      0.000<span style="text-decoration: underline;">969</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> pop_urban  white     dem_hum -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">183</span>     0.005<span style="text-decoration: underline;">25</span>        1      0.000<span style="text-decoration: underline;">346</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> pop_rural  white     dem_hum -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">416</span>    -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">965</span>      -<span style="color: #BB0000;">1</span>     -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">286</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> farm       white     dem_hum  0.000<span style="text-decoration: underline;">085</span>7   -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">75</span>        1      0.000<span style="text-decoration: underline;">064</span>8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> nonfarm    white     dem_hum  0.000<span style="text-decoration: underline;">085</span>7   -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">75</span>        1      0.000<span style="text-decoration: underline;">064</span>8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> educ_elem  white     dem_hum -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">033</span><span style="color: #BB0000;">3</span>   -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">09</span>        1      0.000<span style="text-decoration: underline;">049</span>8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> educ_hsch  white     dem_hum -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">281</span>    -<span style="color: #BB0000;">0.002</span><span style="color: #BB0000; text-decoration: underline;">85</span>        1      0.000<span style="text-decoration: underline;">152</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> educ_coll  white     dem_hum  0.001<span style="text-decoration: underline;">42</span>      0.047<span style="text-decoration: underline;">8</span>         0.312  0.001<span style="text-decoration: underline;">09</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> inc_00_03k white     dem_hum  0.000<span style="text-decoration: underline;">561</span>     0.002<span style="text-decoration: underline;">85</span>       -<span style="color: #BB0000;">0.267</span> -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">145</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> inc_03_08k white     dem_hum  0.000<span style="text-decoration: underline;">864</span>     0.015<span style="text-decoration: underline;">1</span>         0.837  0.001<span style="text-decoration: underline;">30</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> inc_08_25k white     dem_hum  0.000<span style="text-decoration: underline;">081</span>3    0.000<span style="text-decoration: underline;">400</span>      -<span style="color: #BB0000;">1</span>     -<span style="color: #BB0000;">0.000</span><span style="color: #BB0000; text-decoration: underline;">161</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span> inc_25_99k white     dem_hum  0.000<span style="text-decoration: underline;">333</span>     0.028<span style="text-decoration: underline;">7</span>         1      0.001<span style="text-decoration: underline;">95</span></span></span></code></pre></div>
+<p>The table above shows the benchmark values for each covariate for the
+White preference for Humphrey estimand. The <code>confounding</code>
+column is an additional component of the sensitivity analysis that is
+discussed in the paper; the default value is 1, which is a conservative
+worst-case bound. The benchmark values here show that <code>state</code>
+is far and away the strongest observed confounder, whose inclusion
+changes the estimate by 6.5pp. If the unobserved confounders were as
+strong as <code>state</code>, we might expect a significant amount of
+bias, as we will see next.</p>
+<p>Rather than perform this sensitivity analysis on a single set of
+sensitivity parameters, we can run it across all combinations of
+parameter values, and visualize the results on a <strong>bias contour
+plot.</strong> We can further overlay the benchmarking values to help
+interpret the results.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sens</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span> <span class="co"># the default evaluates on a grid of parameters</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sens</span>, bench <span class="op">=</span> <span class="va">bench</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seine_files/figure-html/unnamed-chunk-20-1.png" alt="Bias contour plot for the White preference for Humphrey" width="700"></p>
+<p>The contour lines indicate how much bias could result from an
+unobserved confounder with the specified sensitivity parameters. The
+blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
+This is a helpful value to compare against, because bias of that size
+corresponds to a predictable drop in coverage rates of confidence
+intervals. For example, bias of 1 standard error means that a confidence
+interval with 95% nominal coverage will actually have coverage of only
+around 80%.</p>
+<p>The red asterisks indicate the benchmark values for each covariate.
+Most are clustered in the lower-left corner and can’t be distinguished.
+In contrast, the benchmark for <code>state</code> shows that an
+unobserved confounder of that strength could lead to bias of around
+15pp, which is substantial compared to the estimate itself, which is
+22.5pp.</p>
+<p>Finally, it can be helpful to summarize the sensitivity analysis by a
+single number. The <code><a href="../reference/ei_sens_rv.html">ei_sens_rv()</a></code> function calculates the
+<strong>robustness value</strong>, which measures the minimum strength
+of an unobserved confounder that would lead to a bias of a given amount.
+Here, we might consider a bias of one standard error to be problematic,
+due to its implications for the coverage of our confidence
+intervals.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens_rv.html">ei_sens_rv</a></span><span class="op">(</span><span class="va">est</span>, bias_bound <span class="op">=</span> <span class="fl">1</span> <span class="op">*</span> <span class="va">std.error</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 7</span></span></span>
+<span><span class="co">#&gt;    predictor outcome estimate std.error  conf.low conf.high     rv</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.225    0.024<span style="text-decoration: underline;">1</span>    0.178      0.273   0.079<span style="text-decoration: underline;">4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.584    0.060<span style="text-decoration: underline;">1</span>    0.467      0.702   0.056<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> other     dem_hum  2.92     0.744     1.47       4.38    0.022<span style="text-decoration: underline;">7</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.435    0.036<span style="text-decoration: underline;">5</span>    0.363      0.506   0.102 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.024</span><span style="color: #BB0000; text-decoration: underline;">2</span>   0.036<span style="text-decoration: underline;">7</span>   -<span style="color: #BB0000;">0.096</span><span style="color: #BB0000; text-decoration: underline;">2</span>     0.047<span style="text-decoration: underline;">7</span>  0.029<span style="text-decoration: underline;">9</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> other     rep_nix -<span style="color: #BB0000;">4.75</span>     0.991    -<span style="color: #BB0000;">6.69</span>      -<span style="color: #BB0000;">2.81</span>    0.026<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.339    0.019<span style="text-decoration: underline;">7</span>    0.300      0.377   0.053<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>    0.351      0.522   0.033<span style="text-decoration: underline;">1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> other     ind_wal  2.84     0.840     1.20       4.49    0.020<span style="text-decoration: underline;">7</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  0.000<span style="text-decoration: underline;">692</span>   0.002<span style="text-decoration: underline;">20</span> 0.029<span style="text-decoration: underline;">9</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> black     abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">957</span>   0.005<span style="text-decoration: underline;">32</span> 0.024<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> other     abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">4</span>  0.018<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
+<p>All of the robustness values (one for each predictor/outcome
+combination) are relatively small, indicating low robustness (high
+sensitivity). In particular, they are all far smaller than the amount of
+confounding benchmarked by the observed <code>state</code> variable.</p>
+<p>Alternatively, we might be interested in bias that would be
+sufficient to eliminate any evidence of racially polarized voting—i.e.,
+to equalize the vote shares across racial groups. For clarity, we’ll
+show this analysis for just the Humphrey vote.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hum_avg</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/weighted.mean.html" class="external-link">weighted.mean</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">$</span><span class="va">pres_dem_hum</span>, <span class="va">elec_1968</span><span class="op">$</span><span class="va">pres_total</span><span class="op">)</span></span>
+<span><span class="va">est_hum</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">est</span>, <span class="va">outcome</span> <span class="op">==</span> <span class="st">"dem_hum"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/ei_sens_rv.html">ei_sens_rv</a></span><span class="op">(</span><span class="va">est_hum</span>, bias_bound <span class="op">=</span> <span class="va">estimate</span> <span class="op">-</span> <span class="va">hum_avg</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 7</span></span></span>
+<span><span class="co">#&gt;   predictor outcome estimate std.error conf.low conf.high     rv</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> white     dem_hum    0.225    0.024<span style="text-decoration: underline;">1</span>    0.178     0.273 0.250 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> black     dem_hum    0.584    0.060<span style="text-decoration: underline;">1</span>    0.467     0.702 0.231 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> other     dem_hum    2.92     0.744     1.47      4.38  0.077<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
+<p>We see that it would take a larger amount of confounding, compared to
+the previous analysis, to eliminate evidence of racially polarized
+voting for Humprhey.</p>
+<p>As with any single-number summary, it is important to consider
+sensitivity beyond the single value, by using the contour plot and the
+benchmarking analysis.</p>
 </div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>McCartan, C. and Kuriwaki, S. (2025+). <em>Estimation of conditional
+means from aggregate data.</em> Working paper.</p>
+<p>Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., &amp;
+Syrgkanis, V. (2024). <em>Long story short: Omitted variable bias in
+causal machine learning</em> (No. w30302). National Bureau of Economic
+Research.</p>
+</div>
+
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

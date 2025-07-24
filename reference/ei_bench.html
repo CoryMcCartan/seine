@@ -7,9 +7,9 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Benchmark sensitivity parameters from observed covariates — ei_bench"><meta name="description" content="Produces a table of benchmark values for c_outcome and c_predictor in
 ei_sens() for each covariate, following the methodology of Chernozhukov
-et al. (2022)."><meta property="og:description" content="Produces a table of benchmark values for c_outcome and c_predictor in
+et al. (2024)."><meta property="og:description" content="Produces a table of benchmark values for c_outcome and c_predictor in
 ei_sens() for each covariate, following the methodology of Chernozhukov
-et al. (2022)."><meta property="og:image" content="https://corymccartan.com/seine/logo.svg"><!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
+et al. (2024)."><meta property="og:image" content="https://corymccartan.com/seine/logo.svg"><!-- Google tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2KH5JZ6JS1"></script><script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
@@ -52,7 +52,7 @@ gtag('config', 'G-2KH5JZ6JS1');
     <div class="ref-description section level2">
     <p>Produces a table of benchmark values for <code>c_outcome</code> and <code>c_predictor</code> in
 <code><a href="ei_sens.html">ei_sens()</a></code> for each covariate, following the methodology of Chernozhukov
-et al. (2022).</p>
+et al. (2024).</p>
     </div>
 
     <div class="section level2">
@@ -77,7 +77,7 @@ transformation, as part of the benchmarking process.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., &amp; Syrgkanis, V. (2022).
+    <p>Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., &amp; Syrgkanis, V. (2024).
 <em>Long story short: Omitted variable bias in causal machine learning</em>
 (No. w30302). National Bureau of Economic Research.</p>
     </div>
@@ -112,7 +112,6 @@ transformation, as part of the benchmarking process.</p></dd>
 <span class="r-in"><span>    <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">s_out</span>, <span class="va">white</span><span class="op">:</span><span class="va">other</span>, <span class="va">pres_ind_wal</span>,</span></span>
 <span class="r-in"><span>            total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"ei_n"</span><span class="op">)</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">z_new</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NaNs produced</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome      c_outcome c_predictor confounding est_chg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -121,7 +120,7 @@ transformation, as part of the benchmarking process.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> educ_elem other     pres_ind_wal    0.193        0.113     -<span style="color: #BB0000;">0.549</span>  -<span style="color: #BB0000;">1.22</span>  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pop_urban white     pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.143     -<span style="color: #BB0000;">0.586</span>  -<span style="color: #BB0000;">0.015</span><span style="color: #BB0000; text-decoration: underline;">2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> pop_urban black     pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.210      0.526   0.068<span style="text-decoration: underline;">1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban other     pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>      -<span style="color: #BB0000;">0.345</span>    <span style="color: #BB0000;">NaN</span>      -<span style="color: #BB0000;">0.359</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban other     pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>      -<span style="color: #BB0000;">0.345</span>     -<span style="color: #BB0000;">1</span>      -<span style="color: #BB0000;">0.359</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> farm      white     pres_ind_wal    0.254        0.700     -<span style="color: #BB0000;">0.294</span>  -<span style="color: #BB0000;">0.023</span><span style="color: #BB0000; text-decoration: underline;">7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> farm      black     pres_ind_wal    0.254        0.617      0.486   0.160 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      other     pres_ind_wal    0.254        1          0.162   1.08  </span>
