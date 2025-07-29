@@ -353,6 +353,9 @@ wrap_king_ei <- function(obj) {
                    call = parent.frame())
     }
 
+    # calculate CEF manually
+    # $betaw and $betaw combine the CEF with the residuals
+    # this approach also obviates any sampling, by using `ep_moments`
     sds = exp(obj$phi[3:4])
     Sigma = (diag(2)*(1 - tanh(obj$phi[5])) + tanh(obj$phi[5]))
     Sigma = diag(sds) %*% Sigma %*% diag(sds)
