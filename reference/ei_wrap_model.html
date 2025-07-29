@@ -119,17 +119,14 @@ the provided <code>x</code> with <code><a href="ei_est.html">ei_est()</a></code>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">pres_ind_wal</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="va">white</span> <span class="op">+</span> <span class="va">black</span> <span class="op">+</span> <span class="va">other</span> <span class="op">+</span> <span class="va">pop_urban</span> <span class="op">+</span> <span class="va">farm</span>,</span></span>
 <span class="r-in"><span>        data <span class="op">=</span> <span class="va">spec</span>, family <span class="op">=</span> <span class="st">"binomial"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(predvars, data, env):</span> object 'white' not found</span>
 <span class="r-in"><span><span class="va">m_wrap</span> <span class="op">=</span> <span class="fu">ei_wrap_model</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'm' not found</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_wrap</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> A wrapped <span style="color: #0000BB;">&lt;glm/lm&gt;</span> model with 1143 observations</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'm_wrap' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m_wrap</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># notice all estimates nonnegative</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   predictor outcome        estimate std.error</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> white     pres_ind_wal 0.339        0.023<span style="text-decoration: underline;">9</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> black     pres_ind_wal 0.741        0.056<span style="text-decoration: underline;">5</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> other     pres_ind_wal 0.000<span style="text-decoration: underline;">002</span>98   0.005<span style="text-decoration: underline;">39</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'm_wrap' not found</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

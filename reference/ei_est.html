@@ -170,63 +170,68 @@ number of aggregate units used in estimation (the number of rows in
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_est</span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, data <span class="op">=</span> <span class="va">spec</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span> <span class="co"># Plug-in estimate</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome estimate std.error  conf.low conf.high</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.230    0.022<span style="text-decoration: underline;">2</span>    0.186      0.273  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.588    0.045<span style="text-decoration: underline;">7</span>    0.499      0.678  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  1.55     0.181     1.20       1.91   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.382    0.028<span style="text-decoration: underline;">4</span>    0.326      0.438  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.077</span><span style="color: #BB0000; text-decoration: underline;">5</span>   0.016<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.110</span>     -<span style="color: #BB0000;">0.045</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  0.494    0.072<span style="text-decoration: underline;">2</span>    0.353      0.636  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.387    0.025<span style="text-decoration: underline;">1</span>    0.338      0.436  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.488    0.044<span style="text-decoration: underline;">6</span>    0.401      0.576  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">1.05</span>     0.131    -<span style="color: #BB0000;">1.30</span>      -<span style="color: #BB0000;">0.790</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">52</span>  0.000<span style="text-decoration: underline;">251</span>  0.001<span style="text-decoration: underline;">02</span>    0.002<span style="text-decoration: underline;">01</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.001<span style="text-decoration: underline;">09</span>  0.000<span style="text-decoration: underline;">227</span>  0.000<span style="text-decoration: underline;">641</span>   0.001<span style="text-decoration: underline;">53</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs      0.001<span style="text-decoration: underline;">17</span>  0.000<span style="text-decoration: underline;">471</span>  0.000<span style="text-decoration: underline;">250</span>   0.002<span style="text-decoration: underline;">10</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome      estimate std.error  conf.low conf.high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> vap_white pres_dem_hum  0.230    0.022<span style="text-decoration: underline;">2</span>    0.186      0.273  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> vap_black pres_dem_hum  0.588    0.045<span style="text-decoration: underline;">7</span>    0.499      0.678  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> vap_other pres_dem_hum  1.55     0.181     1.20       1.91   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> vap_white pres_rep_nix  0.382    0.028<span style="text-decoration: underline;">4</span>    0.326      0.438  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> vap_black pres_rep_nix -<span style="color: #BB0000;">0.077</span><span style="color: #BB0000; text-decoration: underline;">5</span>   0.016<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.110</span>     -<span style="color: #BB0000;">0.045</span><span style="color: #BB0000; text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> vap_other pres_rep_nix  0.494    0.072<span style="text-decoration: underline;">2</span>    0.353      0.636  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> vap_white pres_ind_wal  0.387    0.025<span style="text-decoration: underline;">1</span>    0.338      0.436  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> vap_black pres_ind_wal  0.488    0.044<span style="text-decoration: underline;">6</span>    0.401      0.576  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> vap_other pres_ind_wal -<span style="color: #BB0000;">1.05</span>     0.131    -<span style="color: #BB0000;">1.30</span>      -<span style="color: #BB0000;">0.790</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> vap_white pres_abs      0.001<span style="text-decoration: underline;">52</span>  0.000<span style="text-decoration: underline;">251</span>  0.001<span style="text-decoration: underline;">02</span>    0.002<span style="text-decoration: underline;">01</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.001<span style="text-decoration: underline;">09</span>  0.000<span style="text-decoration: underline;">227</span>  0.000<span style="text-decoration: underline;">641</span>   0.001<span style="text-decoration: underline;">53</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> vap_other pres_abs      0.001<span style="text-decoration: underline;">17</span>  0.000<span style="text-decoration: underline;">471</span>  0.000<span style="text-decoration: underline;">250</span>   0.002<span style="text-decoration: underline;">10</span></span>
 <span class="r-in"><span><span class="fu">ei_est</span><span class="op">(</span>riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># Weighted (Riesz) estimate</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 12 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome estimate std.error</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> white     dem_hum  0.230    0.022<span style="text-decoration: underline;">4</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> black     dem_hum  0.588    0.094<span style="text-decoration: underline;">8</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> other     dem_hum  1.55     1.98    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> white     rep_nix  0.382    0.023<span style="text-decoration: underline;">7</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> black     rep_nix -<span style="color: #BB0000;">0.077</span><span style="color: #BB0000; text-decoration: underline;">5</span>   0.069<span style="text-decoration: underline;">5</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> other     rep_nix  0.494    1.49    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> white     ind_wal  0.387    0.028<span style="text-decoration: underline;">6</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> black     ind_wal  0.488    0.115   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> other     ind_wal -<span style="color: #BB0000;">1.05</span>     1.98    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> white     abs      0.001<span style="text-decoration: underline;">52</span>  0.000<span style="text-decoration: underline;">252</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> black     abs      0.001<span style="text-decoration: underline;">09</span>  0.000<span style="text-decoration: underline;">840</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> other     abs      0.001<span style="text-decoration: underline;">17</span>  0.013<span style="text-decoration: underline;">4</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    predictor outcome      estimate std.error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> vap_white pres_dem_hum  0.230    0.022<span style="text-decoration: underline;">4</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> vap_black pres_dem_hum  0.588    0.094<span style="text-decoration: underline;">8</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> vap_other pres_dem_hum  1.55     1.98    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> vap_white pres_rep_nix  0.382    0.023<span style="text-decoration: underline;">7</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> vap_black pres_rep_nix -<span style="color: #BB0000;">0.077</span><span style="color: #BB0000; text-decoration: underline;">5</span>   0.069<span style="text-decoration: underline;">5</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> vap_other pres_rep_nix  0.494    1.49    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> vap_white pres_ind_wal  0.387    0.028<span style="text-decoration: underline;">6</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> vap_black pres_ind_wal  0.488    0.115   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> vap_other pres_ind_wal -<span style="color: #BB0000;">1.05</span>     1.98    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> vap_white pres_abs      0.001<span style="text-decoration: underline;">52</span>  0.000<span style="text-decoration: underline;">252</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.001<span style="text-decoration: underline;">09</span>  0.000<span style="text-decoration: underline;">840</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> vap_other pres_abs      0.001<span style="text-decoration: underline;">17</span>  0.013<span style="text-decoration: underline;">4</span>  </span>
 <span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu">ei_est</span><span class="op">(</span>regr <span class="op">=</span> <span class="va">m</span>, riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span> <span class="co"># Double/debiased ML estimate</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> predictor   dem_hum    rep_nix    ind_wal          abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.2296810  0.3814135  0.3873821 0.0015233731</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.5856278 -0.0768011  0.4901049 0.0010683650</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     other 1.6370000  0.5979725 -1.2351002 0.0001277371</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_white    0.2296810    0.3814135    0.3873821 0.0015233731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_black    0.5856278   -0.0768011    0.4901049 0.0010683650</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_other    1.6370000    0.5979725   -1.2351002 0.0001277371</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, <span class="st">"std.error"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> predictor    dem_hum    rep_nix    ind_wal          abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.02346882 0.03061363 0.02459608 0.0002801522</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.04997948 0.02670867 0.05056769 0.0005101309</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     other 0.47024050 0.33462988 0.55488723 0.0058597394</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_white   0.02346882   0.03061363   0.02459608 0.0002801522</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_black   0.04997948   0.02670867   0.05056769 0.0005101309</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_other   0.47024050   0.33462988   0.55488723 0.0058597394</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               white:dem_hum black:dem_hum other:dem_hum white:rep_nix</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white:dem_hum  0.0005507857  0.0004144159   0.002191216  0.0006103741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black:dem_hum  0.0004144159  0.0024979486   0.005601271  0.0007945676</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> other:dem_hum  0.0021912165  0.0056012709   0.221126131  0.0045939440</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white:rep_nix  0.0006103741  0.0007945676   0.004593944  0.0009371944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        vap_white:pres_dem_hum vap_black:pres_dem_hum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_white:pres_dem_hum           0.0005507857           0.0004144159</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_black:pres_dem_hum           0.0004144159           0.0024979486</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_other:pres_dem_hum           0.0021912165           0.0056012709</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_white:pres_rep_nix           0.0006103741           0.0007945676</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        vap_other:pres_dem_hum vap_white:pres_rep_nix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_white:pres_dem_hum            0.002191216           0.0006103741</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_black:pres_dem_hum            0.005601271           0.0007945676</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_other:pres_dem_hum            0.221126131           0.0045939440</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> vap_white:pres_rep_nix            0.004593944           0.0009371944</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu">ei_est</span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span>, subset <span class="op">=</span> <span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"Alabama"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          outcome</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> predictor     dem_hum     rep_nix    ind_wal         abs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     white 0.006649839  0.16292434  0.8158650 0.014560791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     black 0.733211508 -0.04036185  0.2995285 0.007621831</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     other 1.803101753  0.16471677 -0.9702721 0.002453595</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            outcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> predictor   pres_dem_hum pres_rep_nix pres_ind_wal    pres_abs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_white  0.006649839   0.16292434    0.8158650 0.014560791</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_black  0.733211508  -0.04036185    0.2995285 0.007621831</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   vap_other  1.803101753   0.16471677   -0.9702721 0.002453595</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 67</span>
 </code></pre></div>
