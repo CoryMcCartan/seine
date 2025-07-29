@@ -14,6 +14,20 @@ test_that("Estimation methods agree when there is no penalization", {
     expect_true(all(est_d$std.error > est_p$std.error))
 })
 
+test_that("Estimation methods work with single predictor", {
+    m = ei_ridge(pres_ind_wal ~ vap_black | farm, elec_1968, penalty=0)
+    rr = ei_riesz(pres_ind_wal ~ vap_black | farm, elec_1968, 
+                  penalty=m$penalty, total=pres_total)
+
+    est_p = ei_est(m, data=elec_1968, total=pres_total)
+    est_w = ei_est(rr, data=elec_1968, total=pres_total, outcome=pres_ind_wal)
+    est_d = ei_est(m, rr, data=elec_1968, total=pres_total)
+
+    expect_equal(est_p$estimate, est_w$estimate)
+    expect_equal(est_p$estimate, est_d$estimate)
+    expect_true(all(est_d$std.error > est_p$std.error))
+})
+
 test_that("Estimation methods work with character predictors", {
     spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
                    total = pres_total, covariates = c(state, pop_urban))

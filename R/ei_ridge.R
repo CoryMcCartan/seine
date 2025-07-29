@@ -195,11 +195,7 @@ ei_ridge_bridge <- function(processed, ...) {
     x = processed$predictors
     idx_x = match(processed$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
-    x = x[, idx_x, drop=FALSE]
-    if (ncol(x) == 1) {
-        x = cbind(x, 1 - x)
-        colnames(x)[2] = ".other"
-    }
+    x = pull_x(x, idx_x)
     check_preds(x)
     weights = processed$blueprint$ei_wgt
 
@@ -309,6 +305,17 @@ predict_ei_ridge_numeric <- function(object, x, z) {
     xz = row_kronecker(x, z, object$int_scale)
     pred = as.list(as.data.frame(xz %*% object$coef))
     do.call(hardhat::spruce_numeric_multiple, pred)
+}
+
+# helper to pull columns from predictor matrix and add .other if needed
+# used by ei_riesz and ei_est as well
+pull_x <- function(x, idx_x) {
+    x = x[, idx_x, drop=FALSE]
+    if (ncol(x) == 1) {
+        x = cbind(x, 1 - x)
+        colnames(x)[2] = ".other"
+    }
+    x
 }
 
 # Model type ------------------------------------------------------------------

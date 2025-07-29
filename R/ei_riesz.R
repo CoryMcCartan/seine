@@ -142,11 +142,7 @@ ei_riesz_bridge <- function(processed, ...) {
     x = processed$predictors
     idx_x = match(processed$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
-    x = x[, idx_x, drop=FALSE]
-    if (ncol(x) == 1) {
-        x = cbind(x, 1 - x)
-        colnames(x)[2] = ".other"
-    }
+    x = pull_x(x, idx_x)
     check_preds(x)
     total = processed$blueprint$ei_n
     weights = processed$blueprint$ei_wgt

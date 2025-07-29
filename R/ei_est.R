@@ -65,7 +65,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
         regr = NULL
     }
 
-    y = est_check_outcome(regr, data, !!enquo(outcome))
+    y = est_check_outcome(regr, data, enquo(outcome))
     n = nrow(y)
     n_y = ncol(y)
 
@@ -142,16 +142,18 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     out
 }
 
-est_check_outcome = function(regr, data, outcome) {
+est_check_outcome = function(regr, data, quo_outcome) {
     if (!is.null(regr)) {
         y = regr$y
     } else if (inherits(data, "ei_spec")) {
         y = as.matrix(data[attr(data, "ei_y")])
     } else {
-        quo = enquo(outcome)
-        y = as.matrix(eval_tidy(!!quo, data))
-        if (ncol(y) == 1) {
-            colnames(y) = rlang::quo_label(quo)
+        y = eval_tidy(quo_outcome, data)
+        if (!is.null(y)) {
+            y = as.matrix(y)
+            if (ncol(y) == 1) {
+                colnames(y) = rlang::as_label(quo_outcome)
+            }
         }
     }
     if (is.null(y)) {
@@ -166,6 +168,9 @@ est_check_outcome = function(regr, data, outcome) {
 est_check_riesz = function(riesz, data, weights, n, regr) {
     if (is.null(riesz)) {
         xcols = regr$blueprint$ei_x # will be NULL if regr is wrong type
+        if (length(xcols) == 1) {
+            xcols = c(xcols, ".other")
+        }
         riesz = matrix(1/n, nrow=n, ncol=length(xcols))
         colnames(riesz) = xcols
     } else if (inherits(riesz, "ei_riesz")) {
@@ -202,7 +207,8 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
     xcols = regr$blueprint$ei_x
     idx_x = match(xcols, colnames(data))
     z = as.matrix(data[, -idx_x, drop=FALSE])
-    x = data[, idx_x, drop=FALSE]
+    x = pull_x(data, idx_x)
+    xcols = colnames(x)
     n_x = length(xcols)
     p = ncol(z)
 
