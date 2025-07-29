@@ -110,7 +110,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     rl = est_check_regr(regr, data, n, colnames(riesz), n_y)
 
     n_x = ncol(riesz)
-    xc = colnames(riesz)
+    xc = names(rl$preds)
     eif = matrix(nrow=n, ncol=n_y*n_x) # x varies faster than y
     for (i in seq_len(n_x)) {
         plugin = rl$preds[[xc[i]]] * rl$x[, i] * w / mean(rl$x[, i] * w)
@@ -268,6 +268,9 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
 #'
 #' @export
 ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
+    if (inherits(x, "ei")) {
+        return(wrap_king_ei(x))
+    } 
     if (inherits(data, "ei_spec")) {
         predictors = attr(data, "ei_x")
         outcome = attr(data, "ei_y")
@@ -332,6 +335,42 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
     }
 
     out
+}
+
+wrap_king_ei <- function(obj) {
+    y = as.matrix(obj$t)
+    n = length(y)
+    x = cbind(.x = obj$x, .other = 1 - obj$x)
+
+    if (!isTRUE(all.equal(obj$Zb, obj$Zw))) {
+        cli_abort("Covariates for each group, {.arg Zb} and {.arg Zw}, must match.", 
+                   call = parent.frame())
+    }
+
+    sds = exp(obj$phi[3:4])
+    Sigma = (diag(2)*(1 - tanh(obj$phi[5])) + tanh(obj$phi[5]))
+    Sigma = diag(sds) %*% Sigma %*% diag(sds)
+    L = t(chol(Sigma))
+    b_loc = obj$phi[1:2] * (sds^2 + 0.25) + 0.5
+
+    z = shift_cols(obj$Zb, colMeans(obj$Zb))
+    eta_raw = shift_cols(z %*% matrix(obj$phi[-1:-5], ncol=2), -b_loc) 
+    eta = matrix(nrow=n, ncol=2)
+    for (i in seq_len(n)) {
+        eta[i, ] = R_ep_moments(eta_raw[i, ], L, numeric(0), 0, 1e-7)[[2]]
+    }
+
+    yhat = rowSums(eta * x)
+
+    structure(list(
+        y = y,
+        yhat = yhat,
+        sigma2 = var(y - yhat),
+        preds = list(.x = eta[, 1, drop=FALSE], .other = eta[, 2, drop=FALSE]),
+        x = x,
+        blueprint = list(ei_x = colnames(x)),
+        classes = "ei"
+    ), class = "ei_wrapped")
 }
 
 
