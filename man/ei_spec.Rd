@@ -5,7 +5,7 @@
 \alias{weights.ei_spec}
 \title{Specify an ecological inference problem}
 \usage{
-ei_spec(data, predictors, outcome, total, covariates = NULL, strip = TRUE)
+ei_spec(data, predictors, outcome, total, covariates = NULL, strip = FALSE)
 
 \method{weights}{ei_spec}(object, normalize = TRUE, ...)
 }

@@ -33,7 +33,7 @@ ei_bench(spec, preproc = function(s) {
     s_out = s[-z_cols]
     z_new = model.matrix(~ .^2 - 1, data = s[z_cols])
     s_out = cbind(s_out, z_new)
-    ei_spec(s_out, white:other, pres_ind_wal,
+    ei_spec(s_out, vap_white:vap_other, pres_ind_wal,
             total = attr(s, "ei_n"), covariates = colnames(z_new))
 })
 }

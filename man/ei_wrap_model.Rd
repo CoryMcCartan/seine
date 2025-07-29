@@ -45,7 +45,7 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal, pres_total,
 
 # Note: this is not a model recommended for valid ecological inference!
 m = suppressWarnings(
-    glm(pres_ind_wal ~ 0 + white + black + other + pop_urban + farm,
+    glm(pres_ind_wal ~ 0 + vap_white + vap_black + vap_other + pop_urban + farm,
         data = spec, family = "binomial")
 )
 m_wrap = ei_wrap_model(m, spec, type = "response")
