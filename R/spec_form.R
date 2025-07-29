@@ -34,7 +34,7 @@
 #' ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #'
 #' @export
-ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=TRUE) {
+ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=FALSE) {
     predictors = try_fetch(
         eval_select(enquo(predictors), data, allow_empty=FALSE),
         error = function(cnd) cli_abort("Predictor specification failed.", parent=cnd)

@@ -2,7 +2,7 @@ test_that("ei_spec() produces correct specification", {
     data(elec_1968)
     expect_error(ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth), "required")
 
-    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total, strip=TRUE)
     expect_no_error(validate_ei_spec(spec))
     expect_equal(attr(spec, "ei_x"), c("white", "black", "other")) # tests str_strip_prefix() too
     expect_equal(attr(spec, "ei_y"), c("dem_hum", "rep_nix", "ind_wal", "abs", "oth"))
