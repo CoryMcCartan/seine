@@ -80,7 +80,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 <p>The <strong>seine</strong> package allows researchers to perform modern ecological inference quickly, accurately, and transparently.</p>
 <ul>
 <li>
-<strong>Double/debiased machine learning</strong> allows for controlling for confounding covariates, which increases the plausibility of identifying assumptions.</li>
+<strong>Double/debiased machine learning</strong> allows for controlling for confounding covariates, which increases the plausibility of identifying assumptions. Machine learning can be used to estimate the key regression model and avoid strong parametric assumptions made by existing EI methods.</li>
 <li>
 <strong>Sensitivity analysis</strong> and <strong>benchmarking</strong> let researchers understand how violations of their assumptions will affect results.</li>
 <li>A <strong>tidy interface</strong> makes the package modular and easy to use, and works well with pipe-based workflows.</li>
@@ -113,7 +113,8 @@ gtag('config', 'G-2KH5JZ6JS1');
 <span>    predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span>
 <span>    outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_ind_wal</span>, </span>
 <span>    total <span class="op">=</span> <span class="va">pres_total</span>,</span>
-<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, <span class="va">inc_00_03k</span><span class="op">:</span><span class="va">inc_25_99k</span><span class="op">)</span></span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">pop_city</span><span class="op">:</span><span class="va">pop_rural</span>, <span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, </span>
+<span>                   <span class="va">inc_00_03k</span><span class="op">:</span><span class="va">inc_25_99k</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
@@ -123,16 +124,16 @@ gtag('config', 'G-2KH5JZ6JS1');
 <span><span class="co">#&gt; # A tibble: 9 × 6</span></span>
 <span><span class="co">#&gt;   predictor outcome estimate std.error conf.low conf.high</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 white     dem_hum   0.291     0.0229   0.246     0.336 </span></span>
-<span><span class="co">#&gt; 2 black     dem_hum   0.285     0.0433   0.200     0.369 </span></span>
-<span><span class="co">#&gt; 3 other     dem_hum   3.80      1.14     1.57      6.03  </span></span>
-<span><span class="co">#&gt; 4 white     rep_nix   0.436     0.0360   0.365     0.506 </span></span>
-<span><span class="co">#&gt; 5 black     rep_nix  -0.0290    0.0313  -0.0903    0.0322</span></span>
-<span><span class="co">#&gt; 6 other     rep_nix  -3.86      1.16    -6.14     -1.58  </span></span>
-<span><span class="co">#&gt; 7 white     ind_wal   0.272     0.0195   0.234     0.310 </span></span>
-<span><span class="co">#&gt; 8 black     ind_wal   0.740     0.0632   0.616     0.864 </span></span>
-<span><span class="co">#&gt; 9 other     ind_wal   1.01      1.52    -1.97      4.00</span></span></code></pre></div>
-<p>This workflow is explained in more detail in the <a href="https://corymccartan.com/seine/articles/seine.html">package vignette</a>, along with demonstrations of data preprocessing and sensitivity analysis.</p>
+<span><span class="co">#&gt; 1 white     dem_hum   0.225     0.0241   0.178     0.273 </span></span>
+<span><span class="co">#&gt; 2 black     dem_hum   0.584     0.0601   0.467     0.702 </span></span>
+<span><span class="co">#&gt; 3 other     dem_hum   2.92      0.744    1.47      4.38  </span></span>
+<span><span class="co">#&gt; 4 white     rep_nix   0.435     0.0365   0.363     0.506 </span></span>
+<span><span class="co">#&gt; 5 black     rep_nix  -0.0242    0.0367  -0.0962    0.0477</span></span>
+<span><span class="co">#&gt; 6 other     rep_nix  -4.75      0.991   -6.69     -2.81  </span></span>
+<span><span class="co">#&gt; 7 white     ind_wal   0.339     0.0197   0.300     0.377 </span></span>
+<span><span class="co">#&gt; 8 black     ind_wal   0.437     0.0436   0.351     0.522 </span></span>
+<span><span class="co">#&gt; 9 other     ind_wal   2.84      0.840    1.20      4.49</span></span></code></pre></div>
+<p>This workflow is explained in more detail on the <a href="https://corymccartan.com/seine/articles/seine.html">Get Started</a> page, along with demonstrations of data preprocessing and sensitivity analysis.</p>
 </div>
 <div class="section level2">
 <h2 id="name">Name<a class="anchor" aria-label="anchor" href="#name"></a>
