@@ -5,6 +5,7 @@
 \alias{predict.ei_ridge}
 \alias{fitted.ei_ridge}
 \alias{residuals.ei_ridge}
+\alias{vcov.ei_ridge}
 \alias{summary.ei_ridge}
 \alias{weights.ei_ridge}
 \title{Methods for \code{\link{ei_ridge}} models}
@@ -14,6 +15,8 @@
 \method{fitted}{ei_ridge}(object, ...)
 
 \method{residuals}{ei_ridge}(object, ...)
+
+\method{vcov}{ei_ridge}(object, ...)
 
 \method{summary}{ei_ridge}(object, ...)
 
@@ -40,6 +43,8 @@ Models fitted with \code{\link[=ei_ridge]{ei_ridge()}} support various generic m
 \item \code{fitted(ei_ridge)}: Extract fitted values.
 
 \item \code{residuals(ei_ridge)}: Extract residuals.
+
+\item \code{vcov(ei_ridge)}: Extract covariance of coefficient estimates.
 
 \item \code{summary(ei_ridge)}: Summarize the model's fitted values and \eqn{R^2}.
 

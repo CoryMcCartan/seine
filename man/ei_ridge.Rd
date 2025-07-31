@@ -11,13 +11,21 @@
 \usage{
 ei_ridge(x, ...)
 
-\method{ei_ridge}{formula}(formula, data, weights, penalty = NULL, scale = TRUE, ...)
+\method{ei_ridge}{formula}(
+  formula,
+  data,
+  weights,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE,
+  ...
+)
 
-\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, scale = TRUE, ...)
+\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
 
-\method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, scale = TRUE, ...)
+\method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
 
-\method{ei_ridge}{matrix}(x, y, z, weights, penalty = NULL, scale = TRUE, ...)
+\method{ei_ridge}{matrix}(x, y, z, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
 
 \method{ei_ridge}{default}(x, ...)
 }
@@ -69,6 +77,9 @@ Keep in mind when choosing \code{penalty} manually that covariates in \code{z} a
 scaled to have mean zero and unit variance before fitting.}
 
 \item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
+
+\item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
+estimated coefficients.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:

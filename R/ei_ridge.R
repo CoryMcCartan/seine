@@ -79,6 +79,8 @@
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
+#' @param vcov If `TRUE`, calculate and return the covariance matrix of the
+#'    estimated coefficients.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
@@ -102,7 +104,7 @@ ei_ridge <- function(x, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, ...) {
+ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -118,14 +120,14 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, .
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, ...) {
+ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -145,13 +147,13 @@ ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, ...) {
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, ...) {
+ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -171,13 +173,13 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, ...)
     x = cbind(x, z)
 
     processed <- hardhat::mold(x, y, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, scale=TRUE, ...) {
-    ei_ridge.data.frame(x, y, z, weights, penalty, scale, ...)
+ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
+    ei_ridge.data.frame(x, y, z, weights, penalty, scale, vcov, ...)
 }
 
 
@@ -191,7 +193,7 @@ ei_ridge.default <- function(x, ...) {
 
 # Bridge and implementation ---------------------------------------------------
 
-ei_ridge_bridge <- function(processed, ...) {
+ei_ridge_bridge <- function(processed, vcov, ...) {
     x = processed$predictors
     idx_x = match(processed$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
@@ -219,7 +221,7 @@ ei_ridge_bridge <- function(processed, ...) {
     if (ncol(z) == 0)
         processed$blueprint$penalty = 0
 
-    fit <- ei_ridge_impl(x, y, z, weights, processed$blueprint$penalty)
+    fit <- ei_ridge_impl(x, y, z, weights, processed$blueprint$penalty, vcov)
 
     new_ei_ridge(
       coef = fit$coef,
@@ -250,25 +252,29 @@ ei_ridge_bridge <- function(processed, ...) {
 #' @param penalty The ridge penalty (a non-negative scalar), which must be
 #'   specified for [ei_riesz_impl()] but can be automatically estimated with
 #'   [ei_ridge_impl()] by providing `penalty=NULL`.
+#' @inheritParams ei_ridge
 #'
 #' @returns A list with model components.
 #'
 #' @rdname ei-impl
 #' @export
-ei_ridge_impl <- function(x, y, z, weights, penalty=NULL) {
+ei_ridge_impl <- function(x, y, z, weights, penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))
     udv = svd(xz * sqrt_w)
 
+    vcov = isTRUE(vcov)
     fit = if (is.null(penalty)) {
-        ridge_auto(udv, y, sqrt_w)
+        ridge_auto(udv, y, sqrt_w, vcov)
     } else {
-        ridge_svd(udv, y, sqrt_w, penalty)
+        ridge_svd(udv, y, sqrt_w, penalty, vcov)
     }
 
     rownames(fit$coef) = colnames(xz)
-    rownames(fit$vcov_u) = colnames(fit$vcov_u) = colnames(xz)
+    if (vcov) {
+        rownames(fit$vcov_u) = colnames(fit$vcov_u) = colnames(xz)
+    }
     names(fit$sigma2) = colnames(y)
     fit$int_scale = int_scale
 
@@ -365,6 +371,12 @@ fitted.ei_ridge <- function(object, ...) {
 #' @export
 residuals.ei_ridge <- function(object, ...) {
     object$y - object$fitted
+}
+
+#' @describeIn ridge-methods Extract covariance of coefficient estimates.
+#' @export
+vcov.ei_ridge <- function(object, ...) {
+    object$vcov_u
 }
 
 

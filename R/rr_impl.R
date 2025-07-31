@@ -1,30 +1,45 @@
 # Ridge regression implementations ---------------------------------------------
 
 # Does ridge regression with the normal equations
-ridge_naive <- function(X, y, weights, penalty=0) {
+ridge_naive <- function(X, y, weights, penalty=0, vcov=TRUE) {
     Lambda = diag(rep(penalty, ncol(X)))
     coef = solve(crossprod(X, weights * X) + Lambda, crossprod(X, weights * y))
     fitted = X %*% coef
+    vcov_u = if (vcov) {
+        tcrossprod(solve(crossprod(X, weights * X) + Lambda, t(X)))
+    } else {
+        NULL
+    }
     # Neyman-orthogonal estimate of residual variance
     sigma2 = colMeans((y - fitted)^2 * weights)
-    vcov_u = tcrossprod(solve(crossprod(X, weights * X) + Lambda, t(X)))
 
-    list(coef = coef, vcov = vcov, fitted = fitted, sigma2 = sigma2, penalty = penalty)
+    list(
+        coef = coef,
+        vcov_u = vcov_u,
+        fitted = fitted,
+        sigma2 = sigma2,
+        penalty = penalty
+    )
 }
 
 # Does ridge regression given SVD of design matrix
 # `sqrt_w` (square root of unit weights) must be incorporated into udv,
 # i.e., `udv = svd(xz * sqrt(weights))`
-ridge_svd <- function(udv, y, sqrt_w, penalty=0) {
+ridge_svd <- function(udv, y, sqrt_w, penalty=0, vcov=TRUE) {
     d_pen_c = udv$d / (udv$d^2 + penalty)
     d_uy = d_pen_c * crossprod(udv$u, sqrt_w * y)
     fitted = (udv$u / sqrt_w) %*% (udv$d * d_uy)
+    vcov_u = if (vcov) {
+        tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v)
+    } else {
+        NULL
+    }
     # Neyman-orthogonal estimate of residual variance
     sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
 
     list(
         coef = udv$v %*% d_uy,
-        vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
+        vcov_u = vcov_u,
         fitted = fitted,
         sigma2 = sigma2,
         penalty = penalty
@@ -33,7 +48,7 @@ ridge_svd <- function(udv, y, sqrt_w, penalty=0) {
 
 # Does ridge regression with LOOCV-minimized penalty given SVD of design matrix
 # Any weights must be incorporated into udv
-ridge_auto <- function(udv, y, sqrt_w) {
+ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
     uy = crossprod(udv$u, y * sqrt_w)
     uow = udv$u / sqrt_w
 
@@ -47,11 +62,17 @@ ridge_auto <- function(udv, y, sqrt_w) {
     penalty = 10^(optimize(loo_mse, c(-8, 8), tol=0.01)$minimum)
     d_pen_c = udv$d / (udv$d^2 + penalty)
     fitted = uow %*% (d_pen_c * udv$d * uy)
+    vcov_u = if (vcov) {
+        tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v)
+    } else {
+        NULL
+    }
+    # Neyman-orthogonal estimate of residual variance
     sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
 
     list(
         coef = udv$v %*% (d_pen_c * uy),
-        vcov_u = tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v),
+        vcov_u = vcov_u,
         fitted = fitted,
         sigma2 = sigma2,
         penalty = penalty
