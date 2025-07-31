@@ -5,27 +5,29 @@
 \alias{weights.ei_spec}
 \title{Specify an ecological inference problem}
 \usage{
-ei_spec(data, predictors, outcome, weights, covariates = NULL, strip = TRUE)
+ei_spec(data, predictors, outcome, total, covariates = NULL, strip = FALSE)
 
 \method{weights}{ei_spec}(object, normalize = TRUE, ...)
 }
 \arguments{
 \item{data}{A data frame.}
 
-\item{predictors}{<\code{\link[dplyr:select]{tidy-select}}> Predictor variables.
-This is the \code{x} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of each racial group.}
+\item{predictors}{<\code{\link[tidyselect:language]{tidy-select}}> Predictor
+variables. This is the \code{x} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+each racial group.}
 
-\item{outcome}{<\code{\link[dplyr:select]{tidy-select}}> Outcome variables.
-This is the \code{y} variable in ecological regression that is of primary interest.
-For example, the columns containing the percentage of votes for each party.}
+\item{outcome}{<\code{\link[tidyselect:language]{tidy-select}}> Outcome
+variables. This is the \code{y} variable in ecological regression that is of
+primary interest. For example, the columns containing the percentage of
+votes for each party.}
 
-\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required by
+default.}
 
-\item{covariates}{<\code{\link[dplyr:select]{tidy-select}}> Covariates.}
+\item{covariates}{<\code{\link[tidyselect:language]{tidy-select}}> Covariates.}
 
 \item{strip}{Whether to strip common prefixes from column names within each group.
 For example, columns named \code{vap_white}, \code{vap_black}, and \code{vap_hisp} would be
@@ -33,31 +35,31 @@ renamed \code{white}, \code{black} and \code{other} in the model and output.}
 
 \item{object}{An \link{ei_spec} object.}
 
-\item{normalize}{If \code{TRUE}, normalize the weights to have mean 1.}
+\item{normalize}{If \code{TRUE}, normalize the totals to have mean 1.}
 
 \item{...}{Additional arguments (ignored).}
 }
 \value{
 An \code{ei_spec} object, which is a data frame with additional
-attributes recording \code{predictors}, \code{outcomes}, and \code{covariates}.
+attributes recording \code{predictors}, \code{outcomes}, \code{total}, and \code{covariates}.
 }
 \description{
 Uses tidy-select syntax to specify outcomes, predictors, and covariates.
 The result of this function can be passed directly into \code{\link[=ei_ridge]{ei_ridge()}},
-\code{\link[=ei_model]{ei_model()}}, or \code{\link[=ei_riesz]{ei_riesz()}}, or plotted with \code{\link[=plot.ei_spec]{plot()}}.
+\code{\link[=ei_tmvn]{ei_tmvn()}}, or \code{\link[=ei_riesz]{ei_riesz()}}, or plotted with \code{\link[=plot.ei_spec]{plot()}}.
 }
 \details{
 The function is lightweight and does not perform any checking of the
 arguments, bounds, sum constraints, etc.  All of these checks are performed
-by \code{\link[=ei_model]{ei_model()}}.
+by functions that use \code{ei_spec} objects.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{weights(ei_spec)}: Extract the weights from a specification
+\item \code{weights(ei_spec)}: Extract the totals from a specification
 
 }}
 \examples{
 data(elec_1968)
-ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth, pres_total)
+ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 
 }

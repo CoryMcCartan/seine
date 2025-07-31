@@ -5,9 +5,9 @@
 \alias{ei_riesz_impl}
 \title{Low-level implementations of \code{ei_ridge()} and \code{ei_riesz()}}
 \usage{
-ei_ridge_impl(x, y, z, weights, penalty = NULL)
+ei_ridge_impl(x, y, z, weights, penalty = NULL, vcov = TRUE)
 
-ei_riesz_impl(x, z, weights, penalty)
+ei_riesz_impl(x, z, total, weights, penalty)
 }
 \arguments{
 \item{x}{A matrix of predictors}
@@ -16,11 +16,16 @@ ei_riesz_impl(x, z, weights, penalty)
 
 \item{z}{A matrix of covariates}
 
-\item{weights}{A vector of unit weights}
+\item{weights}{A vector of estimation weights}
 
-\item{penalty}{The ridge penalty, which must be specified. Recommended value
-is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}}, which is stored in the \code{penalty}
-entry of the fitted model object.}
+\item{penalty}{The ridge penalty (a non-negative scalar), which must be
+specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with
+\code{\link[=ei_ridge_impl]{ei_ridge_impl()}} by providing \code{penalty=NULL}.}
+
+\item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
+estimated coefficients.}
+
+\item{total}{A vector of total observations per unit.}
 }
 \value{
 A list with model components.

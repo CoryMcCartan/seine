@@ -3,7 +3,7 @@
 \docType{data}
 \name{elec_1968}
 \alias{elec_1968}
-\title{1968 U.S. Presidential Election Data}
+\title{1968 U.S. presidential election data}
 \format{
 A data frame with 1,143 rows and 41 variables:
 \describe{
@@ -48,13 +48,13 @@ run \code{lapply(elec_1968$adj, function(x) match(x, elec_1968$fips))}.}
 Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy
 Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical
 Geographic Information System: Version 19.0. 1970 Decennial Census.
-Minneapolis, MN: IPUMS. 2024. \url{http://doi.org/10.18128/D050.V19.0}
+Minneapolis, MN: IPUMS. 2024. \doi{10.18128/D050.V19.0}
 
 \strong{Presidential election data}:
 Clubb, Jerome M., Flanigan, William H., and Zingale, Nancy H. Electoral Data
 for Counties in the United States: Presidential and Congressional Races,
 1840-1972. Inter-university Consortium for Political and Social Research
-(distributor), 2006-11-13. \url{https://doi.org/10.3886/ICPSR08611.v1}
+(distributor), 2006-11-13. \doi{10.3886/ICPSR08611.v1}
 }
 \usage{
 elec_1968

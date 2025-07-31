@@ -21,7 +21,7 @@
 #'   greater than 0, then unbounded.
 #' @param ... Not currently used, but required for extensibility.
 #'
-#' @returns An `ei_model` object.
+#' @returns An `ei_tmvn` object.
 #'
 #' @references
 #' King, G. (1997). *A solution to the ecological inference problem:
@@ -32,17 +32,18 @@
 #' data(elec_1968)
 #'
 #' \dontrun{
-#' ei_model(pres_ind_wal ~ vap_white + vap_black, elec_1968, weights=pres_total)
+#' ei_tmvn(pres_ind_wal ~ vap_white + vap_black, elec_1968, weights=pres_total)
 #' }
-#' @export
-ei_model <- function(x, ...) {
-  UseMethod("ei_model")
+#' @noRd
+ei_tmvn <- function(x, ...) {
+  UseMethod("ei_tmvn")
 }
 
 
-#' @export
-#' @rdname ei_model
-ei_model.formula <- function(formula, data, weights, bounds=NULL, ...) {
+# @export
+# @rdname ei_tmvn
+#' @exportS3Method seine::ei_tmvn
+ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -57,13 +58,14 @@ ei_model.formula <- function(formula, data, weights, bounds=NULL, ...) {
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
-    ei_model_bridge(processed, ...)
+    ei_tmvn_bridge(processed, ...)
 }
 
 
-#' @export
-#' @rdname ei_model
-ei_model.ei_spec <- function(x, bounds=NULL, ...) {
+# @export
+# @rdname ei_tmvn
+#' @exportS3Method seine::ei_tmvn
+ei_tmvn.ei_spec <- function(x, bounds=NULL, ...) {
     spec = x
     x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
     y = spec[attr(spec, "ei_y")]
@@ -77,13 +79,14 @@ ei_model.ei_spec <- function(x, bounds=NULL, ...) {
     )
 
     processed = hardhat::mold(x, y, blueprint=bp)
-    ei_model_bridge(processed, ...)
+    ei_tmvn_bridge(processed, ...)
 }
 
 
-#' @export
-#' @rdname ei_model
-ei_model.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
+# @export
+# @rdname ei_tmvn
+#' @exportS3Method seine::ei_tmvn
+ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -103,22 +106,24 @@ ei_model.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
     x = cbind(x, z)
 
     processed <- hardhat::mold(x, y, blueprint=bp)
-    ei_model_bridge(processed, ...)
+    ei_tmvn_bridge(processed, ...)
 }
 
-#' @export
-#' @rdname ei_model
-ei_model.matrix <- function(x, y, z, weights, bounds=NULL, ...) {
-    ei_model.data.frame(x, y, z, weights, bounds=bounds, ...)
+# @export
+# @rdname ei_tmvn
+#' @exportS3Method seine::ei_tmvn
+ei_tmvn.matrix <- function(x, y, z, weights, bounds=NULL, ...) {
+    ei_tmvn.data.frame(x, y, z, weights, bounds=bounds, ...)
 }
 
 
-#' @export
-#' @rdname ei_model
-ei_model.default <- function(x, ...) {
+# @export
+# @rdname ei_tmvn
+#' @exportS3Method seine::ei_tmvn
+ei_tmvn.default <- function(x, ...) {
     if (missing(x))
-        cli_abort("{.fn ei_model} requires arguments.", call=NULL)
-    cli_abort("{.fn ei_model} is not defined for a {.cls {class(x)}}.", call=NULL)
+        cli_abort("{.fn ei_tmvn} requires arguments.", call=NULL)
+    cli_abort("{.fn ei_tmvn} is not defined for a {.cls {class(x)}}.", call=NULL)
 }
 
 # Creates bounds _after_ molding outcomes
@@ -139,7 +144,7 @@ run_mold.ei_blueprint <- function(blueprint, ...) {
 
 # Bridge ----------------------------------------------------------------------
 
-ei_model_bridge <- function(processed, ...) {
+ei_tmvn_bridge <- function(processed, ...) {
   x = processed$predictors
   idx_x = match(processed$blueprint$ei_x, colnames(x))
   z = x[, -idx_x, drop=FALSE]
@@ -150,10 +155,10 @@ ei_model_bridge <- function(processed, ...) {
   }
   y = as.matrix(processed$outcomes)
 
-  fit <- ei_model_impl(x, y, z, processed$blueprint$ei_wgt, processed$blueprint$bounds)
+  fit <- ei_tmvn_impl(x, y, z, processed$blueprint$ei_wgt, processed$blueprint$bounds)
 
-  do.call(new_ei_model, c(fit, list(blueprint = processed$blueprint)))
-  # new_ei_model(
+  do.call(new_ei_tmvn, c(fit, list(blueprint = processed$blueprint)))
+  # new_ei_tmvn(
   #   coefs = fit$coefs,
   #   blueprint = processed$blueprint
   # )
@@ -161,12 +166,12 @@ ei_model_bridge <- function(processed, ...) {
 
 # Model type ------------------------------------------------------------------
 
-new_ei_model <- function(..., blueprint) {
-    hardhat::new_model(..., blueprint = blueprint, class = "ei_model")
+new_ei_tmvn <- function(..., blueprint) {
+    hardhat::new_model(..., blueprint = blueprint, class = "ei_tmvn")
 }
 
 #' @export
-print.ei_model <- function(x, ...) {
+print.ei_tmvn <- function(x, ...) {
     cat_line("An ecological inference model")
     cat_line("<placeholder print method>")
     if ("b_global" %in% names(x)) {

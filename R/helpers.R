@@ -44,26 +44,3 @@ chol_pivot = function(Sigma) {
     L = chol.default(Sigma, pivot=TRUE)
     t(L[1:attr(L, "rank"), order(attr(L, "pivot")), drop=FALSE])
 }
-
-
-
-# These functions are currently only used in `explore/`
-
-# MVN density, Cholesky parametrization
-# Assumes `x` is a matrix with 1 row per obs.
-# Assumes `L` is a lower triangular matrix
-# CONSTANTS DROPPED
-dmvnorm_chol = function(x, mu, L, log=FALSE) {
-    rss = colSums(forwardsolve(L, t(x) - mu)^2)
-    out = -sum(log(diag(L))) - 0.5 * rss
-    if (!log) exp(out) else out
-}
-# gradient of log density wrt mu
-dmvnorm_chol_lgr = function(x, mu, L) {
-    t(chol2inv(t(L)) %*% (t(x) - mu))
-}
-dmvnorm_chol_rk1 = function(x, mu, L, log=FALSE) {
-    rss = colSums(forwardsolve(L, t(x) - mu)^2)
-    out = -log(sum(L^2)) - 0.5 * rss
-    if (!log) exp(out) else out
-}

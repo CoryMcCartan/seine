@@ -110,7 +110,7 @@ void proj_mvn(const vec& eta, const mat& L, const vec& x, double eps, vec& Lx, m
             L_out(span(i+1, n-1), i).zeros();
             Lx(span(i+1, n-1)) = -Lx(i) * L_out(span(i+1, n-1), i) / L_out(i, i);
             // figure out last zero in x, which needs its own entry
-            for (int j = n - 1; j >= 0; ++j) {
+            for (int j = n - 1; j >= 0; --j) {
                 if (x(j) == 0) {
                     L_out(j, i) = L(j, j);
                     break;

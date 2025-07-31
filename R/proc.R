@@ -8,16 +8,17 @@
 #' containing the remainder amount so that all proportions sum to 1.
 #'
 #' @param data A data frame.
-#' @param ... <[`tidy-select`][dplyr::select]> Columns to convert to proportions.
-#'   If one column is completely missing, it will be imputed as 1 minus the total.
-#' @param .total <[`tidy-select`][dplyr::select]> Column to use as the total.
-#'   If this column does not exist, it will be created as the sum of the selected
-#'   columns. Supports renaming syntax.
-#' @param .other <[`tidy-select`][dplyr::select]> Column to store the remainder,
-#'   so that the selected columns plus `.other` sum to 1. If the selected
-#'   columns do sum to 1 after normalization, this argument will not be used;
-#'   otherwise it will be created or overwritten.
-#'   The calculation of `.other` is performed _after_ clamping (see below).
+#' @param ... <[`tidy-select`][tidyselect::select_helpers]> Columns to convert
+#'   to proportions. If one column is completely missing, it will be imputed as
+#'   1 minus the total.
+#' @param .total <[`tidy-select`][tidyselect::select_helpers]> Column to use as
+#'   the total. If this column does not exist, it will be created as the sum of
+#'   the selected columns. Supports renaming syntax.
+#' @param .other <[`tidy-select`][tidyselect::select_helpers]> Column to store
+#'   the remainder, so that the selected columns plus `.other` sum to 1. If the
+#'   selected columns do sum to 1 after normalization, this argument will not be
+#'   used; otherwise it will be created or overwritten. The calculation of
+#'   `.other` is performed _after_ clamping (see below).
 #' @param clamp Proportions that are `clamp` below 0 or above 1 will be rounded
 #'   to 0 and 1, respectively.  Values outside `clamp` will throw an error.
 #'   Set `clamp=0` to disable or `clamp=Inf` to allow for out-of-bounds
@@ -62,7 +63,8 @@ ei_proportions = function(data, ..., .total=".total", .other=".other", clamp=1e-
         cli_abort("{.arg total} must refer to a single column.")
     }
 
-    data[cols] = data[cols] / total
+    denom = total + (total == 0)
+    data[cols] = data[cols] / denom
     old_names = names(data)[cols]
     names(data)[cols] = names(cols)
 

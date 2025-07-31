@@ -32,6 +32,37 @@ test_that("Degenerate TMVN samples correctly", {
     expect_equal(qr(scale(z))$rank, 1)
 })
 
+test_that("Random seed synchronizes", {
+    set.seed(16801)
+    x1 = R_ess_tmvn(2, c(0.5, 0.5), diag(2), c(0.5, 0.5))
+    set.seed(16801)
+    x2 = R_ess_tmvn(2, c(0.5, 0.5), diag(2), c(0.5, 0.5))
+
+    set.seed(16801)
+    R_sync_rng()
+    x3 = R_ess_tmvn(2, c(0.5, 0.5), diag(2), c(0.5, 0.5))
+    set.seed(16801)
+    R_sync_rng()
+    x4 = R_ess_tmvn(2, c(0.5, 0.5), diag(2), c(0.5, 0.5))
+
+    expect_false(all(x1 == x2))
+    expect_equal(x3, x4)
+})
+
+# MVN density, Cholesky parametrization
+# Assumes `x` is a matrix with 1 row per obs.
+# Assumes `L` is a lower triangular matrix
+# CONSTANTS DROPPED
+dmvnorm_chol = function(x, mu, L, log=FALSE) {
+    rss = colSums(forwardsolve(L, t(x) - mu)^2)
+    out = -sum(log(diag(L))) - 0.5 * rss
+    if (!log) exp(out) else out
+}
+# gradient of log density wrt mu
+dmvnorm_chol_lgr = function(x, mu, L) {
+    t(chol2inv(t(L)) %*% (t(x) - mu))
+}
+
 # infer mean for known Sigma
 # return z-score
 # Note: normal approx doesn't always hold well for truncated likelihood esp when OOB

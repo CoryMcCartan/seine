@@ -4,23 +4,28 @@
 \alias{ei_est}
 \alias{as.matrix.ei_est}
 \alias{vcov.ei_est}
+\alias{nobs.ei_est}
 \title{Estimate ecological quantities}
 \usage{
 ei_est(
   regr = NULL,
   riesz = NULL,
   data,
-  weights,
+  total,
+  subset = NULL,
   outcome = NULL,
   conf_level = FALSE
 )
 
-\method{as.matrix}{ei_est}(x, se = FALSE, ...)
+\method{as.matrix}{ei_est}(x, which = "estimate", ...)
 
 \method{vcov}{ei_est}(object, ...)
+
+\method{nobs}{ei_est}(object, ...)
 }
 \arguments{
-\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}} or \code{\link[=ei_model]{ei_model()}}.
+\item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
+of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.
 If \code{riesz} is not provided and \code{regr} is an \code{\link[=ei_riesz]{ei_riesz()}} object, then
 \code{riesz} will be set to the value of \code{regr} and \code{regr} will be set to
 \code{NULL}. This is so users can call this function as
@@ -32,10 +37,14 @@ Riesz weights}
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression or Riesz representer.}
 
-\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights. In general these should be the count of the total number of
-individuals in each unit. Required by default. To force constant weights,
-you can provide \code{weights=FALSE}.}
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required if
+\code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object and \code{riesz} is not provided.}
+
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided
@@ -47,12 +56,18 @@ errors are always returned.}
 
 \item{x, object}{An object of class \code{ei_est}}
 
-\item{se}{If \code{TRUE}, return standard errors instead of estimates.}
+\item{which}{Which column of \code{ei_est} to convert to a matrix. For example,
+pass \code{which="std.error"} to return standard errors instead of estimates.
+Partial matching supported.}
 
 \item{...}{Additional arguments (ignored)}
 }
 \value{
-A data frame with estimates.
+A data frame with estimates. It has class \code{ei_est}, supporting
+several methods, and two additional attributes: \code{vcov}, containing the
+estimated covariance matrix for the estimates, and \code{n}, containing the
+number of aggregate units used in estimation (the number of rows in
+\code{data}).
 }
 \description{
 Produces estimates of overall conditional means from a fitted
@@ -62,16 +77,18 @@ machine learning (DML) estimate is produced.
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{as.matrix(ei_est)}: Format estimates or standard errors as a matrix
+\item \code{as.matrix(ei_est)}: Format estimates, standard errors, or other columns as a matrix.
 
 \item \code{vcov(ei_est)}: Extract full covariance matrix of estimates
+
+\item \code{nobs(ei_est)}: Extract number of units covered by estimates
 
 }}
 \examples{
 data(elec_1968)
 
-spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-               weights = pres_total, covariates = c(pop_urban, farm))
+spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+               total = pres_total, covariates = c(state, pop_urban, farm))
 
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
@@ -80,7 +97,10 @@ ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
 as.matrix(est)
-as.matrix(est, se=TRUE)
+as.matrix(est, "std.error")
 vcov(est)[1:4, 1:4]
 
+est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
+as.matrix(est)
+nobs(est)
 }

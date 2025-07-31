@@ -9,6 +9,23 @@
 #' allows for efficient recalculation under different `penalty` values as part
 #' of leave-one-out cross-validation.
 #'
+#' @section Weights:
+#' The weakest identification result for ecological inference makes no
+#' assumption about the number of observations per aggregate unit (the totals).
+#' It requires, however, weighting the estimation steps according to the totals.
+#' This may reduce efficiency when the totals are variable and a slightly
+#' stronger condition holds.
+#'
+#' Specifically, if the totals are conditionally mean-independent of the missing
+#' data (the aggregation-unit level means of the outcome within each predictor
+#' level), given covariates, then it is appropriate to use uniform weights in
+#' estimation, or any fixed set of weights.
+#'
+#' In general, estimation efficiency is improved when units with larger variance
+#' in the outcome receive less weight. Various bulit-in options are provided by
+#' the helper functions in [ei_wgt()].
+#'
+#'
 #' @param x Depending on the context:
 #'   * A **data frame** of predictors.
 #'   * A **matrix** of predictors.
@@ -16,6 +33,8 @@
 #'
 #'   Predictors must be proportions that sum to 1 across rows.
 #'   You can use [ei_proportions()] to assist in preparing predictor variables.
+#'   Covariates in an [ei_spec] object are shifted to have mean zero. If
+#'   `scale=TRUE` (the default), they are also scaled to have unit variance.
 #' @param y When `x` is a **data frame** or **matrix**, `y` is the outcome
 #' specified as:
 #'   * A **data frame** with numeric columns.
@@ -29,28 +48,39 @@
 #'   * A **data frame** with numeric columns.
 #'   * A **matrix**
 #'
-#'   These are scaled internally to have mean zero and unit variance.
+#'   These are shifted to have mean zero. If `scale=TRUE` (the default), they
+#'   are also scaled to have unit variance.
 #' @param data When a **formula** is used, `data` is a **data frame** containing
 #'   both the predictors and the outcome.
-#' @param formula A formula such as `y | x ~ z` specifying the outcome and
-#'   predictor terms on the left-hand side, and any covariate terms on the
-#'   right-hand side.
-#'   The outcome and predictor variables must be separated by a vertical bar
-#'   `|` on the left-hand side.
-#'   This is because EI models the conditional mean of the outcome given
-#'   predictors, and how this may vary with covariates.
-#'   See the examples for more details.
+#' @param formula A formula such as `y ~ x0 + x1 | z` specifying the outcome `y`
+#'  regressed on the predictors of interest `x` and any covariates `z`.
+#'  The predictors should form a partition, that is, `x0 + x1 = 1` for each
+#'  observation. Users can be include more than two predictors as well, e.g.
+#'  `pct_white + pct_black + pct_hisp + pct_other`.
+#'  If there are just two predictors, it is acceptable to only include one in
+#'  the formula; the other will be formed as 1 minus the provided predictor.
+#'  Include additional covariates separated by a vertical bar `|`.
+#'  These covariates are strongly recommended for reliable ecological inference.
+#'  Covariates are shifted to have mean zero. If `scale=TRUE` (the default),
+#'  they are also scaled to have unit variance.
 #' @param weights <[`data-masking`][rlang::args_data_masking]> A vector of unit
-#'   weights. In general these should be the count of the total number of
-#'   individuals in each unit. Required by default. To force constant weights,
-#'   you can provide `weights=FALSE`.
-#' @param penalty The ridge penalty. Set to `NULL` to automatically determine
-#'    the penalty which minimizes mean-square error, via an efficient
-#'    leave-one-out cross validation procedure. The ridge regression solution is
+#'   weights for estimation. These may be the same or different from the total
+#'   number of observations in each aggregate unit (see the `total` argument to
+#'   [ei_spec()]). See the discussion below under 'Weights' for choosing this
+#'   parameter. The default, uniform weights, makes a slightly
+#'   stronger-than-necessary assumption about the relationship between the
+#'   unit totals and the unknown data.
+#' @param penalty The ridge penalty (a non-negative scalar). Set to `NULL` to
+#'    automatically determine the penalty which minimizes mean-square error,
+#'    via an efficient leave-one-out cross validation procedure.
+#'    The ridge regression solution is
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 #'    where \eqn{\lambda} is the value of `penalty`.
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
+#' @param scale If `TRUE`, scale covariates `z` to have unit variance.
+#' @param vcov If `TRUE`, calculate and return the covariance matrix of the
+#'    estimated coefficients.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
@@ -58,13 +88,12 @@
 #' @examples
 #' data(elec_1968)
 #'
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
-#'                weights = pres_total, covariates = c(pop_urban, farm))
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+#'                total = pres_total, covariates = c(pop_urban, farm))
 #' ei_ridge(spec)
 #'
-#' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs + pres_oth ~
-#'       vap_white + vap_black + vap_other | pop_urban + farm,
-#'     data = elec_1968, weights = pres_total)
+#' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~
+#'       vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 #'
 #' @export
 ei_ridge <- function(x, ...) {
@@ -75,7 +104,7 @@ ei_ridge <- function(x, ...) {
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
+ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -83,51 +112,48 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, ...) {
     bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(form_preds, "term.labels"),
-        ei_wgt = check_make_weights(!!enquo(weights), data),
+        ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, penalty=NULL, ...) {
+ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     spec = x
-    x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
-    # handle factors
-    chr_cols = logical(length(x))
-    for (col in seq_len(length(x))) {
-        if (is.character(x[[col]]) || is.factor(x[[col]])) {
-            chr_cols[col] = TRUE
-            form = formula(paste("~ 0 +", names(x)[col]))
-            x = cbind(x, model.matrix(form, x))
-        }
-    }
-    x = x[, !chr_cols, drop=FALSE]
+    validate_ei_spec(spec)
 
-    y = spec[attr(spec, "ei_y")]
+    form = as.formula(paste0(
+        paste0(attr(spec, "ei_y"), collapse=" + "), " ~ ",
+        paste0(c(attr(spec, "ei_x"), attr(spec, "ei_z")), collapse=" + ")
+    ))
 
-    bp = hardhat::new_default_xy_blueprint(
+    bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(spec, "ei_x"),
-        ei_wgt = attr(spec, "ei_wgt"),
+        ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
 
-    processed = hardhat::mold(x, y, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    processed <- hardhat::mold(form, spec, blueprint=bp)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
+ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -140,19 +166,20 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
-        ei_wgt = check_make_weights(weights, NULL),
+        ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         penalty = penalty,
+        scale = scale
     )
     x = cbind(x, z)
 
     processed <- hardhat::mold(x, y, blueprint=bp)
-    ei_ridge_bridge(processed, ...)
+    ei_ridge_bridge(processed, vcov, ...)
 }
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, ...) {
-    ei_ridge.data.frame(x, y, z, weights, penalty, ...)
+ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
+    ei_ridge.data.frame(x, y, z, weights, penalty, scale, vcov, ...)
 }
 
 
@@ -166,22 +193,23 @@ ei_ridge.default <- function(x, ...) {
 
 # Bridge and implementation ---------------------------------------------------
 
-ei_ridge_bridge <- function(processed, ...) {
+ei_ridge_bridge <- function(processed, vcov, ...) {
     x = processed$predictors
     idx_x = match(processed$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
-    x = x[, idx_x, drop=FALSE]
-    if (ncol(x) == 1) {
-        x = cbind(x, 1 - x)
-        colnames(x)[2] = ".other"
-    }
+    x = pull_x(x, idx_x)
+    check_preds(x)
     weights = processed$blueprint$ei_wgt
 
     # normalize
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
-    z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
-    z = scale_cols(z, z_scale)
+    if (isTRUE(processed$blueprint$scale)) {
+        z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
+        z = scale_cols(z, z_scale)
+    } else {
+        rep(1, ncol(z))
+    }
 
     y = as.matrix(processed$outcomes)
 
@@ -193,12 +221,14 @@ ei_ridge_bridge <- function(processed, ...) {
     if (ncol(z) == 0)
         processed$blueprint$penalty = 0
 
-    fit <- ei_ridge_impl(x, y, z, weights, processed$blueprint$penalty)
+    fit <- ei_ridge_impl(x, y, z, weights, processed$blueprint$penalty, vcov)
 
     new_ei_ridge(
       coef = fit$coef,
       y = y,
       fitted = fit$fitted,
+      vcov_u = fit$vcov_u,
+      sigma2 = fit$sigma2,
       r2 = diag(as.matrix(cor(fit$fitted, y)^2)),
       penalty = fit$penalty,
       int_scale = fit$int_scale,
@@ -218,24 +248,34 @@ ei_ridge_bridge <- function(processed, ...) {
 #' @param x A matrix of predictors
 #' @param y A vector of outcomes
 #' @param z A matrix of covariates
-#' @param weights A vector of unit weights
-#' @inheritParams ei_riesz
+#' @param weights A vector of estimation weights
+#' @param penalty The ridge penalty (a non-negative scalar), which must be
+#'   specified for [ei_riesz_impl()] but can be automatically estimated with
+#'   [ei_ridge_impl()] by providing `penalty=NULL`.
+#' @inheritParams ei_ridge
 #'
 #' @returns A list with model components.
+#'
 #' @rdname ei-impl
-ei_ridge_impl <- function(x, y, z, weights, penalty=NULL) {
+#' @export
+ei_ridge_impl <- function(x, y, z, weights, penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))
     udv = svd(xz * sqrt_w)
 
+    vcov = isTRUE(vcov)
     fit = if (is.null(penalty)) {
-        ridge_auto(udv, y, sqrt_w)
+        ridge_auto(udv, y, sqrt_w, vcov)
     } else {
-        ridge_svd(udv, y, sqrt_w, penalty)
+        ridge_svd(udv, y, sqrt_w, penalty, vcov)
     }
 
     rownames(fit$coef) = colnames(xz)
+    if (vcov) {
+        rownames(fit$vcov_u) = colnames(fit$vcov_u) = colnames(xz)
+    }
+    names(fit$sigma2) = colnames(y)
     fit$int_scale = int_scale
 
     fit
@@ -271,6 +311,17 @@ predict_ei_ridge_numeric <- function(object, x, z) {
     xz = row_kronecker(x, z, object$int_scale)
     pred = as.list(as.data.frame(xz %*% object$coef))
     do.call(hardhat::spruce_numeric_multiple, pred)
+}
+
+# helper to pull columns from predictor matrix and add .other if needed
+# used by ei_riesz and ei_est as well
+pull_x <- function(x, idx_x) {
+    x = x[, idx_x, drop=FALSE]
+    if (ncol(x) == 1) {
+        x = cbind(x, 1 - x)
+        colnames(x)[2] = ".other"
+    }
+    x
 }
 
 # Model type ------------------------------------------------------------------
@@ -322,6 +373,12 @@ residuals.ei_ridge <- function(object, ...) {
     object$y - object$fitted
 }
 
+#' @describeIn ridge-methods Extract covariance of coefficient estimates.
+#' @export
+vcov.ei_ridge <- function(object, ...) {
+    object$vcov_u
+}
+
 
 #' @describeIn ridge-methods Summarize the model's fitted values and \eqn{R^2}.
 #' @export
@@ -333,7 +390,7 @@ summary.ei_ridge <- function(object, ...) {
     print(object$r2)
 }
 
-#' @describeIn ridge-methods Extract row weights from a fitted model.
+#' @describeIn ridge-methods Extract estimation weights from a fitted model.
 #' @param normalize If `TRUE`, normalize the weights to have mean 1.
 #' @export
 weights.ei_ridge <- function(object, normalize = TRUE, ...) {
