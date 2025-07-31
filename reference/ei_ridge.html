@@ -57,16 +57,24 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'formula'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span></span>
+<span>  <span class="va">formula</span>,</span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'matrix'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -126,12 +134,19 @@ via an efficient leave-one-out cross validation procedure.
 The ridge regression solution is
 $$\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,$$
 where \(\lambda\) is the value of <code>penalty</code>.
+One can equivalently think of the penalty as imposing a
+$\(\mathcal{N}(0, \sigma^2/\lambda^2)\)$ prior on the \(\beta\).
 Keep in mind when choosing <code>penalty</code> manually that covariates in <code>z</code> are
 scaled to have mean zero and unit variance before fitting.</p></dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
 <dd><p>If <code>TRUE</code>, scale covariates <code>z</code> to have unit variance.</p></dd>
+
+
+<dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
+<dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
+estimated coefficients.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
