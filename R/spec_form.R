@@ -1,8 +1,8 @@
 #' Specify an ecological inference problem
 #'
 #' Uses tidy-select syntax to specify outcomes, predictors, and covariates.
-#' The result of this function can be passed directly into [ei_ridge()],
-#' [ei_tmvn()], or [ei_riesz()], or plotted with [`plot()`][plot.ei_spec].
+#' The result of this function can be passed directly into [ei_ridge()]
+#' or [ei_riesz()], or plotted with [`plot()`][plot.ei_spec].
 #'
 #' The function is lightweight and does not perform any checking of the
 #' arguments, bounds, sum constraints, etc.  All of these checks are performed

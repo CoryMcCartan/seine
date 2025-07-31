@@ -45,8 +45,8 @@ attributes recording \code{predictors}, \code{outcomes}, \code{total}, and \code
 }
 \description{
 Uses tidy-select syntax to specify outcomes, predictors, and covariates.
-The result of this function can be passed directly into \code{\link[=ei_ridge]{ei_ridge()}},
-\code{\link[=ei_tmvn]{ei_tmvn()}}, or \code{\link[=ei_riesz]{ei_riesz()}}, or plotted with \code{\link[=plot.ei_spec]{plot()}}.
+The result of this function can be passed directly into \code{\link[=ei_ridge]{ei_ridge()}}
+or \code{\link[=ei_riesz]{ei_riesz()}}, or plotted with \code{\link[=plot.ei_spec]{plot()}}.
 }
 \details{
 The function is lightweight and does not perform any checking of the

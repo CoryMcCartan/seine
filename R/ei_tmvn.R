@@ -43,7 +43,7 @@ ei_tmvn <- function(x, ...) {
 # @export
 # @rdname ei_tmvn
 #' @exportS3Method seine::ei_tmvn
-ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, ...) {
+ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -51,10 +51,12 @@ ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, ...) {
     bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(form_preds, "term.labels"),
-        ei_wgt = check_make_weights(!!enquo(weights), data),
+        ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         bounds = bounds,
-        subclass = "ei_blueprint"
+        penalty = penalty,
+        scale = scale
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -65,20 +67,27 @@ ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, ...) {
 # @export
 # @rdname ei_tmvn
 #' @exportS3Method seine::ei_tmvn
-ei_tmvn.ei_spec <- function(x, bounds=NULL, ...) {
+ei_tmvn.ei_spec <- function(x, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     spec = x
-    x = spec[c(attr(spec, "ei_x"), attr(spec, "ei_z"))]
-    y = spec[attr(spec, "ei_y")]
-    bp = hardhat::new_default_xy_blueprint(
+    validate_ei_spec(spec)
+
+    form = as.formula(paste0(
+        paste0(attr(spec, "ei_y"), collapse=" + "), " ~ ",
+        paste0(c(attr(spec, "ei_x"), attr(spec, "ei_z")), collapse=" + ")
+    ))
+
+    bp = hardhat::new_default_formula_blueprint(
         intercept = FALSE,
         composition = "matrix",
+        indicators = "one_hot",
         ei_x = attr(spec, "ei_x"),
-        ei_wgt = attr(spec, "ei_wgt"),
+        ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         bounds = bounds,
-        subclass = "ei_blueprint"
+        penalty = penalty,
+        scale = scale
     )
 
-    processed = hardhat::mold(x, y, blueprint=bp)
+    processed <- hardhat::mold(form, spec, blueprint=bp)
     ei_tmvn_bridge(processed, ...)
 }
 
@@ -86,7 +95,7 @@ ei_tmvn.ei_spec <- function(x, bounds=NULL, ...) {
 # @export
 # @rdname ei_tmvn
 #' @exportS3Method seine::ei_tmvn
-ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
+ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -99,9 +108,10 @@ ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
-        ei_wgt = check_make_weights(weights, NULL),
+        ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         bounds = bounds,
-        subclass = "ei_blueprint"
+        penalty = penalty,
+        scale = scale
     )
     x = cbind(x, z)
 
@@ -112,8 +122,8 @@ ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, ...) {
 # @export
 # @rdname ei_tmvn
 #' @exportS3Method seine::ei_tmvn
-ei_tmvn.matrix <- function(x, y, z, weights, bounds=NULL, ...) {
-    ei_tmvn.data.frame(x, y, z, weights, bounds=bounds, ...)
+ei_tmvn.matrix <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
+    ei_tmvn.data.frame(x, y, z, weights, bounds, penalty, scale, ...)
 }
 
 
@@ -133,6 +143,12 @@ run_mold.ei_blueprint <- function(blueprint, ...) {
 
     # update bounds
     bounds = ei_bounds(processed$blueprint$bounds, processed$outcomes)
+    if (bounds[1] == -Inf && bounds[2] == Inf) {
+        cli_abort(c("Bounds were set or inferred to be `c(-Inf, Inf)`.",
+                    "i"="Use {.fn ei_ridge} for unbounded regression."),
+                  call=rlang::new_call(rlang::sym("ei_tmvn")))
+    }
+
     processed$blueprint = hardhat::update_blueprint(
         processed$blueprint,
         bounds = bounds
@@ -145,23 +161,41 @@ run_mold.ei_blueprint <- function(blueprint, ...) {
 # Bridge ----------------------------------------------------------------------
 
 ei_tmvn_bridge <- function(processed, ...) {
-  x = processed$predictors
-  idx_x = match(processed$blueprint$ei_x, colnames(x))
-  z = x[, -idx_x, drop=FALSE]
-  x = x[, idx_x, drop=FALSE]
-  if (ncol(x) == 1) {
-      x = cbind(x, 1 - x)
-      colnames(x)[2] = ".other"
-  }
-  y = as.matrix(processed$outcomes)
+    bp = processed$blueprint
+    x = processed$predictors
+    idx_x = match(bp$ei_x, colnames(x))
+    z = x[, -idx_x, drop=FALSE]
+    x = pull_x(x, idx_x)
+    check_preds(x)
+    weights = processed$blueprint$ei_wgt
 
-  fit <- ei_tmvn_impl(x, y, z, processed$blueprint$ei_wgt, processed$blueprint$bounds)
+    # normalize
+    z_shift = colSums(z * weights) / sum(weights)
+    z = shift_cols(z, z_shift)
+    if (isTRUE(bp$scale)) {
+        z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
+        z = scale_cols(z, z_scale)
+    } else {
+        rep(1, ncol(z))
+    }
 
-  do.call(new_ei_tmvn, c(fit, list(blueprint = processed$blueprint)))
-  # new_ei_tmvn(
-  #   coefs = fit$coefs,
-  #   blueprint = processed$blueprint
-  # )
+    y = as.matrix(processed$outcomes)
+
+    # NA checking
+    if (any(is.na(x))) cli_abort("Missing values found in predictors.")
+    if (any(is.na(y))) cli_abort("Missing values found in outcome.")
+    if (any(is.na(z))) cli_abort("Missing values found in covariates.")
+
+    if (ncol(z) == 0)
+        bp$penalty = 0
+
+    fit <- ei_tmvn_impl(x, y, z, weights, bp$bounds, bp$penalty)
+
+    do.call(new_ei_tmvn, c(fit, list(blueprint = bp)))
+    # new_ei_tmvn(
+    #   coefs = fit$coefs,
+    #   blueprint = processed$blueprint
+    # )
 }
 
 # Model type ------------------------------------------------------------------

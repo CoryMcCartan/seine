@@ -76,6 +76,8 @@
 #'    The ridge regression solution is
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 #'    where \eqn{\lambda} is the value of `penalty`.
+#'    One can equivalently think of the penalty as imposing a
+#'    $\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.  
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
@@ -194,17 +196,18 @@ ei_ridge.default <- function(x, ...) {
 # Bridge and implementation ---------------------------------------------------
 
 ei_ridge_bridge <- function(processed, vcov, ...) {
+    bp = processed$blueprint
     x = processed$predictors
-    idx_x = match(processed$blueprint$ei_x, colnames(x))
+    idx_x = match(bp$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
     x = pull_x(x, idx_x)
     check_preds(x)
-    weights = processed$blueprint$ei_wgt
+    weights = bp$ei_wgt
 
     # normalize
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
-    if (isTRUE(processed$blueprint$scale)) {
+    if (isTRUE(bp$scale)) {
         z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
         z = scale_cols(z, z_scale)
     } else {
@@ -219,9 +222,9 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
     if (any(is.na(z))) cli_abort("Missing values found in covariates.")
 
     if (ncol(z) == 0)
-        processed$blueprint$penalty = 0
+        bp$penalty = 0
 
-    fit <- ei_ridge_impl(x, y, z, weights, processed$blueprint$penalty, vcov)
+    fit <- ei_ridge_impl(x, y, z, weights, bp$penalty, vcov)
 
     new_ei_ridge(
       coef = fit$coef,
@@ -234,7 +237,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
       int_scale = fit$int_scale,
       z_shift = z_shift,
       z_scale = z_scale,
-      blueprint = processed$blueprint
+      blueprint = bp
     )
 }
 
@@ -287,7 +290,7 @@ predict_ei_ridge_bridge <- function(type, object, processed) {
     x = processed$predictors
     idx_x = match(object$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
-    x = x[, idx_x, drop=FALSE]
+    x = pull_x(x, idx_x)
     if (ncol(x) == 1) {
         x = cbind(x, 1 - x)
         colnames(x)[2] = ".other"

@@ -73,6 +73,8 @@ via an efficient leave-one-out cross validation procedure.
 The ridge regression solution is
 \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 where \eqn{\lambda} is the value of \code{penalty}.
+One can equivalently think of the penalty as imposing a
+$\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.
 Keep in mind when choosing \code{penalty} manually that covariates in \code{z} are
 scaled to have mean zero and unit variance before fitting.}
 

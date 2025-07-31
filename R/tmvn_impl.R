@@ -1,10 +1,10 @@
 # EI model fitting function
-ei_tmvn_impl <- function(x, y, z, weights, bounds) {
+ei_tmvn_impl <- function(x, y, z, weights, bounds, penalty) {
     # TODO REMOVE
     # x <<- x; y <<- y; z <<- z; assign("weights", weights, envir=rlang::global_env());
     # assign("bounds", bounds, envir=rlang::global_env())
 
-    if (ncol(x) == 2 && ncol(y) == 1 && ncol(z) == 0) {
+    if (ncol(x) == 2 && ncol(y) == 1) {
         ei_tmvn_2x2_impl(x, c(y), rep(1, nrow(x)), weights, bounds, draw_local=TRUE)
     } else {
         cli_abort("{.fn ei_tmvn} not implemented yet beyond 2x2 case or for covariates.",
@@ -13,16 +13,19 @@ ei_tmvn_impl <- function(x, y, z, weights, bounds) {
 }
 
 
-ei_tmvn_2x2_impl = function(x, y, z, weights, bounds, draw_local=TRUE) {
+ei_tmvn_2x2_impl = function(x, y, z, weights, bounds, penalty, draw_local=TRUE) {
     if (!identical(bounds, c(0, 1))) {
         cli_abort("For now, bounds must be [0, 1].", call=parent.frame())
     }
 
+    if (ncol(z) > 0) {
+        cli_abort("Covariates not yet supported.")
+    }
     if (any(x[, 1] == 0)) {
-        cli_warn("Homogeneous units found; this special case is not yet implemented.");
+        cli_warn("Homogeneous units found; this special case is not yet implemented.")
     }
     if (any(y == 0 | y == 1)) {
-        cli_abort("Unanimous units found; this special case is not yet implemented.");
+        cli_abort("Unanimous units found; this special case is not yet implemented.")
     }
 
     n = length(y)
