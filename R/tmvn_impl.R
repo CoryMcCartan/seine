@@ -43,6 +43,7 @@ make_nlpost_gr = function(x, y, z, weights, beta_sd) {
     function(upars) {
         pars = constr_pars(upars)
         jac_c = constr_jac(upars)
+        eta = tcrossprod(z, pars$beta)
 
         out = -(
             R_llik(eta, pars_to_L(pars), y, x, weights, p=ncol(pars$beta), tol=1e-8) +
@@ -97,6 +98,7 @@ ei_tmvn_2x2_impl = function(x, y, z, weights, bounds, penalty, draws_local=1000L
     vcov = cov(pars_dr)
 
     if (draws_local > 0) {
+        warmup = 5L
         eta = tcrossprod(z, pars$beta)
         L = pars_to_L(pars)
         b = R_draw_local(draws_local, eta, L, y, x, warmup, 1e-6)
