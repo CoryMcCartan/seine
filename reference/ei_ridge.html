@@ -61,6 +61,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">formula</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">weights</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -68,13 +69,41 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'data.frame'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">y</span>,</span>
+<span>  <span class="va">z</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'matrix'</span></span>
-<span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">ei_ridge</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">y</span>,</span>
+<span>  <span class="va">z</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -127,6 +156,13 @@ stronger-than-necessary assumption about the relationship between the
 unit totals and the unknown data.</p></dd>
 
 
+<dt id="arg-bounds">bounds<a class="anchor" aria-label="anchor" href="#arg-bounds"></a></dt>
+<dd><p>A vector <code>c(min, max)</code> of bounds for the outcome.
+If <code>bounds = NULL</code>, they will be inferred from the outcome variable:
+if it is contained within \([0, 1]\), for instance, then the bounds will
+be <code>c(0, 1)</code>. The default <code>bounds = FALSE</code> uses an unbounded outcome.</p></dd>
+
+
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
 <dd><p>The ridge penalty (a non-negative scalar). Set to <code>NULL</code> to
 automatically determine the penalty which minimizes mean-square error,
@@ -135,7 +171,7 @@ The ridge regression solution is
 $$\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,$$
 where \(\lambda\) is the value of <code>penalty</code>.
 One can equivalently think of the penalty as imposing a
-$\(\mathcal{N}(0, \sigma^2/\lambda^2)\)$ prior on the \(\beta\).
+\(\mathcal{N}(0, \sigma^2/\lambda^2)\) prior on the \(\beta\).
 Keep in mind when choosing <code>penalty</code> manually that covariates in <code>z</code> are
 scaled to have mean zero and unit variance before fitting.</p></dd>
 
@@ -146,7 +182,7 @@ scaled to have mean zero and unit variance before fitting.</p></dd>
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
 <dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
-estimated coefficients.</p></dd>
+estimated coefficients. Ignored when <code>bounds</code> are provided.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -174,7 +210,13 @@ are also scaled to have unit variance.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The regression is calculated using the singular value decomposition, which
 allows for efficient recalculation under different <code>penalty</code> values as part
-of leave-one-out cross-validation.</p>
+of leave-one-out cross-validation.
+When <code>bounds</code> are provided, the regression is calculated via quadratic
+programming, as there is no closed-form solution. The unbounded regression
+is run to select the <code>penalty</code> automatically in this case, if it is not
+provided. Estimation is still efficient, though somewhat slower than in the
+unbounded case. The covariance matrix of the estimates is not available when
+bounds are applied.</p>
     </div>
     <div class="section level2">
     <h2 id="weights">Weights<a class="anchor" aria-label="anchor" href="#weights"></a></h2>
@@ -209,6 +251,18 @@ the helper functions in <code><a href="ei_wgt.html">ei_wgt()</a></code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An ecological inference model with 4 outcomes, 3 groups, and 1143 observations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit with penalty = 1.01453e-08</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># bounds inferred</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># bounds enforced</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1029559</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -3.377815e-19</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

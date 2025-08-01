@@ -60,9 +60,17 @@ Only works for a single outcome, i.e., <code>y</code> must be a vector, not a ma
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_ridge_impl</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, <span class="va">weights</span>, penalty <span class="op">=</span> <span class="cn">NULL</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_ridge_impl</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">y</span>,</span>
+<span>  <span class="va">z</span>,</span>
+<span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">ei_riesz_impl</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, <span class="va">weights</span>, <span class="va">penalty</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">ei_riesz_impl</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, <span class="va">total</span>, weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, <span class="va">penalty</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -85,6 +93,10 @@ Only works for a single outcome, i.e., <code>y</code> must be a vector, not a ma
 <dd><p>A vector of estimation weights</p></dd>
 
 
+<dt id="arg-bounds">bounds<a class="anchor" aria-label="anchor" href="#arg-bounds"></a></dt>
+<dd><p>A vector <code>c(min, max)</code> of bounds for the outcome.</p></dd>
+
+
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
 <dd><p>The ridge penalty (a non-negative scalar), which must be
 specified for <code>ei_riesz_impl()</code> but can be automatically estimated with
@@ -93,7 +105,7 @@ specified for <code>ei_riesz_impl()</code> but can be automatically estimated wi
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
 <dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
-estimated coefficients.</p></dd>
+estimated coefficients. Ignored when <code>bounds</code> are provided.</p></dd>
 
 
 <dt id="arg-total">total<a class="anchor" aria-label="anchor" href="#arg-total"></a></dt>
