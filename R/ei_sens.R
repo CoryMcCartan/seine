@@ -364,7 +364,7 @@ ei_bench <- function(spec, preproc = NULL) {
     }
 
     spec_proc = preproc(spec)
-    regr0 = ei_ridge(spec_proc)
+    regr0 = ei_ridge(spec_proc, vcov=FALSE)
     riesz0 = ei_riesz(spec_proc, penalty=regr0$penalty)
     est0 = ei_est(regr0, riesz0, spec_proc)
     vy = apply(regr0$y, 2, var)
@@ -376,7 +376,7 @@ ei_bench <- function(spec, preproc = NULL) {
         spec_loo = reconstruct_ei_spec(spec[setdiff(names(spec), cv)], spec)
         spec_loo = preproc(spec_loo)
 
-        regr_loo = ei_ridge(spec_loo)
+        regr_loo = ei_ridge(spec_loo, vcov=FALSE)
         riesz_loo = ei_riesz(spec_loo, penalty=regr_loo$penalty)
         est_loo = ei_est(regr_loo, riesz_loo, spec_loo)
         var_resid_loo = var_resid(regr_loo)

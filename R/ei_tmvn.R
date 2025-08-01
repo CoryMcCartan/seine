@@ -32,7 +32,7 @@
 #' data(elec_1968)
 #'
 #' \dontrun{
-#' ei_tmvn(pres_ind_wal ~ vap_white + vap_black, elec_1968, weights=pres_total)
+#' ei_tmvn(pres_ind_wal ~ vap_black, elec_1968, weights=pres_total)
 #' }
 #' @noRd
 ei_tmvn <- function(x, ...) {
@@ -42,7 +42,7 @@ ei_tmvn <- function(x, ...) {
 
 # @export
 # @rdname ei_tmvn
-#' @exportS3Method seine::ei_tmvn
+#' @export
 ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -56,7 +56,8 @@ ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, penalty=0, scal
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_tmvn_blueprint"
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -66,7 +67,7 @@ ei_tmvn.formula <- function(formula, data, weights, bounds=NULL, penalty=0, scal
 
 # @export
 # @rdname ei_tmvn
-#' @exportS3Method seine::ei_tmvn
+#' @export
 ei_tmvn.ei_spec <- function(x, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
@@ -84,7 +85,8 @@ ei_tmvn.ei_spec <- function(x, weights, bounds=NULL, penalty=0, scale=TRUE, ...)
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_tmvn_blueprint"
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
@@ -94,7 +96,7 @@ ei_tmvn.ei_spec <- function(x, weights, bounds=NULL, penalty=0, scale=TRUE, ...)
 
 # @export
 # @rdname ei_tmvn
-#' @exportS3Method seine::ei_tmvn
+#' @export
 ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
@@ -111,7 +113,8 @@ ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=T
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_tmvn_blueprint"
     )
     x = cbind(x, z)
 
@@ -121,7 +124,7 @@ ei_tmvn.data.frame <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=T
 
 # @export
 # @rdname ei_tmvn
-#' @exportS3Method seine::ei_tmvn
+#' @export
 ei_tmvn.matrix <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=TRUE, ...) {
     ei_tmvn.data.frame(x, y, z, weights, bounds, penalty, scale, ...)
 }
@@ -129,7 +132,7 @@ ei_tmvn.matrix <- function(x, y, z, weights, bounds=NULL, penalty=0, scale=TRUE,
 
 # @export
 # @rdname ei_tmvn
-#' @exportS3Method seine::ei_tmvn
+#' @export
 ei_tmvn.default <- function(x, ...) {
     if (missing(x))
         cli_abort("{.fn ei_tmvn} requires arguments.", call=NULL)
@@ -138,7 +141,7 @@ ei_tmvn.default <- function(x, ...) {
 
 # Creates bounds _after_ molding outcomes
 #' @exportS3Method hardhat::run_mold
-run_mold.ei_blueprint <- function(blueprint, ...) {
+run_mold.ei_tmvn_blueprint <- function(blueprint, ...) {
     processed = NextMethod("run_mold")
 
     # update bounds
@@ -161,12 +164,13 @@ run_mold.ei_blueprint <- function(blueprint, ...) {
 # Bridge ----------------------------------------------------------------------
 
 ei_tmvn_bridge <- function(processed, ...) {
+    err_call = rlang::new_call(rlang::sym("ei_tmvn"))
     bp = processed$blueprint
     x = processed$predictors
     idx_x = match(bp$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
     x = pull_x(x, idx_x)
-    check_preds(x)
+    check_preds(x, call=err_call)
     weights = processed$blueprint$ei_wgt
 
     # normalize
@@ -176,22 +180,41 @@ ei_tmvn_bridge <- function(processed, ...) {
         z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
         z = scale_cols(z, z_scale)
     } else {
-        rep(1, ncol(z))
+        z_scale = rep(1, ncol(z))
     }
 
     y = as.matrix(processed$outcomes)
+    # standardize bounds
+    if (all(is.finite(bp$bounds))) {
+        y_shift = bp$bounds[1]
+        y_scale = bp$bounds[2] - bp$bounds[1]
+        y = (y - y_shift) / y_scale
+    } else {
+        cli_abort(c("Inference on half-open regions is not currently supported.",
+                    "i"="Bounds must be finite; got {.val {bp$bounds}}."),
+                     call=err_call)
+    }
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.")
-    if (any(is.na(y))) cli_abort("Missing values found in outcome.")
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.")
+    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
+    if (any(is.na(y))) cli_abort("Missing values found in outcome.", call=err_call)
+    if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
 
-    if (ncol(z) == 0)
+    if (ncol(z) == 0) {
         bp$penalty = 0
+    }
 
     fit <- ei_tmvn_impl(x, y, z, weights, bp$bounds, bp$penalty)
 
-    do.call(new_ei_tmvn, c(fit, list(blueprint = bp)))
+    do.call(new_ei_tmvn, c(fit, list(
+        y = y,
+        penalty = bp$penalty,
+        y_shift = y_shift,
+        y_scale = y_scale,
+        z_shift = z_shift,
+        z_scale = z_scale,
+        blueprint = bp
+    )))
     # new_ei_tmvn(
     #   coefs = fit$coefs,
     #   blueprint = processed$blueprint

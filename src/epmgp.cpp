@@ -1,7 +1,9 @@
 // (c) 2025 Cory McCARTAN
 
 #include <cmath>
+
 #include "armadillo.hpp"
+#include "Rmath.h"
 
 #include "epmgp.h"
 
@@ -12,10 +14,13 @@ using namespace arma;
 // helper functions
 double log_erf_diff(double a, double b);
 
+// only calculates log_Z and avoids extra sqrt()
+// also allows for different truncation buonds
 double utn_logZ(double mu, double sigma, double l, double u) {
     double alpha = (l - mu) / (M_SQRT2 * sigma);
     double beta = (u - mu) / (M_SQRT2 * sigma);
-    return -M_LN2 + log_erf_diff(alpha, beta);
+    double logZ = -M_LN2 + log_erf_diff(alpha, beta);
+    return std::isfinite(logZ) ? logZ : -1000.0;
 }
 
 /*
@@ -31,8 +36,8 @@ Moments utn_moments(double mu, double sigma2) {
     double beta = (u - mu) / (M_SQRT2 * sigma);
     double log_m0 = -M_LN2 + log_erf_diff(alpha, beta);
 
-    if (std::isnan(log_m0)) {
-        return {0.0, mu > u ? u : l, 0.0};
+    if (!std::isfinite(log_m0)) {
+        return {-1000.0, mu > u ? u : l, 0.0};
     }
 
     double alpha_updf = std::exp(-alpha*alpha);
@@ -129,7 +134,7 @@ EPResult ep_moments(const vec& mu, const mat& L, const vec& addl_c, double addl_
     // derivatives
     if (gr) {
         vec dlogZ_mu = K_inv * (m1 - mu);
-        mat dlogZ_L = (dlogZ_mu * dlogZ_mu.t() + (K_inv * m2 * K_inv - K_inv)) * L;
+        mat dlogZ_L = (dlogZ_mu * dlogZ_mu.t() + (K_inv * m2 * K_inv - K_inv)) * trimatl(L);
         // mat dlogZ_L = trimatl((dlogZ_mu * dlogZ_mu.t() + (K_inv * m2 * K_inv - K_inv)) * trimatl(L));
 
         return {log_Z, m1, m2, dlogZ_mu, dlogZ_L};
@@ -145,14 +150,19 @@ EPResult ep_moments(const vec& mu, const mat& L, bool gr, double tol) {
 }
 
 
+// erfc distribution based on R's pnorm(); ~50x slower
+// see docs at <https://svn.r-project.org/R/trunk/src/nmath/pnorm.c>
+double Rf_erfc(double x) {
+    double cp;
+    double p = -x;
+    Rf_pnorm_both(-x, &p, &cp, 0, 0);
+    return p;
+}
+
 /*
  * Numerically stable log(erf(b) - erf(a))
  */
 double log_erf_diff(double a, double b) {
-    // easy case
-    if (std::signbit(a) != std::signbit(b)) {
-        return std::log(std::erfc(a) - std::erfc(b));
-    }
     // erfc stable for positive values
     if (a < 0 && b < 0) {
         double tmp = -a;
@@ -160,8 +170,7 @@ double log_erf_diff(double a, double b) {
         b = tmp;
     }
 
-    double erfc_a = std::erfc(a);
-    return std::log(erfc_a) + std::log1p(- std::erfc(b) / erfc_a);
+    return std::log(erfc(a) - erfc(b));
 }
 
 
@@ -187,7 +196,7 @@ context("EPMGP Tests") {
     test_that("Truncated Normal moments are correctly calculated") {
         const double tol = 1.4901161e-8;
         auto [log_m0a, m1a, m2a] = utn_moments(0.5, 0.0001);
-        expect_true(abs(log_m0a - 0.0) < tol);
+        expect_true(abs(log_m0a) < tol);
         expect_true(abs(m1a - 0.5) < tol);
         expect_true(abs(m2a - 0.0001) < tol);
 

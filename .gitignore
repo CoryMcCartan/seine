@@ -37,3 +37,5 @@ docs
 
 todo.txt
 inst/doc
+compile_commands.json
+.cache

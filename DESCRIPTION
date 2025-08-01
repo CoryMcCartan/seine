@@ -7,11 +7,11 @@ Authors@R: c(
     person("Shiro", "Kuriwaki", , "shiro.kuriwaki@yale.edu", role = c("aut"),
            comment = c(ORCID = "0000-0002-5687-2647"))
     )
-Description: Efficient and user-friendly routines for modern ecological 
+Description: Efficient and user-friendly routines for modern ecological
     inference. Implements the methods described in McCartan & Kuriwaki (2025)
     <arxiv:2507.XXXXX>, which generalize ecological regression as introduced by
     Goodman (1953) <doi:10.2307/2088121>. Includes routines for preprocessing,
-    synthetic data generation, double/debiased machine learning (DML) 
+    synthetic data generation, double/debiased machine learning (DML)
     estimation, and sensitivity analysis.
 Depends:
     R (>= 3.5.0)
@@ -24,12 +24,12 @@ Imports:
     graphics,
     utils,
     stats
-Suggests: 
+Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
     xml2
-LinkingTo: 
+LinkingTo:
     cpp11,
     cpp11armadillo,
     testthat
@@ -38,7 +38,9 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 LazyData: true
+SystemRequirements: C++17
 Config/testthat/edition: 3
 URL: https://github.com/CoryMcCartan/seine, https://corymccartan.com/seine/
 BugReports: https://github.com/CoryMcCartan/seine/issues
 VignetteBuilder: knitr
+Config/build/compilation-database: true

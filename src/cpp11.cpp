@@ -35,10 +35,10 @@ extern "C" SEXP _seine_R_utn_moments(SEXP mu, SEXP sigma2) {
   END_CPP11
 }
 // R_interface.cpp
-double R_llik_intonly(const doubles& eta, const doubles_matrix<>& L, const doubles& y, const doubles_matrix<>& X, const doubles& weights, double tol);
-extern "C" SEXP _seine_R_llik_intonly(SEXP eta, SEXP L, SEXP y, SEXP X, SEXP weights, SEXP tol) {
+double R_llik(const doubles& eta, const doubles_matrix<>& L, const doubles& y, const doubles_matrix<>& X, const doubles& weights, double tol);
+extern "C" SEXP _seine_R_llik(SEXP eta, SEXP L, SEXP y, SEXP X, SEXP weights, SEXP tol) {
   BEGIN_CPP11
-    return cpp11::as_sexp(R_llik_intonly(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(L), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(y), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(X), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(weights), cpp11::as_cpp<cpp11::decay_t<double>>(tol)));
+    return cpp11::as_sexp(R_llik(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(L), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(y), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(X), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(weights), cpp11::as_cpp<cpp11::decay_t<double>>(tol)));
   END_CPP11
 }
 // R_interface.cpp
@@ -68,15 +68,15 @@ extern "C" {
 extern SEXP run_testthat_tests(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_seine_R_draw_local",   (DL_FUNC) &_seine_R_draw_local,   7},
-    {"_seine_R_ep_moments",   (DL_FUNC) &_seine_R_ep_moments,   5},
-    {"_seine_R_ess_tmvn",     (DL_FUNC) &_seine_R_ess_tmvn,     4},
-    {"_seine_R_llik_intonly", (DL_FUNC) &_seine_R_llik_intonly, 6},
-    {"_seine_R_sync_rng",     (DL_FUNC) &_seine_R_sync_rng,     0},
-    {"_seine_R_utn_moments",  (DL_FUNC) &_seine_R_utn_moments,  2},
-    {"_seine_r_proj_local",   (DL_FUNC) &_seine_r_proj_local,   5},
-    {"_seine_r_proj_mvn",     (DL_FUNC) &_seine_r_proj_mvn,     4},
-    {"run_testthat_tests",    (DL_FUNC) &run_testthat_tests,    1},
+    {"_seine_R_draw_local",  (DL_FUNC) &_seine_R_draw_local,  7},
+    {"_seine_R_ep_moments",  (DL_FUNC) &_seine_R_ep_moments,  5},
+    {"_seine_R_ess_tmvn",    (DL_FUNC) &_seine_R_ess_tmvn,    4},
+    {"_seine_R_llik",        (DL_FUNC) &_seine_R_llik,        6},
+    {"_seine_R_sync_rng",    (DL_FUNC) &_seine_R_sync_rng,    0},
+    {"_seine_R_utn_moments", (DL_FUNC) &_seine_R_utn_moments, 2},
+    {"_seine_r_proj_local",  (DL_FUNC) &_seine_r_proj_local,  5},
+    {"_seine_r_proj_mvn",    (DL_FUNC) &_seine_r_proj_mvn,    4},
+    {"run_testthat_tests",   (DL_FUNC) &run_testthat_tests,   1},
     {NULL, NULL, 0}
 };
 }

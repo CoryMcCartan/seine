@@ -290,9 +290,9 @@ check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
     x
 }
 
-check_preds = function(x, tol = 1e-6) {
+check_preds = function(x, tol = 1e-6, call=parent.frame()) {
     if (!isTRUE(all.equal(rowSums(x), rep(1, nrow(x)), tolerance = tol))) {
-        cli_warn("Predictors should sum to 1 in every row.", call=parent.frame())
+        cli_warn("Predictors should sum to 1 in every row.", call=call)
     }
 }
 

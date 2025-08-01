@@ -12,7 +12,7 @@
  * All dimensions are assumed to be correct and are not checked. `tol` controls
  * the tolerance of the projection (see `proj_mvn()`).
  */
-double llik_intonly(const arma::vec& eta, const arma::mat& L,
+double llik(const arma::vec& eta, const arma::mat& L,
                     const arma::vec& y, const arma::mat& X,
                     const arma::vec& weights, double tol);
 

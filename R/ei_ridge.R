@@ -77,7 +77,7 @@
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 #'    where \eqn{\lambda} is the value of `penalty`.
 #'    One can equivalently think of the penalty as imposing a
-#'    $\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.  
+#'    $\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
@@ -196,12 +196,13 @@ ei_ridge.default <- function(x, ...) {
 # Bridge and implementation ---------------------------------------------------
 
 ei_ridge_bridge <- function(processed, vcov, ...) {
+    err_call = rlang::new_call(rlang::sym("ei_ridge"))
     bp = processed$blueprint
     x = processed$predictors
     idx_x = match(bp$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
     x = pull_x(x, idx_x)
-    check_preds(x)
+    check_preds(x, call=err_call)
     weights = bp$ei_wgt
 
     # normalize
@@ -211,15 +212,15 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
         z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
         z = scale_cols(z, z_scale)
     } else {
-        rep(1, ncol(z))
+        z_scale = rep(1, ncol(z))
     }
 
     y = as.matrix(processed$outcomes)
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.")
-    if (any(is.na(y))) cli_abort("Missing values found in outcome.")
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.")
+    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
+    if (any(is.na(y))) cli_abort("Missing values found in outcome.", call=err_call)
+    if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
 
     if (ncol(z) == 0)
         bp$penalty = 0

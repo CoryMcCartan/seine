@@ -51,15 +51,16 @@ doubles R_utn_moments(double mu, double sigma2) {
     return out;
 }
 
+
 [[cpp11::register]]
-double R_llik_intonly(const doubles& eta, const doubles_matrix<>& L, const doubles& y,
+double R_llik(const doubles& eta, const doubles_matrix<>& L, const doubles& y,
                       const doubles_matrix<>& X, const doubles& weights, double tol) {
     vec _eta = as_Col(eta);
     mat _L = as_Mat(L);
     vec _y = as_Col(y);
     mat _X = as_Mat(X);
     vec _weights = as_Col(weights);
-    return llik_intonly(_eta, _L, _y, _X, _weights, tol);
+    return llik(_eta, _L, _y, _X, _weights, tol);
 }
 
 [[cpp11::register]]

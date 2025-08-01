@@ -139,11 +139,12 @@ ei_riesz.default <- function(x, ...) {
 # Bridge and implementation ---------------------------------------------------
 
 ei_riesz_bridge <- function(processed, ...) {
+    err_call = rlang::new_call(rlang::sym("ei_riesz"))
     x = processed$predictors
     idx_x = match(processed$blueprint$ei_x, colnames(x))
     z = x[, -idx_x, drop=FALSE]
     x = pull_x(x, idx_x)
-    check_preds(x)
+    check_preds(x, call=err_call)
     total = processed$blueprint$ei_n
     weights = processed$blueprint$ei_wgt
     penalty = processed$blueprint$penalty
@@ -155,12 +156,12 @@ ei_riesz_bridge <- function(processed, ...) {
         z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
         z = scale_cols(z, z_scale)
     } else {
-        rep(1, ncol(z))
+        z_scale = rep(1, ncol(z))
     }
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.")
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.")
+    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
+    if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
 
     fit <- ei_riesz_impl(x, z, total, weights, penalty)
 

@@ -14,10 +14,51 @@ using namespace arma;
 inline double norm_lupdf(double x, double var) {
     return -0.5 * (x * x / var + std::log(var));
 }
+double mvnorm_lupdf(const vec& x, const vec& mu, const mat& L) {
+    vec diff = solve(trimatl(L), x - mu);
+    return -sum(log(diagvec(L))) - 0.5 * dot(diff, diff);
+}
 
+// integral over tomography line, 2x2 case
+double llik_S_2x2(const mat& L_eta_proj, double y, const mat& X, int i) {
+    // pick variable to param. tomog. line: 0 by default, but 1 if at boundary
+    int j = X(i, 0) == 0 || X(i, 0) == 1;
+    // bounds and sd in tomog. line parametrization
+    double lb = (y - X(i, 1 - j)) / X(i, j);
+    double ub = y / X(i, j);
+    double sd;
+    if (j == 0) {
+        // sd of 1st component is just L[0, 0]
+        sd = L_eta_proj(j, 0);
+    } else {
+        // var. of 2nd component is L[0, 0]^2 + L[1, 0]^2
+        sd = std::sqrt(sum(square(L_eta_proj.col(0))));
+    }
+    return utn_logZ(L_eta_proj(j, 1), sd, lb < 0 ? 0 : lb, ub > 1 ? 1 : ub);
+}
 
-double llik_intonly(const vec& eta, const mat& L, const vec& y, const mat& X,
-                    const vec& weights, double tol) {
+// integral over tomography hyperplane
+double llik_S_ep(const mat& L_eta_proj, double y, const mat& X, int i,
+                  int k, vec& eta_ep, mat& L_ep, vec& c_ep, double tol) {
+    // find last nonzero entry of x
+    int last_nz;
+    for (last_nz = k - 1; last_nz >= 0; last_nz--)
+      if (X(i, last_nz) != 0)
+        break;
+
+    // set up EP inputs
+    for (int j = 0; j < k - 1; ++j) {
+        int js = j + (j >= last_nz); // shifted
+        eta_ep(j) = L_eta_proj(js, k - 1);
+        L_ep.row(j) = L_eta_proj.row(js).head(k - 1);
+        c_ep(j) = -X(i, js) / X(i, last_nz);
+    }
+
+    return ep_moments(eta_ep, L_ep, c_ep, y / X(i, last_nz), false, tol).log_Z;
+}
+
+double llik(const vec& eta, const mat& L, const vec& y, const mat& X,
+            const vec& weights, double tol) {
     int k = eta.n_elem;
     vec eps_loc = y - X * eta;
     vec var_loc = diagvec(X * trimatl(L) * trimatl(L).t() * X.t());
@@ -25,36 +66,37 @@ double llik_intonly(const vec& eta, const mat& L, const vec& y, const mat& X,
     // 1 / R(eta, L) [norm. const. for overall TMVN]; false=no gradient
     double llik = -sum(weights) * ep_moments(eta, L, false, tol).log_Z;
 
+    // calculate MVN density at (0, 0, ... 0) and (1, 1, ... 1)
+    double L_det = sum(log(diagvec(L)));
+    vec diff_0 = solve(trimatl(L), -eta);
+    vec diff_1 = solve(trimatl(L), 1 - eta);
+    double llik_unam_0 = -L_det - 0.5 * dot(diff_0, diff_0);
+    double llik_unam_1 = -L_det - 0.5 * dot(diff_1, diff_1);
+
     mat L_eta_proj(k, k);
     vec Lx(k);
     vec eta_ep(k - 1);
     mat L_ep(k - 1, k - 1);
     vec c_ep(k - 1);
     for (int i = 0; i < y.n_elem; ++i) {
+        // unanimous units
+        if (y[i] == 0) {
+            llik += weights(i) * llik_unam_0;
+            continue;
+        } else if (y[i] == 1) {
+            llik += weights(i) * llik_unam_1;
+            continue;
+        }
+
         proj_mvn(eta, L, X.row(i).t(), eps_loc(i), Lx, L_eta_proj, tol);
 
         double log_S;
         if (k == 2) { // analytical
-            int j = X(i, 0) > 0 ? 0 : 1;
-            double lb = (y(i) - X(i, 1 - j)) / X(i, j);
-            double ub = y(i) / X(i, j);
-            double sd = j == 0 ? L_eta_proj(j, 0) : std::sqrt(sum(square(L_eta_proj.col(0))));
-            log_S = utn_logZ(L_eta_proj(j, 1), sd, lb < 0 ? 0 : lb, ub > 1 ? 1 : ub);
+            log_S = llik_S_2x2(L_eta_proj, y[i], X, i);
         } else { // EP
-            // find last nonzero entry of x
-            int last_nz;
-            for (last_nz = k - 1; last_nz >= 0; last_nz--) if (X(i, last_nz) != 0) break;
-
-            // set up EP inputs
-            for (int j = 0; j < k - 1; ++j) {
-                int js = j + (j >= last_nz); // shifted
-                eta_ep(j) = L_eta_proj(js, k - 1);
-                L_ep.row(j) = L_eta_proj.row(js).head(k - 1);
-                c_ep(j) = -X(i, js) / X(i, last_nz);
-            }
-
-            log_S = ep_moments(eta_ep, L_ep, c_ep, y(i)/X(i, last_nz), false, tol).log_Z;
+            log_S = llik_S_ep(L_eta_proj, y[i], X, i, k, eta_ep, L_ep, c_ep, tol);
         }
+
         // 2nd term is  y ~ N(x'eta, x'Sigma x)
         llik += weights(i) * (log_S + norm_lupdf(eps_loc(i), var_loc(i)));
     }
@@ -88,7 +130,6 @@ vec draw_local(int draws, const vec& eta, const mat& L,
 
     return out;
 }
-
 
 void proj_mvn(const vec& eta, const mat& L, const vec& x, double eps, vec& Lx, mat& L_out, double tol) {
     int n = eta.n_elem;
@@ -127,6 +168,20 @@ void proj_mvn(const vec& eta, const mat& L, const vec& x, double eps, vec& Lx, m
 #include "random.h"
 context("Likelihood Tests") {
     double tol = 1e-5;
+
+    test_that("Normal distributions calculated correctly") {
+        // dnorm(0.0, 0, 0.3, log=TRUE) - dnorm(0.5, 0, 0.3, log=TRUE)
+        double diff_r = 1.3888888888889;
+        double diff_act = norm_lupdf(0.0, 0.09) - norm_lupdf(0.5, 0.09);
+        expect_true(abs(diff_r - diff_act) < tol);
+
+        vec x = {0.5, 1.5};
+        vec mu = {0.0, 1.0};
+        mat L = eye(2, 2) * 0.3;
+        double d_un = norm_lupdf(0.5, 0.09);
+        double d_mv = mvnorm_lupdf(x, mu, L);
+        expect_true(abs(2*d_un - d_mv) < tol);
+    }
 
     test_that("MVN subspace projections calculated correctly") {
         int k = 5;
