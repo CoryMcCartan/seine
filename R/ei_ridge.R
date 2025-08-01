@@ -262,7 +262,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
 #'
 #' @rdname ei-impl
 #' @export
-ei_ridge_impl <- function(x, y, z, weights, penalty=NULL, vcov=TRUE) {
+ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)), penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))

@@ -180,7 +180,7 @@ ei_riesz_bridge <- function(processed, ...) {
 #'
 #' @rdname ei-impl
 #' @export
-ei_riesz_impl <- function(x, z, total, weights, penalty) {
+ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)
     xz = row_kronecker(x, z, int_scale)
