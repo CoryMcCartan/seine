@@ -12,9 +12,9 @@
  * All dimensions are assumed to be correct and are not checked. `tol` controls
  * the tolerance of the projection (see `proj_mvn()`).
  */
-double llik(const arma::vec& eta, const arma::mat& L,
-                    const arma::vec& y, const arma::mat& X,
-                    const arma::vec& weights, double tol);
+double llik(const arma::mat& eta, const arma::mat& L,
+            const arma::vec& y, const arma::mat& X,
+            const arma::vec& weights, int p, double tol);
 
 /**
  * Draw local parameters from their projected truncated normal distributions.
@@ -22,7 +22,7 @@ double llik(const arma::vec& eta, const arma::mat& L,
  * Returns a column-major 3d array (first index varies fastest) of dimension
  * (draws, y.n_elem, eta.n_elem).
  */
-arma::vec draw_local(int draws, const arma::vec& eta, const arma::mat& L,
+arma::vec draw_local(int draws, const arma::mat& eta, const arma::mat& L,
                      const arma::vec& y, const arma::mat& X, int warmup, double tol);
 
 /**

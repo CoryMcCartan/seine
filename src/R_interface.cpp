@@ -53,20 +53,20 @@ doubles R_utn_moments(double mu, double sigma2) {
 
 
 [[cpp11::register]]
-double R_llik(const doubles& eta, const doubles_matrix<>& L, const doubles& y,
-                      const doubles_matrix<>& X, const doubles& weights, double tol) {
-    vec _eta = as_Col(eta);
+double R_llik(const doubles_matrix<>& eta, const doubles_matrix<>& L, const doubles& y,
+              const doubles_matrix<>& X, const doubles& weights, int p, double tol) {
+    mat _eta = as_Mat(eta);
     mat _L = as_Mat(L);
     vec _y = as_Col(y);
     mat _X = as_Mat(X);
     vec _weights = as_Col(weights);
-    return llik(_eta, _L, _y, _X, _weights, tol);
+    return llik(_eta, _L, _y, _X, _weights, p, tol);
 }
 
 [[cpp11::register]]
-doubles R_draw_local(int draws, const doubles& eta, const doubles_matrix<>& L,
+doubles R_draw_local(int draws, const doubles_matrix<>& eta, const doubles_matrix<>& L,
                      const doubles& y, const doubles_matrix<>& X, int warmup, double tol) {
-    vec _eta = as_Col(eta);
+    mat _eta = as_Mat(eta);
     mat _L = as_Mat(L);
     vec _y = as_Col(y);
     mat _X = as_Mat(X);
@@ -74,7 +74,8 @@ doubles R_draw_local(int draws, const doubles& eta, const doubles_matrix<>& L,
 }
 
 [[cpp11::register]]
-doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l, const doubles& x, double eps) {
+doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l,
+                            const doubles& x, double eps) {
     vec _eta = as_col(eta);
     mat _l = as_mat(l);
     vec _x = as_col(x);

@@ -235,7 +235,7 @@ print.ei_tmvn <- function(x, ...) {
         cat_line("Global estimate:")
         print(x$b_global)
     } else {
-        cat_line("Eta estimate:")
-        print(x$est$eta)
+        cat_line("Global estimate (no draws):")
+        print(x$est$beta[, 1])
     }
 }

@@ -42,9 +42,11 @@ double llik_S_ep(const mat& L_eta_proj, double y, const mat& X, int i,
                   int k, vec& eta_ep, mat& L_ep, vec& c_ep, double tol) {
     // find last nonzero entry of x
     int last_nz;
-    for (last_nz = k - 1; last_nz >= 0; last_nz--)
-      if (X(i, last_nz) != 0)
-        break;
+    for (last_nz = k - 1; last_nz >= 0; last_nz--) {
+      if (X(i, last_nz) != 0) {
+          break;
+      }
+    }
 
     // set up EP inputs
     for (int j = 0; j < k - 1; ++j) {
@@ -57,65 +59,72 @@ double llik_S_ep(const mat& L_eta_proj, double y, const mat& X, int i,
     return ep_moments(eta_ep, L_ep, c_ep, y / X(i, last_nz), false, tol).log_Z;
 }
 
-double llik(const vec& eta, const mat& L, const vec& y, const mat& X,
-            const vec& weights, double tol) {
-    int k = eta.n_elem;
-    vec eps_loc = y - X * eta;
+double llik(const mat& eta, const mat& L, const vec& y, const mat& X,
+            const vec& weights, int p, double tol) {
+    int n = y.n_elem;
+    int k = eta.n_cols;
+    vec eps_loc = y - sum(X % eta, 1); // row sums
     vec var_loc = diagvec(X * trimatl(L) * trimatl(L).t() * X.t());
-
-    // 1 / R(eta, L) [norm. const. for overall TMVN]; false=no gradient
-    double llik = -sum(weights) * ep_moments(eta, L, false, tol).log_Z;
-
-    // calculate MVN density at (0, 0, ... 0) and (1, 1, ... 1)
     double L_det = sum(log(diagvec(L)));
-    vec diff_0 = solve(trimatl(L), -eta);
-    vec diff_1 = solve(trimatl(L), 1 - eta);
-    double llik_unam_0 = -L_det - 0.5 * dot(diff_0, diff_0);
-    double llik_unam_1 = -L_det - 0.5 * dot(diff_1, diff_1);
+
+    double llik = 0;
+    if (p == 1) { // when no covariates, R term shared across all obs
+        llik += -sum(weights) * ep_moments(eta.row(0).t(), L, false, tol).log_Z;
+    }
 
     mat L_eta_proj(k, k);
+    vec diff_unam(k);
     vec Lx(k);
     vec eta_ep(k - 1);
     mat L_ep(k - 1, k - 1);
     vec c_ep(k - 1);
-    for (int i = 0; i < y.n_elem; ++i) {
+    for (int i = 0; i < n; ++i) {
+        // 1 / R(eta, L); false=no gradient
+        double llik_i = 0.0;
+        if (p > 1) {
+            llik_i += -ep_moments(eta.row(i).t(), L, false, tol).log_Z;
+        }
+
         // unanimous units
+        // calculate MVN density at (0, 0, ... 0) and (1, 1, ... 1)
         if (y[i] == 0) {
-            llik += weights(i) * llik_unam_0;
-            continue;
+            diff_unam = solve(trimatl(L), -eta.row(i).t());
+            llik_i += -L_det - 0.5 * dot(diff_unam, diff_unam);
         } else if (y[i] == 1) {
-            llik += weights(i) * llik_unam_1;
-            continue;
+            diff_unam = solve(trimatl(L), 1 - eta.row(i).t());
+            llik_i += -L_det - 0.5 * dot(diff_unam, diff_unam);
+        } else {
+            proj_mvn(eta.row(i).t(), L, X.row(i).t(), eps_loc(i), Lx, L_eta_proj, tol);
+
+            // log S
+            if (k == 2) { // analytical
+                llik_i += llik_S_2x2(L_eta_proj, y[i], X, i);
+            } else { // EP
+                llik_i += llik_S_ep(L_eta_proj, y[i], X, i, k, eta_ep, L_ep, c_ep, tol);
+            }
+
+            // y ~ N(x'eta, x'Sigma x)
+            llik_i += norm_lupdf(eps_loc(i), var_loc(i));
         }
 
-        proj_mvn(eta, L, X.row(i).t(), eps_loc(i), Lx, L_eta_proj, tol);
-
-        double log_S;
-        if (k == 2) { // analytical
-            log_S = llik_S_2x2(L_eta_proj, y[i], X, i);
-        } else { // EP
-            log_S = llik_S_ep(L_eta_proj, y[i], X, i, k, eta_ep, L_ep, c_ep, tol);
-        }
-
-        // 2nd term is  y ~ N(x'eta, x'Sigma x)
-        llik += weights(i) * (log_S + norm_lupdf(eps_loc(i), var_loc(i)));
+        llik += weights(i) * llik_i;
     }
 
     return llik;
 }
 
-vec draw_local(int draws, const vec& eta, const mat& L,
+vec draw_local(int draws, const mat& eta, const mat& L,
                const vec& y, const mat& X, int warmup, double tol) {
     int n = y.n_elem;
-    int k = eta.n_elem;
-    vec eps_loc = y - X * eta;
+    int k = eta.n_cols;
+    vec eps_loc = y - sum(X % eta, 1); // row sums
     vec out(draws * n * k);
 
     mat L_eta_proj(k, k);
     vec Lx(k);
     vec init(k);
     for (int i = 0; i < n; ++i) {
-        proj_mvn(eta, L, X.row(i).t(), eps_loc(i), Lx, L_eta_proj, tol);
+        proj_mvn(eta.row(i).t(), L, X.row(i).t(), eps_loc(i), Lx, L_eta_proj, tol);
 
         init.fill(y(i));
         mat draws_i = ess_tmvn(draws + warmup, L_eta_proj.col(k - 1),

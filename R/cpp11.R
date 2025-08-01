@@ -16,8 +16,8 @@ R_utn_moments <- function(mu, sigma2) {
   .Call(`_seine_R_utn_moments`, mu, sigma2)
 }
 
-R_llik <- function(eta, L, y, X, weights, tol) {
-  .Call(`_seine_R_llik`, eta, L, y, X, weights, tol)
+R_llik <- function(eta, L, y, X, weights, p, tol) {
+  .Call(`_seine_R_llik`, eta, L, y, X, weights, p, tol)
 }
 
 R_draw_local <- function(draws, eta, L, y, X, warmup, tol) {

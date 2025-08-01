@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include "armadillo.hpp"
-#include "Rmath.h"
 
 #include "epmgp.h"
 
@@ -150,13 +149,97 @@ EPResult ep_moments(const vec& mu, const mat& L, bool gr, double tol) {
 }
 
 
-// erfc distribution based on R's pnorm(); ~50x slower
-// see docs at <https://svn.r-project.org/R/trunk/src/nmath/pnorm.c>
-double Rf_erfc(double x) {
-    double cp;
-    double p = -x;
-    Rf_pnorm_both(-x, &p, &cp, 0, 0);
-    return p;
+// Implementation notes (see <https://arxiv.org/pdf/1111.6832>)
+//
+// The paper is wrong in claiming the Appendix B procedure reduces computational
+// complexity from O(n^3) to O(n^2); it replaces a single O(n^3) update with n
+// O(n^2) updates. The original update seems numerically stable enough and is
+// implemented here.
+//
+// The derivatives were calculated by hand and checked numerically; the paper's
+// version of these calculations ignores that many subexpressions are computed
+// as part of the EP.
+EPResult ep_moments_2(const vec& mu, const mat& L, const vec& addl_c, double addl_shift,
+                      bool gr, double tol) {
+    bool has_addl = addl_c.n_elem > 0;
+    int n = 2;
+    int m = n + has_addl;
+    // constants
+    mat K_inv = trimatl(L).i().t() * trimatl(L).i();
+    vec Kmu = K_inv * mu;
+    mat CCt = addl_c * addl_c.t();
+    // message parameters
+    vec tau = zeros(m);
+    vec nu = zeros(m);
+    // cavity parameters
+    vec cav_loc = zeros(m);
+    vec cav_var = zeros(m);
+    // moment estimates
+    vec m1 = mu;
+    vec prev_m1 = mu;
+    mat m2_inv(n, n);
+    mat m2 = L * L.t();
+    vec m2_diag(m);
+    vec m1_resc(m);
+    double log_Z;
+
+    for (int iter = 0; iter < 32; ++iter) {
+        // form cavity locals
+        m2_diag.head(n) = diagvec(m2);
+        if (has_addl) m2_diag(n) = as_scalar(addl_c.t() * m2 * addl_c);
+        cav_var = 1.0 / (1.0 / m2_diag - tau);
+        m1_resc.head(n) = m1;
+        if (has_addl) m1_resc(n) = dot(addl_c, m1);
+        cav_loc = cav_var % (m1_resc / m2_diag - nu);
+
+        log_Z = 0.0;
+        for (int i = 0; i < m; ++i) {
+            // Moment computation
+            if (has_addl && i == n) cav_loc(i) += addl_shift;
+            auto [log_Z_hat, mu_hat, sigma2_hat] = utn_moments(cav_loc(i), cav_var(i));
+            if (has_addl && i == n) {
+                cav_loc(i) -= addl_shift;
+                mu_hat -= addl_shift;
+            }
+
+            log_Z += log_Z_hat;
+            // match moments
+            tau(i) = 1.0/sigma2_hat - 1.0/cav_var(i);
+            nu(i) = mu_hat/sigma2_hat - cav_loc(i)/cav_var(i);
+        }
+
+        m2_inv = K_inv + diagmat(tau.head(n));
+        if (has_addl) m2_inv += CCt * tau(n);
+        m2 = inv_sympd(m2_inv);
+        m1 = Kmu + nu.head(n);
+        if (has_addl) m1 += nu(n) * addl_c;
+        m1 = m2 * m1;
+
+        if (vecnorm(m1 - prev_m1) < tol) break;
+        prev_m1 = m1;
+    }
+
+    // eq. 59; we += for sum of Z_i
+    // the first det terms is outside the -0.5(...) because
+    // it is of a cholesky factor and so needs to be doubled
+    log_Z += -sum(log(L.diag())) + 0.5 * (
+        log_det_sympd(m2)
+        -as_scalar(mu.t() * K_inv * mu) + as_scalar(m1.t() * m2_inv * m1) +
+        sum(log1p(tau % cav_var)) +
+        sum((square(cav_loc) % tau - 2 * cav_loc % nu - square(nu) % cav_var) /
+            (1 + tau % cav_var))
+    );
+
+    // derivatives
+    if (gr) {
+        vec dlogZ_mu = K_inv * (m1 - mu);
+        mat dlogZ_L = (dlogZ_mu * dlogZ_mu.t() + (K_inv * m2 * K_inv - K_inv)) * trimatl(L);
+        // mat dlogZ_L = trimatl((dlogZ_mu * dlogZ_mu.t() + (K_inv * m2 * K_inv - K_inv)) * trimatl(L));
+
+        return {log_Z, m1, m2, dlogZ_mu, dlogZ_L};
+    } else {
+        return {log_Z, m1, m2, m1, m2};
+    }
 }
 
 /*
@@ -170,7 +253,7 @@ double log_erf_diff(double a, double b) {
         b = tmp;
     }
 
-    return std::log(erfc(a) - erfc(b));
+    return std::log(std::erfc(a) - std::erfc(b));
 }
 
 
