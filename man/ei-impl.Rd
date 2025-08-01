@@ -5,9 +5,17 @@
 \alias{ei_riesz_impl}
 \title{Low-level implementations of \code{ei_ridge()} and \code{ei_riesz()}}
 \usage{
-ei_ridge_impl(x, y, z, weights, penalty = NULL, vcov = TRUE)
+ei_ridge_impl(
+  x,
+  y,
+  z,
+  weights = rep(1, nrow(x)),
+  bounds = c(-Inf, Inf),
+  penalty = NULL,
+  vcov = TRUE
+)
 
-ei_riesz_impl(x, z, total, weights, penalty)
+ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 }
 \arguments{
 \item{x}{A matrix of predictors}
@@ -18,12 +26,14 @@ ei_riesz_impl(x, z, total, weights, penalty)
 
 \item{weights}{A vector of estimation weights}
 
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.}
+
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be
 specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with
 \code{\link[=ei_ridge_impl]{ei_ridge_impl()}} by providing \code{penalty=NULL}.}
 
 \item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
-estimated coefficients.}
+estimated coefficients. Ignored when \code{bounds} are provided.}
 
 \item{total}{A vector of total observations per unit.}
 }

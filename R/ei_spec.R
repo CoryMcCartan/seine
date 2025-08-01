@@ -243,7 +243,7 @@ ei_bounds = function(bounds, outcome, clamp=1e-3) {
         if (bounds[1] >= bounds[2])
             cli_abort("Lower bound must be strictly less than upper bound.", call=parent.frame())
 
-        if (any(outcome < bounds[1]) || any(outcome > bounds[2])) {
+        if (any(outcome < bounds[1] - clamp) || any(outcome > bounds[2] + clamp)) {
             cli_warn("Some outcomes are outside the specified bounds of
                       [{bounds[1]}, {bounds[2]}].", call=parent.frame())
         }

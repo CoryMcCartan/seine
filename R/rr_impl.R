@@ -79,6 +79,61 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
     )
 }
 
+# Ridge regression with bounds on the fitted values _for each group_
+# Sets ups as QP minimizing -d_vec %*% beta + (1/2) * t(beta) %*% Dmat %*% beta
+# see quadprog::solve.QP documentation
+ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
+    n = nrow(xz)
+    p = ncol(z)
+    n_x = ncol(xz) %/% (1L + p)
+
+    dvecs = as.matrix(crossprod(xz, weights * y))
+    Dmat = crossprod(xz, weights * xz) + diag(ncol(xz)) * penalty
+    R = backsolve(chol(Dmat), diag(nrow(Dmat)))
+
+    Amat = matrix(0, nrow = p + 1, ncol = n * n_x)
+    Aind = matrix(0, nrow = p + 2, ncol = n * n_x)
+    int_scale = sum(xz[1, 1:n_x])
+    Amat[1, 1:(n*n_x)] = int_scale
+    Aind[1, ] = p + 1
+    for (j in seq_len(n_x)) {
+        idx = (j - 1) * n + seq_len(n)
+        Aind[-1, idx] = c(j, n_x + p*(j - 1) + seq_len(p))
+        Amat[-1, idx] = t(z)
+    }
+
+    enforce = is.finite(bounds)
+    if (all(enforce)) {
+        Amat = cbind(Amat, -Amat)
+        Aind = cbind(Aind, Aind)
+        bvec = rep(bounds * c(1, -1), each = n*n_x)
+    } else if (enforce[1]) {
+        bvec = rep(bounds[1], n*n_x)
+    } else if (enforce[2]) {
+        Amat = -Amat
+        bvec = rep(-bounds[2], n*n_x)
+    } else {
+        cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
+    }
+
+    coefs = matrix(nrow = nrow(dvecs), ncol = ncol(dvecs))
+    for (i in seq_len(ncol(dvecs))) {
+        fit = quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized=TRUE)
+        coefs[, i] = fit$solution
+    }
+
+    fitted = xz %*% coefs
+    sigma2 = colMeans((y - fitted)^2 * weights)
+
+    list(
+        coef = coefs,
+        vcov_u = NULL,
+        fitted = fitted,
+        sigma2 = sigma2,
+        penalty = penalty
+    )
+}
+
 # Calculate diagonal of hat matrix
 ridge_hat_svd <- function(udv, penalty=0) {
     d_pen_f = c(udv$d^2 / (udv$d^2 + penalty))
@@ -92,7 +147,6 @@ ridge_hat_naive <- function(
 ) {
     rowSums(weights * X * (X %*% XXinv))
 }
-
 
 # Riesz regression implementations ---------------------------------------------
 

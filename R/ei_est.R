@@ -276,7 +276,7 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
 ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
     if (inherits(x, "ei")) {
         return(wrap_king_ei(x))
-    } 
+    }
     if (inherits(data, "ei_spec")) {
         predictors = attr(data, "ei_x")
         outcome = attr(data, "ei_y")
@@ -349,7 +349,7 @@ wrap_king_ei <- function(obj) {
     x = cbind(.x = obj$x, .other = 1 - obj$x)
 
     if (!isTRUE(all.equal(obj$Zb, obj$Zw))) {
-        cli_abort("Covariates for each group, {.arg Zb} and {.arg Zw}, must match.", 
+        cli_abort("Covariates for each group, {.arg Zb} and {.arg Zw}, must match.",
                    call = parent.frame())
     }
 
@@ -363,7 +363,7 @@ wrap_king_ei <- function(obj) {
     b_loc = obj$phi[1:2] * (sds^2 + 0.25) + 0.5
 
     z = shift_cols(obj$Zb, colMeans(obj$Zb))
-    eta_raw = shift_cols(z %*% matrix(obj$phi[-1:-5], ncol=2), -b_loc) 
+    eta_raw = shift_cols(z %*% matrix(obj$phi[-1:-5], ncol=2), -b_loc)
     eta = matrix(nrow=n, ncol=2)
     for (i in seq_len(n)) {
         eta[i, ] = R_ep_moments(eta_raw[i, ], L, numeric(0), 0, 1e-7)[[2]]

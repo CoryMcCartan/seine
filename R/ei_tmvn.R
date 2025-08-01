@@ -15,10 +15,9 @@
 #'   For functions which incorporate bounds on the outcome variable, these are
 #'   specified by the `bounds` parameter, which is inferred from context, by
 #'   default.
-#' @param bounds The bounds to enforce on the outcome, as a length-two vector
-#'   `c(lower, upper)`. The default `NULL` will use the strictest bounds
-#'   consistent with the observed data: between 0 and 1, where possible, then
-#'   greater than 0, then unbounded.
+#' @param bounds A vector `c(min, max)` of bounds for the outcome. The default
+#'   `NULL` will use the strictest bounds consistent with the observed data:
+#'   between 0 and 1, where possible, then greater than 0, then unbounded.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_tmvn` object.
@@ -139,6 +138,8 @@ ei_tmvn.default <- function(x, ...) {
     cli_abort("{.fn ei_tmvn} is not defined for a {.cls {class(x)}}.", call=NULL)
 }
 
+# Bridge ----------------------------------------------------------------------
+
 # Creates bounds _after_ molding outcomes
 #' @exportS3Method hardhat::run_mold
 run_mold.ei_tmvn_blueprint <- function(blueprint, ...) {
@@ -160,16 +161,13 @@ run_mold.ei_tmvn_blueprint <- function(blueprint, ...) {
     processed
 }
 
-
-# Bridge ----------------------------------------------------------------------
-
 ei_tmvn_bridge <- function(processed, ...) {
     err_call = rlang::new_call(rlang::sym("ei_tmvn"))
     bp = processed$blueprint
-    x = processed$predictors
-    idx_x = match(bp$ei_x, colnames(x))
-    z = x[, -idx_x, drop=FALSE]
-    x = pull_x(x, idx_x)
+    xz = processed$predictors
+    idx_x = match(bp$ei_x, colnames(xz))
+    z = xz[, -idx_x, drop=FALSE]
+    x = pull_x(xz, idx_x)
     check_preds(x, call=err_call)
     weights = processed$blueprint$ei_wgt
 
@@ -191,7 +189,8 @@ ei_tmvn_bridge <- function(processed, ...) {
         y = (y - y_shift) / y_scale
     } else {
         cli_abort(c("Inference on half-open regions is not currently supported.",
-                    "i"="Bounds must be finite; got {.val {bp$bounds}}."),
+                    "x"="Bounds must be finite; got {.val {bp$bounds}}.",
+                    "i"="{.fn ei_ridge} supports half-open bounds."),
                      call=err_call)
     }
 

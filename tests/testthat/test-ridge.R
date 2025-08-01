@@ -91,3 +91,18 @@ test_that("leave-one-out shortcut is correct for Riesz regression", {
     # mean(abs(fit_naive$loo - loo_act)) / mean(abs(loo_act))
     expect_equal(fit_naive$loo, loo_act, tolerance = 0.2)
 })
+
+test_that("ridge bounds work", {
+    d = elec_1968
+    form = pres_rep_nix ~ vap_white + vap_black + vap_other | state + pop_city +
+        pop_urban + pop_rural + farm + educ_elem + educ_hsch + educ_coll +
+        inc_00_03k + inc_03_08k + inc_08_25k + inc_25_99k + log(pop) + pres_turn
+
+    m = ei_ridge(form, data=elec_1968)
+    m01 = ei_ridge(form, data=elec_1968, bounds=0:1)
+
+    expect_true(min(fitted(m)) < 0)
+    expect_true(min(fitted(m01)) > 0)
+    expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate > 0))
+    expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate < 1))
+})

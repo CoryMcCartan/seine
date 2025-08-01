@@ -15,17 +15,46 @@ ei_ridge(x, ...)
   formula,
   data,
   weights,
+  bounds = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
   ...
 )
 
-\method{ei_ridge}{ei_spec}(x, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
+\method{ei_ridge}{ei_spec}(
+  x,
+  weights,
+  bounds = FALSE,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE,
+  ...
+)
 
-\method{ei_ridge}{data.frame}(x, y, z, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
+\method{ei_ridge}{data.frame}(
+  x,
+  y,
+  z,
+  weights,
+  bounds = FALSE,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE,
+  ...
+)
 
-\method{ei_ridge}{matrix}(x, y, z, weights, penalty = NULL, scale = TRUE, vcov = TRUE, ...)
+\method{ei_ridge}{matrix}(
+  x,
+  y,
+  z,
+  weights,
+  bounds = FALSE,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE,
+  ...
+)
 
 \method{ei_ridge}{default}(x, ...)
 }
@@ -67,6 +96,11 @@ parameter. The default, uniform weights, makes a slightly
 stronger-than-necessary assumption about the relationship between the
 unit totals and the unknown data.}
 
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.
+If \code{bounds = NULL}, they will be inferred from the outcome variable:
+if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
+be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
+
 \item{penalty}{The ridge penalty (a non-negative scalar). Set to \code{NULL} to
 automatically determine the penalty which minimizes mean-square error,
 via an efficient leave-one-out cross validation procedure.
@@ -74,14 +108,14 @@ The ridge regression solution is
 \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 where \eqn{\lambda} is the value of \code{penalty}.
 One can equivalently think of the penalty as imposing a
-$\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.
+\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)} prior on the \eqn{\beta}.
 Keep in mind when choosing \code{penalty} manually that covariates in \code{z} are
 scaled to have mean zero and unit variance before fitting.}
 
 \item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
 
 \item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
-estimated coefficients.}
+estimated coefficients. Ignored when \code{bounds} are provided.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:
@@ -115,6 +149,12 @@ overall and unit-level estimates of conditional means using \code{\link[=ei_est]
 The regression is calculated using the singular value decomposition, which
 allows for efficient recalculation under different \code{penalty} values as part
 of leave-one-out cross-validation.
+When \code{bounds} are provided, the regression is calculated via quadratic
+programming, as there is no closed-form solution. The unbounded regression
+is run to select the \code{penalty} automatically in this case, if it is not
+provided. Estimation is still efficient, though somewhat slower than in the
+unbounded case. The covariance matrix of the estimates is not available when
+bounds are applied.
 }
 \section{Weights}{
 
@@ -144,4 +184,13 @@ ei_ridge(spec)
 ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~
       vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 
+# bounds inferred
+all.equal(
+  fitted(ei_ridge(spec, bounds = NULL)),
+  fitted(ei_ridge(spec, bounds = 0:1))
+)
+
+# bounds enforced
+min(fitted(ei_ridge(spec)))
+min(fitted(ei_ridge(spec, bounds = 0:1)))
 }

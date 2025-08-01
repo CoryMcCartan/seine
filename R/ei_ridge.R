@@ -8,6 +8,12 @@
 #' The regression is calculated using the singular value decomposition, which
 #' allows for efficient recalculation under different `penalty` values as part
 #' of leave-one-out cross-validation.
+#' When `bounds` are provided, the regression is calculated via quadratic
+#' programming, as there is no closed-form solution. The unbounded regression
+#' is run to select the `penalty` automatically in this case, if it is not
+#' provided. Estimation is still efficient, though somewhat slower than in the
+#' unbounded case. The covariance matrix of the estimates is not available when
+#' bounds are applied.
 #'
 #' @section Weights:
 #' The weakest identification result for ecological inference makes no
@@ -77,12 +83,16 @@
 #'    \deqn{\hat\beta = (X^\top X + \lambda I)^{-1}X^\top y,}
 #'    where \eqn{\lambda} is the value of `penalty`.
 #'    One can equivalently think of the penalty as imposing a
-#'    $\eqn{\mathcal{N}(0, \sigma^2/\lambda^2)}$ prior on the \eqn{\beta}.
+#'    \eqn{\mathcal{N}(0, \sigma^2/\lambda^2)} prior on the \eqn{\beta}.
 #'    Keep in mind when choosing `penalty` manually that covariates in `z` are
 #'    scaled to have mean zero and unit variance before fitting.
+#' @param bounds A vector `c(min, max)` of bounds for the outcome.
+#'   If `bounds = NULL`, they will be inferred from the outcome variable:
+#'   if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
+#'   be `c(0, 1)`. The default `bounds = FALSE` uses an unbounded outcome.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param vcov If `TRUE`, calculate and return the covariance matrix of the
-#'    estimated coefficients.
+#'    estimated coefficients. Ignored when `bounds` are provided.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
@@ -97,16 +107,25 @@
 #' ei_ridge(pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~
 #'       vap_white + vap_black + vap_other | pop_urban + farm, data = elec_1968)
 #'
+#' # bounds inferred
+#' all.equal(
+#'   fitted(ei_ridge(spec, bounds = NULL)),
+#'   fitted(ei_ridge(spec, bounds = 0:1))
+#' )
+#'
+#' # bounds enforced
+#' min(fitted(ei_ridge(spec)))
+#' min(fitted(ei_ridge(spec, bounds = 0:1)))
 #' @export
 ei_ridge <- function(x, ...) {
     UseMethod("ei_ridge")
 }
 
 
-
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
+ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, penalty=NULL,
+                             scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -117,8 +136,10 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, v
         indicators = "one_hot",
         ei_x = attr(form_preds, "term.labels"),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_ridge_blueprint"
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -129,7 +150,8 @@ ei_ridge.formula <- function(formula, data, weights, penalty=NULL, scale=TRUE, v
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
+ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, penalty=NULL,
+                             scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -144,8 +166,10 @@ ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ..
         indicators = "one_hot",
         ei_x = attr(spec, "ei_x"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_ridge_blueprint"
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
@@ -155,7 +179,8 @@ ei_ridge.ei_spec <- function(x, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ..
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
+ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
+                                scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -169,8 +194,10 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov
         composition = "matrix",
         ei_x = colnames(x),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_ridge_blueprint"
     )
     x = cbind(x, z)
 
@@ -180,8 +207,9 @@ ei_ridge.data.frame <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
-    ei_ridge.data.frame(x, y, z, weights, penalty, scale, vcov, ...)
+ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
+                            scale=TRUE, vcov=TRUE, ...) {
+    ei_ridge.data.frame(x, y, z, weights, penalty, bounds, scale, vcov, ...)
 }
 
 
@@ -195,14 +223,30 @@ ei_ridge.default <- function(x, ...) {
 
 # Bridge and implementation ---------------------------------------------------
 
+
+# Creates bounds _after_ molding outcomes
+#' @exportS3Method hardhat::run_mold
+run_mold.ei_ridge_blueprint <- function(blueprint, ...) {
+    processed = NextMethod("run_mold")
+
+    # update bounds
+    bounds = ei_bounds(processed$blueprint$bounds, processed$outcomes)
+    processed$blueprint = hardhat::update_blueprint(
+        processed$blueprint,
+        bounds = bounds
+    )
+
+    processed
+}
+
 ei_ridge_bridge <- function(processed, vcov, ...) {
     err_call = rlang::new_call(rlang::sym("ei_ridge"))
     bp = processed$blueprint
-    x = processed$predictors
-    idx_x = match(bp$ei_x, colnames(x))
-    z = x[, -idx_x, drop=FALSE]
-    x = pull_x(x, idx_x)
+    xz = processed$predictors
+    idx_x = match(bp$ei_x, colnames(xz))
+    x = pull_x(xz, idx_x)
     check_preds(x, call=err_call)
+    z = xz[, -idx_x, drop=FALSE]
     weights = bp$ei_wgt
 
     # normalize
@@ -222,10 +266,11 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
     if (any(is.na(y))) cli_abort("Missing values found in outcome.", call=err_call)
     if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
 
-    if (ncol(z) == 0)
+    if (ncol(z) == 0) {
         bp$penalty = 0
+    }
 
-    fit <- ei_ridge_impl(x, y, z, weights, bp$penalty, vcov)
+    fit <- ei_ridge_impl(x, y, z, weights, bp$bounds, bp$penalty, vcov)
 
     new_ei_ridge(
       coef = fit$coef,
@@ -253,6 +298,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
 #' @param y A vector of outcomes
 #' @param z A matrix of covariates
 #' @param weights A vector of estimation weights
+#' @param bounds A vector `c(min, max)` of bounds for the outcome.
 #' @param penalty The ridge penalty (a non-negative scalar), which must be
 #'   specified for [ei_riesz_impl()] but can be automatically estimated with
 #'   [ei_ridge_impl()] by providing `penalty=NULL`.
@@ -262,21 +308,30 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
 #'
 #' @rdname ei-impl
 #' @export
-ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)), penalty=NULL, vcov=TRUE) {
+ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
+                          bounds=c(-Inf, Inf), penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))
     udv = svd(xz * sqrt_w)
 
     vcov = isTRUE(vcov)
-    fit = if (is.null(penalty)) {
-        ridge_auto(udv, y, sqrt_w, vcov)
+    enforce = is.finite(bounds)
+    fit = if (!any(enforce)) { # unbounded
+        if (is.null(penalty)) {
+            ridge_auto(udv, y, sqrt_w, vcov)
+        } else {
+            ridge_svd(udv, y, sqrt_w, penalty, vcov)
+        }
     } else {
-        ridge_svd(udv, y, sqrt_w, penalty, vcov)
+        if (is.null(penalty)) {
+            penalty = ridge_auto(udv, y, sqrt_w, FALSE)$penalty
+        }
+        ridge_bounds(xz, z, y, weights, bounds, penalty)
     }
 
     rownames(fit$coef) = colnames(xz)
-    if (vcov) {
+    if (!is.null(fit$vcov_u)) {
         rownames(fit$vcov_u) = colnames(fit$vcov_u) = colnames(xz)
     }
     names(fit$sigma2) = colnames(y)
@@ -320,6 +375,15 @@ predict_ei_ridge_numeric <- function(object, x, z) {
 # helper to pull columns from predictor matrix and add .other if needed
 # used by ei_riesz and ei_est as well
 pull_x <- function(x, idx_x) {
+    if (any(is.na(idx_x))) {
+        cli_abort(c("Specification error.",
+                    "i"="Factors are not allowed as predictors.
+                          Check your formula or specification.",
+                    ">"="If there are no errors in your specification, please report
+                         this at {.url https://github.com/CoryMcCartan/seine/issues}"),
+                  call = NULL)
+    }
+
     x = x[, idx_x, drop=FALSE]
     if (ncol(x) == 1) {
         x = cbind(x, 1 - x)
@@ -340,6 +404,10 @@ print.ei_ridge <- function(x, ...) {
              ncol(x$coef), " outcomes, ",
              length(x$blueprint$ei_x), " groups, and ",
              nrow(x$fitted), " observations")
+    bounds = x$blueprint$bounds
+    if (any(is.finite(bounds))) {
+        cat_line("With outcome bounded in (", bounds[1], ", ", bounds[2], ")")
+    }
     cat_line("Fit with penalty = ", signif(x$penalty))
 }
 

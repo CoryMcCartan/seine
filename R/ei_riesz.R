@@ -140,10 +140,10 @@ ei_riesz.default <- function(x, ...) {
 
 ei_riesz_bridge <- function(processed, ...) {
     err_call = rlang::new_call(rlang::sym("ei_riesz"))
-    x = processed$predictors
-    idx_x = match(processed$blueprint$ei_x, colnames(x))
-    z = x[, -idx_x, drop=FALSE]
-    x = pull_x(x, idx_x)
+    xz = processed$predictors
+    idx_x = match(processed$blueprint$ei_x, colnames(xz))
+    z = xz[, -idx_x, drop=FALSE]
+    x = pull_x(xz, idx_x)
     check_preds(x, call=err_call)
     total = processed$blueprint$ei_n
     weights = processed$blueprint$ei_wgt

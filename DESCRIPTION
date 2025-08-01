@@ -21,6 +21,7 @@ Imports:
     tidyselect,
     tibble,
     hardhat,
+    quadprog,
     graphics,
     utils,
     stats
