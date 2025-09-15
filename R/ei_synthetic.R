@@ -190,6 +190,12 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
     if (is.null(b_cov)) {
         b_cov = 0.02 * (1 + diag(n_x))
     }
+    if (length(b_loc) != n_x) {
+        cli_abort("Length of {.arg b_loc} does not match number of predictors.")
+    }
+    if (nrow(b_cov) != ncol(b_cov) || nrow(b_cov) != n_x) {
+        cli_abort("{.arg b_cov} must be a square matrix with one row per predictor.")
+    }
 
     if (p > 0) {
         Lambda = matrix(rnorm(p * n_x), nrow=p, ncol=n_x)
