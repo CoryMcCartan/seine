@@ -28,6 +28,9 @@
 #' @param conf_level A numeric specifying the level for confidence intervals.
 #'   If `FALSE` (the default), no confidence intervals are calculated. Standard
 #'   errors are always returned.
+#' @param use_student If `TRUE`, use construct confidence intervals from a
+#'   Student-_t_ distribution, which may improve coverage properties in
+#'   small samples.
 #'
 #' @returns A data frame with estimates. It has class `ei_est`, supporting
 #'   several methods, and two additional attributes: `vcov`, containing the
@@ -56,7 +59,7 @@
 #' nobs(est)
 #' @export
 ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
-                  outcome=NULL, conf_level=FALSE) {
+                  outcome=NULL, conf_level=FALSE, use_student=TRUE) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }
@@ -129,8 +132,13 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     ), class="ei_est")
     if (!isFALSE(conf_level)) {
         alpha = (1 - conf_level) / 2
-        out$conf.low = out$estimate + qnorm(alpha) * out$std.error
-        out$conf.high = out$estimate - qnorm(alpha) * out$std.error
+        crit = if (isFALSE(use_student)) {
+            qnorm(alpha)
+        } else {
+            qt(alpha, df = n - 1)
+        }
+        out$conf.low = out$estimate + crit * out$std.error
+        out$conf.high = out$estimate - crit * out$std.error
     }
 
     rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))

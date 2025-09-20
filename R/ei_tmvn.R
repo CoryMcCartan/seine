@@ -35,7 +35,7 @@
 #' }
 #' @noRd
 ei_tmvn <- function(x, ...) {
-  UseMethod("ei_tmvn")
+    UseMethod("ei_tmvn")
 }
 
 
