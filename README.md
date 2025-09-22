@@ -31,15 +31,6 @@ inference quickly, accurately, and transparently.
 - **Minimal dependencies** and efficient estimation routines keep
   everything **fast** and lightweight.
 
-<h2>
-
-<span style="color: #e06666"><b>This software is experimental</b></span>
-</h2>
-
-**seine** and the underlying statistical methods are under active
-development. The package is not currently recommended for non-expert
-use.
-
 ## Installation
 
 You can install the development version of **seine** with
@@ -78,17 +69,17 @@ rr = ei_riesz(spec, penalty = m$penalty)
 
 ei_est(regr = m, riesz = rr, data = spec, conf_level = 0.95)
 #> # A tibble: 9 × 6
-#>   predictor outcome estimate std.error conf.low conf.high
-#>   <chr>     <chr>      <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 white     dem_hum   0.225     0.0241   0.178     0.273 
-#> 2 black     dem_hum   0.584     0.0601   0.467     0.702 
-#> 3 other     dem_hum   2.92      0.744    1.47      4.38  
-#> 4 white     rep_nix   0.435     0.0365   0.363     0.506 
-#> 5 black     rep_nix  -0.0242    0.0367  -0.0962    0.0477
-#> 6 other     rep_nix  -4.75      0.991   -6.69     -2.81  
-#> 7 white     ind_wal   0.339     0.0197   0.300     0.377 
-#> 8 black     ind_wal   0.437     0.0436   0.351     0.522 
-#> 9 other     ind_wal   2.84      0.840    1.20      4.49
+#>   predictor outcome      estimate std.error conf.low conf.high
+#>   <chr>     <chr>           <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 vap_white pres_dem_hum   0.225     0.0241   0.178     0.273 
+#> 2 vap_black pres_dem_hum   0.584     0.0601   0.467     0.702 
+#> 3 vap_other pres_dem_hum   2.92      0.744    1.46      4.38  
+#> 4 vap_white pres_rep_nix   0.435     0.0365   0.363     0.506 
+#> 5 vap_black pres_rep_nix  -0.0242    0.0367  -0.0963    0.0478
+#> 6 vap_other pres_rep_nix  -4.75      0.991   -6.69     -2.80  
+#> 7 vap_white pres_ind_wal   0.339     0.0197   0.300     0.377 
+#> 8 vap_black pres_ind_wal   0.437     0.0436   0.351     0.522 
+#> 9 vap_other pres_ind_wal   2.84      0.840    1.20      4.49
 ```
 
 This workflow is explained in more detail on the [Get

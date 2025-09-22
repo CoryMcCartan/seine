@@ -40,11 +40,6 @@ quickly, accurately, and transparently.
 - **Minimal dependencies** and efficient estimation routines keep everything 
   **fast** and lightweight.
 
-<h2><span style="color: #e06666"><b>This software is experimental</b></span></h2>
-
-**seine** and the underlying statistical methods are under active development.
-The package is not currently recommended for non-expert use.
-
 ## Installation
 
 You can install the development version of **seine** with
