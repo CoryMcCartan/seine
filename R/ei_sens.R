@@ -8,12 +8,13 @@
 #' \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
 #' representer with the observed covariates. The RR can be equivalently
 #' expressed as \deqn{
-#'   \alpha = \partial_{\bar x_j} \log f(\bar x_j\mid z, u),
-#' } where \eqn{U} is the unobserved confounder and \eqn{f} is the conditional
-#' density. The corresponding `c_predictor` is then \deqn{
+#'   \alpha(n, \bar x_j, z, a) = u(n, \bar x_j)\partial_{\bar x_j} \log f(\bar x_j\mid z, a),
+#' } where \eqn{u(n, \bar x_j)} is the weighting term, \eqn{A} is the unobserved
+#' confounder, and \eqn{f} is the conditional density.
+#' The corresponding `c_predictor` is then \deqn{
 #'   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
-#'   \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
-#'   \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
+#'   \frac{\mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z))^2]}{
+#'   \mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z, A))^2]}.
 #' }
 #'
 #' The bounds here are plug-in estimates and do not incorporate sampling
@@ -77,12 +78,20 @@
 #' ei_sens(est, c_outcome=0.5, c_predictor=0.5)
 #'
 #' @export
-ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
-                    bias_bound=NULL, confounding=1, expand_ci=TRUE) {
+ei_sens <- function(
+    est,
+    c_outcome = seq(0, 1, 0.01)^2,
+    c_predictor = seq(0, 1, 0.01)^2,
+    bias_bound = NULL,
+    confounding = 1,
+    expand_ci = TRUE
+) {
     is_01 <- function(value, arg) {
         if (!is.numeric(value) || all(value < 0) || all(value > 1)) {
-            cli_abort("{.arg {arg}} must be between 0 and 1.",
-                      call = parent.frame())
+            cli_abort(
+                "{.arg {arg}} must be between 0 and 1.",
+                call = parent.frame()
+            )
         }
     }
 
@@ -90,25 +99,34 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
     is_01(c_predictor, "c_predictor")
     is_01(confounding, "confounding")
     if (length(confounding) != 1) {
-        cli_abort("{.arg confounding} must be a single value between 0 and 1.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg confounding} must be a single value between 0 and 1.",
+            call = parent.frame()
+        )
     }
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
     sens_s = attr(est, "sens_s")
     bounds_inf = attr(est, "bounds_inf")
     if (is.null(bias_bound)) {
-        cc = expand.grid(c_outcome=c_outcome, c_predictor=c_predictor)
+        cc = expand.grid(c_outcome = c_outcome, c_predictor = c_predictor)
         est = merge(est, cc)
-        est$bias_bound = sens_s[idx] * confounding *
+        est$bias_bound = sens_s[idx] *
+            confounding *
             sqrt(est$c_outcome * est$c_predictor / (1 - est$c_predictor))
     } else {
         if (!is.numeric(bias_bound)) {
-            cli_abort("If provided, {.arg bias_bound} must be a numeric vector.",
-                      call = parent.frame())
+            cli_abort(
+                "If provided, {.arg bias_bound} must be a numeric vector.",
+                call = parent.frame()
+            )
         }
 
-        cc = expand.grid(c_outcome=c_outcome, c_predictor=1, bias_bound=abs(bias_bound))
+        cc = expand.grid(
+            c_outcome = c_outcome,
+            c_predictor = 1,
+            bias_bound = abs(bias_bound)
+        )
         est = merge(est, cc)
 
         cp = est$bias_bound^2 / (sens_s[idx]^2 * confounding^2 * est$c_outcome)
@@ -120,8 +138,12 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
         est$conf.high = est$conf.high + est$bias_bound
     }
 
-    tibble::new_tibble(est, bounds_inf=bounds_inf, sens_s=sens_s,
-                       class=c("ei_sens", "ei_est"))
+    tibble::new_tibble(
+        est,
+        bounds_inf = bounds_inf,
+        sens_s = sens_s,
+        class = c("ei_sens", "ei_est")
+    )
 }
 
 #' Robustness values for ecological inference
@@ -170,7 +192,7 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 #' ei_sens_rv(est, estimate) # how much to eliminate disparity
 #'
 #' @export
-ei_sens_rv <- function(est, bias_bound, confounding=1) {
+ei_sens_rv <- function(est, bias_bound, confounding = 1) {
     if (missing(bias_bound)) {
         cli_abort("{.arg bias_bound} is required.")
     }
@@ -181,7 +203,7 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
     a = bias_bound^2 / attr(est, "sens_s")[idx]^2 / confounding^2
-    est$rv = 0.5 * (-a + sqrt(a^2 + 4*a))
+    est$rv = 0.5 * (-a + sqrt(a^2 + 4 * a))
 
     est
 }
@@ -230,27 +252,50 @@ ei_sens_rv <- function(est, bias_bound, confounding=1) {
 #'
 #' plot(sens, bench = ei_bench(spec), plot_se=NULL)
 #' @export
-plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
-                         plot_se=1:3, contour_exp=-2:-1, ..., lwd=1, pch=8, cex=1) {
-    if (is.null(y)) y = x$outcome[1]
-    if (is.null(predictor)) predictor = x$predictor[1]
+plot.ei_sens <- function(
+    x,
+    y = NULL,
+    predictor = NULL,
+    bounds = NULL,
+    bench = NULL,
+    plot_se = 1:3,
+    contour_exp = -2:-1,
+    ...,
+    lwd = 1,
+    pch = 8,
+    cex = 1
+) {
+    if (is.null(y)) {
+        y = x$outcome[1]
+    }
+    if (is.null(predictor)) {
+        predictor = x$predictor[1]
+    }
 
     if (!is.character(y) && length(y) != 1) {
-        cli_abort("{.arg y} must be a character vector with a single outcome name.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg y} must be a character vector with a single outcome name.",
+            call = parent.frame()
+        )
     }
     if (!y %in% x$outcome) {
-        cli_abort("{.arg y} must be one of the outcomes in {.arg x}.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg y} must be one of the outcomes in {.arg x}.",
+            call = parent.frame()
+        )
     }
     if (!is.character(predictor) && length(predictor) != 1) {
-        cli_abort("{.arg predictor} must be a character vector with a single predictor name.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg predictor} must be a character vector with a single predictor name.",
+            call = parent.frame()
+        )
     }
     preds = unique(x$predictor)
     if (!predictor %in% preds) {
-        cli_abort("{.arg predictor} must be one of the predictors in {.arg x}.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg predictor} must be one of the predictors in {.arg x}.",
+            call = parent.frame()
+        )
     }
 
     if (is.null(bounds)) {
@@ -263,24 +308,34 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
     cy = unique(x$c_predictor)
 
     if (!all(diff(cx) > 0) || !all(diff(cy) > 0)) {
-        cli_abort("{.arg x} must be sorted by {.var c_outcome} and {.var c_predictor}.",
-                  call = parent.frame())
+        cli_abort(
+            "{.arg x} must be sorted by {.var c_outcome} and {.var c_predictor}.",
+            call = parent.frame()
+        )
     }
-    cz = matrix(x$bias_bound, nrow=length(cx), byrow = TRUE)
+    cz = matrix(x$bias_bound, nrow = length(cx), byrow = TRUE)
 
     breaks = 10^contour_exp %x% c(2:4, 6:9)
     oldmar = graphics::par()$mar
     graphics::par(mar = c(4.2, 5.2, 3, 1.1))
     graphics::contour(
-        cx, cy, cz, levels=breaks, drawlabels=FALSE, col="#d0d0d0", lwd=lwd,
+        cx,
+        cy,
+        cz,
+        levels = breaks,
+        drawlabels = FALSE,
+        col = "#d0d0d0",
+        lwd = lwd,
         xlab = bquote(1 - {R^2}[alpha ~ "~" ~ alpha[s]]),
         ylab = bquote({R^2}[.(y) ~ "~ confounder | predictors, covariates"]),
         # ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
         #                .(paste(preds, collapse = ", ")) ~ ", covariates" ]),
         main = paste0("Sensitivity bounds for E[", y, " | ", predictor, "]"),
-        xaxs="i", yaxs="i", cex.lab=1.5
+        xaxs = "i",
+        yaxs = "i",
+        cex.lab = 1.5
     )
-    graphics::grid(col="#dfdfdf")
+    graphics::grid(col = "#dfdfdf")
 
     breaks = c(10^contour_exp %x% c(1, 5), 1)
     labels = as.character(breaks)
@@ -288,36 +343,69 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
     dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
     labels[dists < 0.05] = ""
     graphics::contour(
-        cx, cy, cz, levels=breaks, labels=labels,
+        cx,
+        cy,
+        cz,
+        levels = breaks,
+        labels = labels,
         lwd = lwd * c(rep(c(1.4, 1.0), length(contour_exp)), 1.4),
-        labcex=0.8, col = "#666", add=TRUE, method="edge"
+        labcex = 0.8,
+        col = "#666",
+        add = TRUE,
+        method = "edge"
     )
     graphics::contour(
-        cx, cy, cz, lwd=2*lwd, labcex=0.85*cex, col="#a42",
+        cx,
+        cy,
+        cz,
+        lwd = 2 * lwd,
+        labcex = 0.85 * cex,
+        col = "#a42",
         levels = abs(bounds - x$estimate[1]),
         labels = paste("Estimate =", bounds),
-        add=TRUE, method="edge"
+        add = TRUE,
+        method = "edge"
     )
     if (length(plot_se) > 0) {
         graphics::contour(
-            cx, cy, cz, lwd=2*lwd, lty="dashed", labcex=1.0, col="#46b",
+            cx,
+            cy,
+            cz,
+            lwd = 2 * lwd,
+            lty = "dashed",
+            labcex = 1.0,
+            col = "#46b",
             levels = x$std.error[1] * plot_se,
             labels = paste("\u00b1", plot_se, "SE"),
-            add=TRUE, method="edge"
+            add = TRUE,
+            method = "edge"
         )
     }
     if (!missing(bench)) {
         if (!inherits(bench, "ei_bench")) {
-            cli_abort("{.arg bench} must be an {.cls ei_bench} object.",
-                      call = parent.frame())
+            cli_abort(
+                "{.arg bench} must be an {.cls ei_bench} object.",
+                call = parent.frame()
+            )
         }
 
         bench = bench[bench$outcome == y & bench$predictor == predictor, ]
-        graphics::points(bench$c_predictor, bench$c_outcome,
-                         col="#a42", pch=pch, cex=1.5*cex)
+        graphics::points(
+            bench$c_predictor,
+            bench$c_outcome,
+            col = "#a42",
+            pch = pch,
+            cex = 1.5 * cex
+        )
         tpos = ifelse(bench$c_predictor < bench$c_outcome, 4, 3)
-        graphics::text(bench$c_predictor, bench$c_outcome, bench$covariate,
-                       pos=tpos, cex=0.85*cex, font=2)
+        graphics::text(
+            bench$c_predictor,
+            bench$c_outcome,
+            bench$covariate,
+            pos = tpos,
+            cex = 0.85 * cex,
+            font = 2
+        )
     }
     graphics::par(mar = oldmar)
 }
@@ -377,8 +465,8 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
     }
 
     spec_proc = preproc(spec)
-    regr0 = ei_ridge(spec_proc, vcov=FALSE)
-    riesz0 = ei_riesz(spec_proc, penalty=regr0$penalty)
+    regr0 = ei_ridge(spec_proc, vcov = FALSE)
+    riesz0 = ei_riesz(spec_proc, penalty = regr0$penalty)
     est0 = ei_est(regr0, riesz0, spec_proc, subset = subs)
     vy = apply(regr0$y, 2, var)
     var_resid0 = var_resid(regr0)
@@ -389,8 +477,8 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
         spec_loo = reconstruct_ei_spec(spec[setdiff(names(spec), cv)], spec)
         spec_loo = preproc(spec_loo)
 
-        regr_loo = ei_ridge(spec_loo, vcov=FALSE)
-        riesz_loo = ei_riesz(spec_loo, penalty=regr_loo$penalty)
+        regr_loo = ei_ridge(spec_loo, vcov = FALSE)
+        riesz_loo = ei_riesz(spec_loo, penalty = regr_loo$penalty)
         est_loo = ei_est(regr_loo, riesz_loo, spec_loo, subset = subs)
         var_resid_loo = var_resid(regr_loo)
         r2_out_loo = 1 - var_resid_loo / vy
@@ -401,18 +489,17 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
         est_chg = est_loo$estimate - est0$estimate
         sd_diff = sqrt(pmax(var_resid_loo - var_resid0, 0))
         nu_diff = sqrt(pmax(riesz0$nu2 - riesz_loo$nu2, 0))
-        confounding = est_chg / rep(sd_diff, each=n_x) / rep(nu_diff, n_y)
+        confounding = est_chg / rep(sd_diff, each = n_x) / rep(nu_diff, n_y)
         confounding = pmax(pmin(confounding, 1), -1)
 
         est_loo$covariate = cv
         est_loo = est_loo[c("covariate", "predictor", "outcome")]
-        est_loo$c_outcome = rep(c_outcome, each=n_x)
+        est_loo$c_outcome = rep(c_outcome, each = n_x)
         est_loo$c_predictor = rep(c_predictor, n_y)
         est_loo$confounding = confounding
         est_loo$est_chg = est_chg
         est_loo
     })
 
-    tibble::new_tibble(do.call(rbind, benches), class="ei_bench")
+    tibble::new_tibble(do.call(rbind, benches), class = "ei_bench")
 }
-

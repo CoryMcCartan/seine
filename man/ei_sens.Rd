@@ -56,12 +56,13 @@ The parameter \code{c_predictor} equals \eqn{1 - R^2_{\alpha\sim\alpha_s}}, wher
 \eqn{\alpha} is the true Riesz representer and \eqn{\alpha_s} is the Riesz
 representer with the observed covariates. The RR can be equivalently
 expressed as \deqn{
-  \alpha = \partial_{\bar x_j} \log f(\bar x_j\mid z, u),
-} where \eqn{U} is the unobserved confounder and \eqn{f} is the conditional
-density. The corresponding \code{c_predictor} is then \deqn{
+  \alpha(n, \bar x_j, z, a) = u(n, \bar x_j)\partial_{\bar x_j} \log f(\bar x_j\mid z, a),
+} where \eqn{u(n, \bar x_j)} is the weighting term, \eqn{A} is the unobserved
+confounder, and \eqn{f} is the conditional density.
+The corresponding \code{c_predictor} is then \deqn{
   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
-  \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
-  \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
+  \frac{\mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z))^2]}{
+  \mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z, A))^2]}.
 }
 
 The bounds here are plug-in estimates and do not incorporate sampling
