@@ -189,3 +189,54 @@ riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
 
     list(alpha = alpha, loo = loo, nu2 = nu2)
 }
+
+# Riesz regression with bounds on the values for each observation
+# Sets ups as QP minimizing -d_vec %*% beta + (1/2) * t(beta) %*% Dmat %*% beta
+# see quadprog::solve.QP documentation
+riesz_bounds <- function(xz, z, total, weights, bounds, group=1, penalty=0) {
+    n = nrow(xz)
+    p = ncol(z)
+    n_x = ncol(xz) %/% (1L + p)
+    use = c(group, n_x + p*(group-1) + seq_len(p))
+
+    dvec = numeric(ncol(xz))
+    dvec[use] = crossprod(xz[, use, drop=FALSE], total) / mean(xz[, group] * total)
+    Dmat = crossprod(xz, weights * xz) + diag(ncol(xz)) * penalty
+    R = backsolve(chol(Dmat), diag(nrow(Dmat)))
+
+    int_scale = sum(xz[1, 1:n_x])
+    enforce = is.finite(bounds)
+    # if (all(enforce)) {
+    #     Amat = t(rbind(xz, -xz))
+    #     bvec = c(bounds[1] * rep(1, n), -bounds[2] / (1e-3 + xz[, group]))
+    #     # bvec = bounds * rep(c(1, -1), each=n)
+    # } else if (enforce[1]) {
+    #     Amat = t(xz)
+    #     bvec = rep(bounds[1], n)
+    # } else if (enforce[2]) {
+    #     Amat = -t(xz)
+    #     bvec = rep(-bounds[2] / xz[, group], n)
+    # } else {
+    #     cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
+    # }
+    # Amat = cbind(crossprod(xz, weights) / n, Amat)
+    # bvec = c(1 / (1 + 1e2*sqrt(penalty)), bvec)
+    Amat = cbind(
+        crossprod(xz, weights) / n,
+        crossprod(xz, weights * y) / n,
+        crossprod(xz, weights * y) / n
+    )
+    bvec = c(1 / (1 + 1e2*sqrt(penalty)), bounds[1], -bounds[2])
+
+    fit = quadprog::solve.QP(R, dvec, Amat, bvec, factorized=TRUE, meq=1)
+
+    list(alpha = c(xz %*% fit$solution), loo = NA, nu2 = -2 * fit$value)
+
+    # plot(bvec, pch='.')
+    # colMeans(xz) %*% fit$solution * (1 + 1e2*sqrt(penalty))
+    # colMeans(xz) %*% fit$unconstrained.solution * (1 + 1e2*sqrt(penalty))
+    # plot(c(xz %*% fit$solution), c(xz %*% fit$unconstrained.solution), cex=0.5)
+
+    # mean(elec_1968$pres_ind_wal * c(xz %*% fit$unconstrained.solution))
+    # mean(elec_1968$pres_ind_wal * c(xz %*% fit$solution))
+}
