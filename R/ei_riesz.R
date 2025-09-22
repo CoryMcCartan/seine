@@ -192,7 +192,6 @@ ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     nu2 = numeric(ncol(x))
     for (group in seq_len(ncol(x))) {
         fit = riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
-        # fit = riesz_bounds(xz, z, total, w, c(0, 1), group, penalty)
         alpha[, group] = fit$alpha * int_scale * w
         loo[, group] = fit$loo * int_scale * w
         nu2[group] = fit$nu2  * int_scale^2
