@@ -122,12 +122,13 @@ The data frame has additional class <code>ei_sens</code>, which supports a
 \(\alpha\) is the true Riesz representer and \(\alpha_s\) is the Riesz
 representer with the observed covariates. The RR can be equivalently
 expressed as $$
-  \alpha = \partial_{\bar x_j} \log f(\bar x_j\mid z, u),
-$$ where \(U\) is the unobserved confounder and \(f\) is the conditional
-density. The corresponding <code>c_predictor</code> is then $$
+  \alpha(n, \bar x_j, z, a) = u(n, \bar x_j)\partial_{\bar x_j} \log f(\bar x_j\mid z, a),
+$$ where \(u(n, \bar x_j)\) is the weighting term, \(A\) is the unobserved
+confounder, and \(f\) is the conditional density.
+The corresponding <code>c_predictor</code> is then $$
   1 - R^2_{\alpha\sim\alpha_s} = 1 - \
-  \frac{\mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z))^2]}{
-  \mathbb{E}[(\partial_{\bar x_j} \log f(\bar x_j\mid z, u))^2]}.
+  \frac{\mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z))^2]}{
+  \mathbb{E}[u(N, \bar X_j)(\partial_{\bar x_j} \log f(\bar x_j\mid Z, A))^2]}.
 $$</p>
 <p>The bounds here are plug-in estimates and do not incorporate sampling
 uncertainty. As such, they may fail to cover the true value in finite
@@ -186,6 +187,14 @@ Chernozhukov et al. (2024).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   vap_white    0.5229302</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   vap_black    0.8985835</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   vap_other    7.0320672</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Works for contrasts as well</span></span></span>
+<span class="r-in"><span><span class="va">est</span> <span class="op">=</span> <span class="fu"><a href="ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ei_sens</span><span class="op">(</span><span class="va">est</span>, c_outcome<span class="op">=</span><span class="fl">0.5</span>, c_predictor<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> vap_white - vap_b… pres_i…   -<span style="color: #BB0000;">0.102</span>    0.045<span style="text-decoration: underline;">7</span>       0.5         0.5      0.737</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
