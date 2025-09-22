@@ -22,6 +22,15 @@
 #' @param subset <[`data-masking`][rlang::args_data_masking]> An optional
 #'   indexing vector describing the subset of units over which to calculate
 #'   estimates.
+#' @param contrast If provided, a list containing entries `predictor` and
+#'   `outcome`, each containing a contrast vector.  If only one of `predictor`
+#'   or `outcome` is provided, the contrast will be calculated for all levels of
+#'   the other variable.  For example `list(predictor = c(1, -1, 0))` will
+#'   calculate the difference in each outcome between the first and second
+#'   predictor groups; `list(outcome = c(1, -1))` will calculate the difference
+#'   between the two outcomes for each predictor group; and
+#'   `list(predictor = c(1, -1, 0), outcome = c(1, -1))` will calculate the
+#'   difference in differences.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
@@ -59,7 +68,7 @@
 #' nobs(est)
 #' @export
 ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
-                  outcome=NULL, conf_level=FALSE, use_student=TRUE) {
+                  contrast=NULL, outcome=NULL, conf_level=FALSE, use_student=TRUE) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }
@@ -72,6 +81,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     n = nrow(y)
     n_y = ncol(y)
 
+    # set up subset
     subset = eval_tidy(enquo(subset), data)
     if (!is.null(subset)) {
         if (is.logical(subset)) {
@@ -90,6 +100,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
         subset = rep(1, n)
     }
 
+    # set up total and weights
     if (missing(total)) {
         if (inherits(riesz, "ei_riesz")) {
             total = riesz$blueprint$ei_n
@@ -101,32 +112,93 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     w = check_make_weights(!!enquo(total), data, n)
     w = subset * w / mean(subset * w)
 
-    # save data for sensitivity analysis
-    if (inherits(riesz, "ei_riesz") && inherits(regr, "ei_ridge")) {
-        sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
-    } else {
-        sens_s = NULL
-    }
-
     # build predictions and RR
     riesz = est_check_riesz(riesz, data, w, n, regr)
     rl = est_check_regr(regr, data, n, colnames(riesz), n_y)
 
+    # evaluate EIF
     n_x = ncol(riesz)
-    xc = names(rl$preds)
+    x_nm = names(rl$preds)
+    y_nm = colnames(y)
     eif = matrix(nrow=n, ncol=n_y*n_x) # x varies faster than y
     for (i in seq_len(n_x)) {
-        plugin = rl$preds[[xc[i]]] * rl$x[, i] * w / mean(rl$x[, i] * w)
+        plugin = rl$preds[[x_nm[i]]] * rl$x[, i] * w / mean(rl$x[, i] * w)
         wtd = riesz[, i] * (y - rl$yhat)
         eif[, i + (seq_len(n_y) - 1)*n_x] = plugin + wtd
     }
+
+    # apply contrast if necessary
+    if (!is.null(contrast)) {
+        if (
+            is.list(contrast) &&
+                length(contrast) %in% 1:2 &&
+                names(contrast) %in% c("predictor", "outcome")
+        ) {
+            if (!"predictor" %in% names(contrast)) {
+                contrast = diag(n_y) %x% contrast$predictor
+                x_nm = rep(format_contrast(contrast$predictor, x_nm), n_y)
+            } else if (!"outcome" %in% names(contrast)) {
+                contrast = contrast$outcome %x% diag(n_x)
+                y_nm = rep(format_contrast(contrast$outcome, y_nm), each=n_x)
+            } else {
+
+            }
+        }
+        if (is.vector(contrast) && length(contrast) == n_x) {
+            contrast =
+        } else if (is.list(contrast)) {
+            cc_out = matrix(nrow = n_x * n_y, ncol = length(contrast))
+            for (i in seq_along(contrast)) {
+                cc = contrast[[i]]
+                if (is.matrix(cc) && identical(dim(cc), c(n_x, n_y))) {
+                    cc_out[, i] = c(cc)
+                } else {
+                    cli_abort("Each elemetn of {.arg contrast} must be a matrix with
+                               {n_x} rows and {n_y} columns.")
+                }
+            }
+            contrast = cc_out
+        } else {
+            cli_abort("The {.arg contrast} argument must be a list of matrices with
+                       {n_x} rows and {n_y} columns, or a single vector of
+                       length {n_x} with an entry for each predictor.")
+        }
+        eif = eif %*% contrast
+
+        nms = name_contrasts(contrast, x_nm, y_nm)
+        x_nm = nms$x
+        y_nm = nms$y
+        vcov_nm = paste(x_nm, y_nm, sep=":")
+    } else {
+        vcov_nm = c(outer(x_nm, y_nm, paste, sep=":"))
+        x_nm = rep(x_nm, n_y)
+        y_nm = rep(y_nm, each=n_x)
+    }
+
+    # save data for sensitivity analysis
+    if (inherits(riesz, "ei_riesz") && inherits(regr, "ei_ridge")) {
+        if (is.null(contrast)) {
+            # nu2 is Neyman orthogonal est
+            sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
+        } else {
+            sens_s = matrix(nrow=ncol(contrast), ncol=ncol(contrast))
+            for (k in seq_len(ncol(contrast))) {
+                cc = matrix(contrast[, k], nrow=length(x_nm), ncol=length(y_nm))
+                rr_k = riesz$weights %*% cc
+            }
+        }
+    } else {
+        sens_s = NULL
+    }
+
+    # calculate and format outputs
     est = colMeans(eif)
     vcov = crossprod(shift_cols(eif, est)) / (sum(subset) - 1)^2
     se = sqrt(diag(vcov))
 
     out = tibble::new_tibble(list(
-        predictor = rep(xc, n_y),
-        outcome = rep(colnames(y), each=n_x),
+        predictor = x_nm,
+        outcome = y_nm,
         estimate = est,
         std.error = se
     ), class="ei_est")
@@ -141,17 +213,24 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
         out$conf.high = out$estimate - crit * out$std.error
     }
 
-    rownames(vcov) = colnames(vcov) = c(outer(xc, colnames(y), paste, sep=":"))
+    rownames(vcov) = colnames(vcov) = vcov_nm
     attr(out, "vcov") = vcov
     attr(out, "n") = sum(subset)
     attr(out, "sens_s") = sens_s
-    attr(out, "bounds_inf") = ei_bounds(NULL, rl$y)
+    attr(out, "bounds_inf") = if (is.null(contrast)) {
+        ei_bounds(NULL, rl$y)
+    } else {
+        c(-Inf, Inf)
+    }
 
     out
 }
 
 est_check_outcome = function(regr, data, quo_outcome) {
     if (!is.null(regr)) {
+        if (!is.list(regr)) {
+            cli_abort("Wrong type for {.arg regr}.", call=parent.frame())
+        }
         y = regr$y
     } else if (inherits(data, "ei_spec")) {
         y = as.matrix(data[attr(data, "ei_y")])
@@ -388,6 +467,55 @@ wrap_king_ei <- function(obj) {
         blueprint = list(ei_x = colnames(x)),
         classes = "ei"
     ), class = "ei_wrapped")
+}
+
+name_contrasts <- function(ccs, x_nm, y_nm) {
+    if (!is.null(colnames(ccs))) {
+        return(list(x = colnames(ccs), y = colnames(ccs)))
+    }
+    nms = list(
+        x = character(ncol(ccs)),
+        y = character(ncol(ccs))
+    )
+
+    proc_coefs = function(cc, margin) {
+        apply(cc, margin, function(ccj) {
+            coefs = ccj[ccj != 0]
+            if (length(coefs) == 1) {
+                coefs
+            } else if (length(coefs) > 1) {
+                NaN
+            } else {
+                0
+            }
+        })
+    }
+
+    fmt_coefs = function(coefs, nm) {
+        if (!any(is.nan(coefs))) {
+            xc = coefs[coefs != 0]
+            xn = nm[coefs != 0][order(xc, decreasing = TRUE)]
+            xc = xc[order(xc, decreasing = TRUE)]
+            xn = ifelse(abs(xc) == 1, xn, paste0(xc, "*", xn))
+            xs = c(
+                c("-", "")[1 + (xc[1] > 0)],
+                c(" - ", " + ")[1 + (xc[-1] > 0)]
+            )
+            paste0(xs, sep=xn, collapse="")
+        } else if (sum(is.nan(coefs)) == 1) {
+            nm[is.nan(coefs)]
+        } else {
+            "complex contrast"
+        }
+    }
+
+    for (i in seq_len(ncol(ccs))) {
+        cc = matrix(ccs[, i], nrow=length(x_nm), ncol=length(y_nm))
+        nms$x[i] = fmt_coefs(proc_coefs(cc, 1), x_nm)
+        nms$y[i] = fmt_coefs(proc_coefs(cc, 2), y_nm)
+    }
+
+    nms
 }
 
 
