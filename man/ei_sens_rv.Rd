@@ -48,6 +48,10 @@ ei_sens_rv(est, estimate - y_avg)
 # Extract as matrix
 as.matrix(ei_sens_rv(est, 0.2), "rv")
 
+# Works for contrasts as well
+est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
+ei_sens_rv(est, estimate) # how much to eliminate disparity
+
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).

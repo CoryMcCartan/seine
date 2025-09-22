@@ -16,7 +16,7 @@ test_that("Estimation methods agree when there is no penalization", {
 
 test_that("Estimation methods work with single predictor", {
     m = ei_ridge(pres_ind_wal ~ vap_black | farm, elec_1968, penalty=0)
-    rr = ei_riesz(pres_ind_wal ~ vap_black | farm, elec_1968, 
+    rr = ei_riesz(pres_ind_wal ~ vap_black | farm, elec_1968,
                   penalty=m$penalty, total=pres_total)
 
     est_p = ei_est(m, data=elec_1968, total=pres_total)
@@ -76,4 +76,23 @@ test_that("Estimation methods work with no predictors", {
         est_w = ei_est(rr, data=spec)
         est_d = ei_est(m, rr, data=spec)
     })
+})
+
+test_that("Contrasts work with no predictors", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
+                   total = pres_total)
+    m = ei_ridge(spec)
+    rr = ei_riesz(spec, penalty=m$penalty)
+
+    est0 = ei_est(m, rr, spec) |>
+        subset(outcome == "pres_dem_hum")
+    estc = ei_est(
+        m, rr, spec,
+        contrast = list(predictor = c(1, -1, 0), outcome = c(1, 0, 0, 0, 0))
+    )
+
+    pt0 = est0$estimate[1] - est0$estimate[2]
+    se0 = sqrt(sum(est0$std.error[1:2]^2))
+    expect_equal(estc$estimate, pt0)
+    expect_lte(estc$std.error, se0)
 })

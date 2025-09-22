@@ -89,6 +89,10 @@ est = ei_est(m, rr, spec, conf_level=0.95)
 sens = ei_sens(est, c_outcome=0.5, c_predictor=0.2)
 as.matrix(sens, "conf.high")
 
+# Works for contrasts as well
+est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
+ei_sens(est, c_outcome=0.5, c_predictor=0.5)
+
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).

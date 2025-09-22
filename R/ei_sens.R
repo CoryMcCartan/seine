@@ -72,6 +72,10 @@
 #' sens = ei_sens(est, c_outcome=0.5, c_predictor=0.2)
 #' as.matrix(sens, "conf.high")
 #'
+#' # Works for contrasts as well
+#' est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
+#' ei_sens(est, c_outcome=0.5, c_predictor=0.5)
+#'
 #' @export
 ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01)^2,
                     bias_bound=NULL, confounding=1, expand_ci=TRUE) {
@@ -161,11 +165,18 @@ ei_sens <- function(est, c_outcome=seq(0, 1, 0.01)^2, c_predictor=seq(0, 1, 0.01
 #' # Extract as matrix
 #' as.matrix(ei_sens_rv(est, 0.2), "rv")
 #'
+#' # Works for contrasts as well
+#' est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
+#' ei_sens_rv(est, estimate) # how much to eliminate disparity
+#'
 #' @export
 ei_sens_rv <- function(est, bias_bound, confounding=1) {
+    if (missing(bias_bound)) {
+        cli_abort("{.arg bias_bound} is required.")
+    }
     bias_bound = eval_tidy(enquo(bias_bound), est)
     if (!is.numeric(bias_bound)) {
-        cli_abort("{.arg bias_bound} must be numeric.", call = parent.frame())
+        cli_abort("{.arg bias_bound} must be numeric.")
     }
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
@@ -322,6 +333,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
 #'   with one covariate removed) and returns a modified object that includes
 #'   modified object. Useful to apply any preprocessing, such as a basis
 #'   transformation, as part of the benchmarking process.
+#' @param subset Passed on to [ei_est()].
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
@@ -346,7 +358,7 @@ plot.ei_sens <- function(x, y=NULL, predictor=NULL, bounds=NULL, bench=NULL,
 #'             total = attr(s, "ei_n"), covariates = colnames(z_new))
 #' })
 #' @export
-ei_bench <- function(spec, preproc = NULL) {
+ei_bench <- function(spec, preproc = NULL, subset = NULL) {
     validate_ei_spec(spec)
 
     if (!missing(preproc)) {
@@ -359,6 +371,7 @@ ei_bench <- function(spec, preproc = NULL) {
 
     n_x = length(attr(spec, "ei_x"))
     n_y = length(attr(spec, "ei_y"))
+    subs = eval_tidy(enquo(subset), spec)
     var_resid = function(regr) {
         apply(regr$y - regr$fitted, 2, var)
     }
@@ -366,7 +379,7 @@ ei_bench <- function(spec, preproc = NULL) {
     spec_proc = preproc(spec)
     regr0 = ei_ridge(spec_proc, vcov=FALSE)
     riesz0 = ei_riesz(spec_proc, penalty=regr0$penalty)
-    est0 = ei_est(regr0, riesz0, spec_proc)
+    est0 = ei_est(regr0, riesz0, spec_proc, subset = subs)
     vy = apply(regr0$y, 2, var)
     var_resid0 = var_resid(regr0)
     r2_out0 = 1 - var_resid0 / vy
@@ -378,7 +391,7 @@ ei_bench <- function(spec, preproc = NULL) {
 
         regr_loo = ei_ridge(spec_loo, vcov=FALSE)
         riesz_loo = ei_riesz(spec_loo, penalty=regr_loo$penalty)
-        est_loo = ei_est(regr_loo, riesz_loo, spec_loo)
+        est_loo = ei_est(regr_loo, riesz_loo, spec_loo, subset = subs)
         var_resid_loo = var_resid(regr_loo)
         r2_out_loo = 1 - var_resid_loo / vy
         r2_riesz = riesz_loo$nu2 / riesz0$nu2

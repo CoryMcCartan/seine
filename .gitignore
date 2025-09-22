@@ -9,6 +9,7 @@
 *.tmp
 *.swp
 .DS_Store
+.air.toml
 
 *.o
 *.so

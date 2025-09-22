@@ -59,10 +59,17 @@
 #' ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 #' ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 #' est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
+#' # Working with the output
 #' as.matrix(est)
 #' as.matrix(est, "std.error")
 #' vcov(est)[1:4, 1:4]
 #'
+#' # Contrasts
+#' ei_est(regr = m, riesz = rr, data = spec, contrast = list(predictor = c(1, -1, 0)))
+#' ei_est(regr = m, riesz = rr, data = spec,
+#'        contrast = list(predictor = c(-1, 1, 0), outcome = c(1, -1, 0, 0)))
+#'
+#' # Subsetting
 #' est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
 #' as.matrix(est)
 #' nobs(est)
@@ -113,17 +120,17 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     w = subset * w / mean(subset * w)
 
     # build predictions and RR
-    riesz = est_check_riesz(riesz, data, w, n, regr)
-    rl = est_check_regr(regr, data, n, colnames(riesz), n_y)
+    rm = est_check_riesz(riesz, data, w, n, regr) # riesz matrix
+    rl = est_check_regr(regr, data, n, colnames(rm), n_y) # regr list
 
     # evaluate EIF
-    n_x = ncol(riesz)
+    n_x = ncol(rm)
     x_nm = names(rl$preds)
     y_nm = colnames(y)
     eif = matrix(nrow=n, ncol=n_y*n_x) # x varies faster than y
     for (i in seq_len(n_x)) {
         plugin = rl$preds[[x_nm[i]]] * rl$x[, i] * w / mean(rl$x[, i] * w)
-        wtd = riesz[, i] * (y - rl$yhat)
+        wtd = rm[, i] * (y - rl$yhat)
         eif[, i + (seq_len(n_y) - 1)*n_x] = plugin + wtd
     }
 
@@ -132,42 +139,39 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
         if (
             is.list(contrast) &&
                 length(contrast) %in% 1:2 &&
-                names(contrast) %in% c("predictor", "outcome")
+                all(names(contrast) %in% c("predictor", "outcome"))
         ) {
-            if (!"predictor" %in% names(contrast)) {
-                contrast = diag(n_y) %x% contrast$predictor
-                x_nm = rep(format_contrast(contrast$predictor, x_nm), n_y)
-            } else if (!"outcome" %in% names(contrast)) {
-                contrast = contrast$outcome %x% diag(n_x)
-                y_nm = rep(format_contrast(contrast$outcome, y_nm), each=n_x)
-            } else {
-
-            }
-        }
-        if (is.vector(contrast) && length(contrast) == n_x) {
-            contrast =
-        } else if (is.list(contrast)) {
-            cc_out = matrix(nrow = n_x * n_y, ncol = length(contrast))
-            for (i in seq_along(contrast)) {
-                cc = contrast[[i]]
-                if (is.matrix(cc) && identical(dim(cc), c(n_x, n_y))) {
-                    cc_out[, i] = c(cc)
-                } else {
-                    cli_abort("Each elemetn of {.arg contrast} must be a matrix with
-                               {n_x} rows and {n_y} columns.")
+            has_x = has_y = FALSE
+            if (!is.null(contrast$predictor)) {
+                has_x = TRUE
+                if (length(contrast$predictor) != n_x) {
+                    cli_abort("{.arg contrast$predictor} must have length {n_x}.")
                 }
             }
-            contrast = cc_out
-        } else {
-            cli_abort("The {.arg contrast} argument must be a list of matrices with
-                       {n_x} rows and {n_y} columns, or a single vector of
-                       length {n_x} with an entry for each predictor.")
-        }
-        eif = eif %*% contrast
+            if (!is.null(contrast$outcome)) {
+                has_y = TRUE
+                if (length(contrast$outcome) != n_y) {
+                    cli_abort("{.arg contrast$outcome} must have length {n_y}.")
+                }
+            }
 
-        nms = name_contrasts(contrast, x_nm, y_nm)
-        x_nm = nms$x
-        y_nm = nms$y
+            if (has_x && !has_y) {
+                contrast$outcome = diag(n_y)
+                x_nm = rep(fmt_contrast(contrast$predictor, x_nm), n_y)
+            } else if (!has_x && has_y) {
+                contrast$predictor = diag(n_x)
+                y_nm = rep(fmt_contrast(contrast$outcome, y_nm), each=n_x)
+            } else {
+                x_nm = fmt_contrast(contrast$predictor, x_nm)
+                y_nm = fmt_contrast(contrast$outcome, y_nm)
+            }
+        } else {
+            cli_abort("The {.arg contrast} argument must be a list with entries
+            {.code predictor} and/or {.code outcome}.")
+        }
+        contr_m = as.matrix(contrast$outcome %x% contrast$predictor)
+
+        eif = eif %*% contr_m
         vcov_nm = paste(x_nm, y_nm, sep=":")
     } else {
         vcov_nm = c(outer(x_nm, y_nm, paste, sep=":"))
@@ -181,11 +185,12 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
             # nu2 is Neyman orthogonal est
             sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
         } else {
-            sens_s = matrix(nrow=ncol(contrast), ncol=ncol(contrast))
-            for (k in seq_len(ncol(contrast))) {
-                cc = matrix(contrast[, k], nrow=length(x_nm), ncol=length(y_nm))
-                rr_k = riesz$weights %*% cc
-            }
+            # re-compute but too late to do Neyman orthogonal Riesz
+            nu_c = colMeans((riesz$weights %*% contrast$predictor)^2)
+            sigma_c = colMeans(((y - rl$yhat) %*% contrast$outcome)^2)
+            sens_s = sqrt(nu_c %o% sigma_c)
+            rownames(sens_s) = unique(x_nm)
+            colnames(sens_s) = unique(y_nm)
         }
     } else {
         sens_s = NULL
@@ -224,6 +229,20 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     }
 
     out
+}
+
+fmt_contrast <- function(cc, nm) {
+    apply(as.matrix(cc), 2, function(coefs) {
+        xc = coefs[coefs != 0]
+        xn = nm[coefs != 0][order(xc, decreasing = TRUE)]
+        xc = xc[order(xc, decreasing = TRUE)]
+        xn = ifelse(abs(xc) == 1, xn, paste0(xc, "*", xn))
+        xs = c(
+            c("-", "")[1 + (xc[1] > 0)],
+            c(" - ", " + ")[1 + (xc[-1] > 0)]
+        )
+        paste0(xs, sep = xn, collapse = "")
+    })
 }
 
 est_check_outcome = function(regr, data, quo_outcome) {
@@ -469,54 +488,6 @@ wrap_king_ei <- function(obj) {
     ), class = "ei_wrapped")
 }
 
-name_contrasts <- function(ccs, x_nm, y_nm) {
-    if (!is.null(colnames(ccs))) {
-        return(list(x = colnames(ccs), y = colnames(ccs)))
-    }
-    nms = list(
-        x = character(ncol(ccs)),
-        y = character(ncol(ccs))
-    )
-
-    proc_coefs = function(cc, margin) {
-        apply(cc, margin, function(ccj) {
-            coefs = ccj[ccj != 0]
-            if (length(coefs) == 1) {
-                coefs
-            } else if (length(coefs) > 1) {
-                NaN
-            } else {
-                0
-            }
-        })
-    }
-
-    fmt_coefs = function(coefs, nm) {
-        if (!any(is.nan(coefs))) {
-            xc = coefs[coefs != 0]
-            xn = nm[coefs != 0][order(xc, decreasing = TRUE)]
-            xc = xc[order(xc, decreasing = TRUE)]
-            xn = ifelse(abs(xc) == 1, xn, paste0(xc, "*", xn))
-            xs = c(
-                c("-", "")[1 + (xc[1] > 0)],
-                c(" - ", " + ")[1 + (xc[-1] > 0)]
-            )
-            paste0(xs, sep=xn, collapse="")
-        } else if (sum(is.nan(coefs)) == 1) {
-            nm[is.nan(coefs)]
-        } else {
-            "complex contrast"
-        }
-    }
-
-    for (i in seq_len(ncol(ccs))) {
-        cc = matrix(ccs[, i], nrow=length(x_nm), ncol=length(y_nm))
-        nms$x[i] = fmt_coefs(proc_coefs(cc, 1), x_nm)
-        nms$y[i] = fmt_coefs(proc_coefs(cc, 2), y_nm)
-    }
-
-    nms
-}
 
 
 # Types --------

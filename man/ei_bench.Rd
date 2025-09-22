@@ -4,7 +4,7 @@
 \alias{ei_bench}
 \title{Benchmark sensitivity parameters from observed covariates}
 \usage{
-ei_bench(spec, preproc = NULL)
+ei_bench(spec, preproc = NULL, subset = NULL)
 }
 \arguments{
 \item{spec}{An \link{ei_spec} object.}
@@ -13,6 +13,8 @@ ei_bench(spec, preproc = NULL)
 with one covariate removed) and returns a modified object that includes
 modified object. Useful to apply any preprocessing, such as a basis
 transformation, as part of the benchmarking process.}
+
+\item{subset}{Passed on to \code{\link[=ei_est]{ei_est()}}.}
 }
 \description{
 Produces a table of benchmark values for \code{c_outcome} and \code{c_predictor} in

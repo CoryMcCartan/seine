@@ -13,8 +13,10 @@ ei_est(
   data,
   total,
   subset = NULL,
+  contrast = NULL,
   outcome = NULL,
-  conf_level = FALSE
+  conf_level = FALSE,
+  use_student = TRUE
 )
 
 \method{as.matrix}{ei_est}(x, which = "estimate", ...)
@@ -46,6 +48,16 @@ example, the column containing the total number of voters. Required if
 indexing vector describing the subset of units over which to calculate
 estimates.}
 
+\item{contrast}{If provided, a list containing entries \code{predictor} and
+\code{outcome}, each containing a contrast vector.  If only one of \code{predictor}
+or \code{outcome} is provided, the contrast will be calculated for all levels of
+the other variable.  For example \code{list(predictor = c(1, -1, 0))} will
+calculate the difference in each outcome between the first and second
+predictor groups; \code{list(outcome = c(1, -1))} will calculate the difference
+between the two outcomes for each predictor group; and
+\code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
+difference in differences.}
+
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided
 alone (without \code{regr}) and \code{data} is not an \link{ei_spec} object.}
@@ -53,6 +65,10 @@ alone (without \code{regr}) and \code{data} is not an \link{ei_spec} object.}
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE} (the default), no confidence intervals are calculated. Standard
 errors are always returned.}
+
+\item{use_student}{If \code{TRUE}, use construct confidence intervals from a
+Student-\emph{t} distribution, which may improve coverage properties in
+small samples.}
 
 \item{x, object}{An object of class \code{ei_est}}
 
@@ -96,10 +112,17 @@ rr = ei_riesz(spec, penalty = m$penalty)
 ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
+# Working with the output
 as.matrix(est)
 as.matrix(est, "std.error")
 vcov(est)[1:4, 1:4]
 
+# Contrasts
+ei_est(regr = m, riesz = rr, data = spec, contrast = list(predictor = c(1, -1, 0)))
+ei_est(regr = m, riesz = rr, data = spec,
+       contrast = list(predictor = c(-1, 1, 0), outcome = c(1, -1, 0, 0)))
+
+# Subsetting
 est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
 as.matrix(est)
 nobs(est)
