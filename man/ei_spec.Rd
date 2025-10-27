@@ -22,7 +22,7 @@ variables. This is the \code{y} variable in ecological regression that is of
 primary interest. For example, the columns containing the percentage of
 votes for each party.}
 
-\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+\item{total}{<\code{\link[rlang:args_data_masking]{data-masking}}> A variable
 containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required by
 default.}

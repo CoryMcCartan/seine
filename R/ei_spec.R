@@ -17,7 +17,7 @@
 #'   variables. This is the `y` variable in ecological regression that is of
 #'   primary interest. For example, the columns containing the percentage of
 #'   votes for each party.
-#' @param total <[`tidy-select`][tidyselect::select_helpers]> A variable
+#' @param total <[`data-masking`][rlang::args_data_masking]> A variable
 #'   containing the total number of observations in each aggregate unit. For
 #'   example, the column containing the total number of voters. Required by
 #'   default.
