@@ -59,6 +59,7 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
              .frequency="regularly", .frequency_id="ei_est_local_temp")
 
     rl = est_check_regr(regr, data, n, NULL, n_y, sd = TRUE)
+    rl <<- rl
     n_x = length(rl$preds)
     if (inherits(regr, "ei_wrapped") && !isFALSE(conf_level)) {
         cli_warn("Local confidence intervals with wrapped model objects
@@ -76,20 +77,21 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
     if (!is.list(r_cov)) {
         r_cov = lapply(seq_len(n_y), function(i) r_cov)
     }
-    # r_cov = lapply(r_cov, function(r) {
     for (r in r_cov) {
         if (!is.matrix(r) || nrow(r) != ncol(r) || nrow(r) != n_x) {
             cli_abort("Invalid {.arg r_cov} found.")
         }
     }
-#         t(chol(r))
-#     })
+    r_cov = lapply(r_cov, function(r) {
+        t(chol(r))
+    })
 
     # browser()
     ests = list()
     for (k in seq_len(n_y)) {
         eta = vapply(rl$preds, function(p) p[, k], numeric(n))
-        proj = r_proj_mvn(eta, r_cov[[k]], rl$x, y[, k] - rl$yhat[, k])
+        # browser()
+        proj = r_proj_local(eta, r_cov[[k]], rl$x, y[, k] - rl$yhat[, k])
 
         ests[[k]] = tibble::new_tibble(list(
             .row = rep(seq_len(n), n_x),

@@ -326,7 +326,7 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
     z = cbind(regr$int_scale, z)
 
     preds = list()
-    sds = if (sd) matrix(nrow = n, ncol = n_x^2) else
+    sds = if (sd) matrix(nrow = n, ncol = n_x^2) else NULL
     for (group in seq_along(xcols)) {
         use = c(group, n_x + p*(group-1) + seq_len(p))
         preds[[xcols[group]]] = z %*% regr$coef[use, ]
