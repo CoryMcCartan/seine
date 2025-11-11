@@ -9,7 +9,15 @@
 \alias{ei_ridge.default}
 \title{Fit an ecological inference regression model}
 \usage{
-ei_ridge(x, ...)
+ei_ridge(
+  x,
+  ...,
+  weights,
+  bounds = FALSE,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE
+)
 
 \method{ei_ridge}{formula}(
   formula,
@@ -73,21 +81,6 @@ Covariates in an \link{ei_spec} object are shifted to have mean zero. If
 
 \item{...}{Not currently used, but required for extensibility.}
 
-\item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
-regressed on the predictors of interest \code{x} and any covariates \code{z}.
-The predictors should form a partition, that is, \code{x0 + x1 = 1} for each
-observation. Users can be include more than two predictors as well, e.g.
-\code{pct_white + pct_black + pct_hisp + pct_other}.
-If there are just two predictors, it is acceptable to only include one in
-the formula; the other will be formed as 1 minus the provided predictor.
-Include additional covariates separated by a vertical bar \code{|}.
-These covariates are strongly recommended for reliable ecological inference.
-Covariates are shifted to have mean zero. If \code{scale=TRUE} (the default),
-they are also scaled to have unit variance.}
-
-\item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
-both the predictors and the outcome.}
-
 \item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
 weights for estimation. These may be the same or different from the total
 number of observations in each aggregate unit (see the \code{total} argument to
@@ -116,6 +109,21 @@ scaled to have mean zero and unit variance before fitting.}
 
 \item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
 estimated coefficients. Ignored when \code{bounds} are provided.}
+
+\item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
+regressed on the predictors of interest \code{x} and any covariates \code{z}.
+The predictors should form a partition, that is, \code{x0 + x1 = 1} for each
+observation. Users can be include more than two predictors as well, e.g.
+\code{pct_white + pct_black + pct_hisp + pct_other}.
+If there are just two predictors, it is acceptable to only include one in
+the formula; the other will be formed as 1 minus the provided predictor.
+Include additional covariates separated by a vertical bar \code{|}.
+These covariates are strongly recommended for reliable ecological inference.
+Covariates are shifted to have mean zero. If \code{scale=TRUE} (the default),
+they are also scaled to have unit variance.}
+
+\item{data}{When a \strong{formula} is used, \code{data} is a \strong{data frame} containing
+both the predictors and the outcome.}
 
 \item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
 specified as:

@@ -37,7 +37,7 @@
 #'
 #' mean(elec_1968$pres_ind_wal * weights(rr, "vap_white"))
 #' @export
-ei_riesz <- function(x, ...) {
+ei_riesz <- function(x, ..., weights, penalty, scale=TRUE) {
     UseMethod("ei_riesz")
 }
 

@@ -9,7 +9,7 @@
 \alias{ei_riesz.default}
 \title{Estimate Riesz representer for ecological inference}
 \usage{
-ei_riesz(x, ...)
+ei_riesz(x, ..., weights, penalty, scale = TRUE)
 
 \method{ei_riesz}{formula}(formula, data, total, weights, penalty, scale = TRUE, ...)
 
@@ -36,6 +36,20 @@ Covariates in an \link{ei_spec} object are shifted to have mean zero. If
 
 \item{...}{Not currently used, but required for extensibility.}
 
+\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the \code{total} argument to
+\code{\link[=ei_spec]{ei_spec()}}). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.}
+
+\item{penalty}{The ridge penalty (a non-negative scalar), which must be
+specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
+which is stored in the \code{penalty} entry of the fitted model object.}
+
+\item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
+
 \item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
 regressed on the predictors of interest \code{x} and any covariates \code{z}.
 The predictors should form a partition, that is, \code{x0 + x1 = 1} for each
@@ -55,20 +69,6 @@ both the predictors and the outcome.}
 containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required by
 default.}
-
-\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
-weights for estimation. These may be the same or different from the total
-number of observations in each aggregate unit (see the \code{total} argument to
-\code{\link[=ei_spec]{ei_spec()}}). See the discussion below under 'Weights' for choosing this
-parameter. The default, uniform weights, makes a slightly
-stronger-than-necessary assumption about the relationship between the
-unit totals and the unknown data.}
-
-\item{penalty}{The ridge penalty (a non-negative scalar), which must be
-specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
-which is stored in the \code{penalty} entry of the fitted model object.}
-
-\item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
 
 \item{z}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{w} are any covariates,
 specified as:
