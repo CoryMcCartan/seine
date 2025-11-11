@@ -107,6 +107,12 @@ ei_sens <- function(
 
     idx = as.matrix(as.data.frame(est[, c("predictor", "outcome")]))
     sens_s = attr(est, "sens_s")
+    if (is.null(sens_s)) {
+        cli_abort(c(
+            "{.arg est} must be fit with DML in order to perform sensitivity analysis.",
+            "i"="Provide both {.arg regr} and {.arg riesz} to {.fn ei_est}."
+        ))
+    }
     bounds_inf = attr(est, "bounds_inf")
     if (is.null(bias_bound)) {
         cc = expand.grid(c_outcome = c_outcome, c_predictor = c_predictor)
