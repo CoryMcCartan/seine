@@ -37,14 +37,14 @@
 #'
 #' mean(elec_1968$pres_ind_wal * weights(rr, "vap_white"))
 #' @export
-ei_riesz <- function(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale=TRUE) {
+ei_riesz <- function(x, ..., weights, penalty, bounds = FALSE, scale=TRUE) {
     UseMethod("ei_riesz")
 }
 
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.formula <- function(formula, data, total, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
+ei_riesz.formula <- function(formula, data, total, weights, penalty, bounds = FALSE, scale=TRUE, ...) {
     f_lhs(formula) = NULL
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -71,7 +71,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, bounds = FA
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.ei_spec <- function(x, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
+ei_riesz.ei_spec <- function(x, weights, penalty, bounds = FALSE, scale=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -138,7 +138,7 @@ ei_riesz.matrix <- function(x, z, total, weights, penalty, bounds = FALSE, y = N
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.default <- function(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale=TRUE) {
+ei_riesz.default <- function(x, ..., weights, penalty, bounds = FALSE, scale=TRUE) {
     if (missing(x))
         cli_abort("{.fn ei_riesz} requires arguments.", call=NULL)
     cli_abort("{.fn ei_riesz} is not defined for a {.cls {class(x)}}.", call=NULL)

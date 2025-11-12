@@ -9,7 +9,7 @@
 \alias{ei_riesz.default}
 \title{Estimate Riesz representer for ecological inference}
 \usage{
-ei_riesz(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
+ei_riesz(x, ..., weights, penalty, bounds = FALSE, scale = TRUE)
 
 \method{ei_riesz}{formula}(
   formula,
@@ -18,12 +18,11 @@ ei_riesz(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
   weights,
   penalty,
   bounds = FALSE,
-  y = NULL,
   scale = TRUE,
   ...
 )
 
-\method{ei_riesz}{ei_spec}(x, weights, penalty, bounds = FALSE, y = NULL, scale = TRUE, ...)
+\method{ei_riesz}{ei_spec}(x, weights, penalty, bounds = FALSE, scale = TRUE, ...)
 
 \method{ei_riesz}{data.frame}(
   x,
@@ -49,7 +48,7 @@ ei_riesz(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
   ...
 )
 
-\method{ei_riesz}{default}(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
+\method{ei_riesz}{default}(x, ..., weights, penalty, bounds = FALSE, scale = TRUE)
 }
 \arguments{
 \item{x}{Depending on the context:
@@ -83,17 +82,6 @@ If \code{bounds = NULL}, they will be inferred from the outcome variable:
 if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
 
-\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
-specified as:
-\itemize{
-\item A \strong{data frame} with numeric columns.
-\item A \strong{matrix}
-\item A numeric \strong{vector}.
-}
-
-When the outcome is a proportion, you can use \code{\link[=ei_proportions]{ei_proportions()}} to assist
-in preparing it.}
-
 \item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
 
 \item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
@@ -125,6 +113,17 @@ specified as:
 
 These are shifted to have mean zero. If \code{scale=TRUE} (the default), they
 are also scaled to have unit variance.}
+
+\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
+specified as:
+\itemize{
+\item A \strong{data frame} with numeric columns.
+\item A \strong{matrix}
+\item A numeric \strong{vector}.
+}
+
+When the outcome is a proportion, you can use \code{\link[=ei_proportions]{ei_proportions()}} to assist
+in preparing it.}
 }
 \value{
 An \code{ei_riesz} object.
