@@ -11,11 +11,20 @@ ei_ridge_impl(
   z,
   weights = rep(1, nrow(x)),
   bounds = c(-Inf, Inf),
+  riesz = NULL,
   penalty = NULL,
   vcov = TRUE
 )
 
-ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
+ei_riesz_impl(
+  x,
+  z,
+  total,
+  weights = rep(1, nrow(x)),
+  bounds,
+  y = NULL,
+  penalty
+)
 }
 \arguments{
 \item{x}{A matrix of predictors}
@@ -27,6 +36,8 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 \item{weights}{A vector of estimation weights}
 
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.}
+
+\item{riesz}{A matrix of Riesz weights}
 
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be
 specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with

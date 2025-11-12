@@ -82,7 +82,7 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
 # Ridge regression with bounds on the fitted values _for each group_
 # Sets ups as QP minimizing -d_vec %*% beta + (1/2) * t(beta) %*% Dmat %*% beta
 # see quadprog::solve.QP documentation
-ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
+ridge_bounds <- function(xz, z, y, weights, bounds, riesz=NULL, penalty=0) {
     n = nrow(xz)
     p = ncol(z)
     n_x = ncol(xz) %/% (1L + p)
@@ -91,21 +91,19 @@ ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
     Dmat = crossprod(xz, weights * xz) + diag(ncol(xz)) * penalty
     R = backsolve(chol(Dmat), diag(nrow(Dmat)))
 
-    Amat = matrix(0, nrow = p + 1, ncol = n * n_x)
-    Aind = matrix(0, nrow = p + 2, ncol = n * n_x)
+    # fitted values
+    Amat = matrix(0, nrow = nrow(Dmat), ncol = n * n_x)
     int_scale = sum(xz[1, 1:n_x])
-    Amat[1, 1:(n*n_x)] = int_scale
-    Aind[1, ] = p + 1
     for (j in seq_len(n_x)) {
+        use = n_x + p*(j-1) + seq_len(p)
         idx = (j - 1) * n + seq_len(n)
-        Aind[-1, idx] = c(j, n_x + p*(j - 1) + seq_len(p))
-        Amat[-1, idx] = t(z)
+        Amat[j, idx] = int_scale
+        Amat[use, idx] = t(z)
     }
 
     enforce = is.finite(bounds)
     if (all(enforce)) {
         Amat = cbind(Amat, -Amat)
-        Aind = cbind(Aind, Aind)
         bvec = rep(bounds * c(1, -1), each = n*n_x)
     } else if (enforce[1]) {
         bvec = rep(bounds[1], n*n_x)
@@ -118,7 +116,17 @@ ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
 
     coefs = matrix(nrow = nrow(dvecs), ncol = ncol(dvecs))
     for (i in seq_len(ncol(dvecs))) {
-        fit = quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized=TRUE)
+        Amat_i = Amat
+        bvec_i = bvec
+        meq = 0
+        if (!is.null(riesz)) {
+            xz_avg = t(crossprod(riesz, xz) / nrow(xz))
+            Amat_i = cbind(xz_avg, Amat)
+            bvec_i = c(colMeans(riesz * y[, i]), bvec)
+            meq = ncol(xz_avg)
+        }
+
+        fit = quadprog::solve.QP(R, dvecs[, i], Amat_i, bvec_i, meq=meq, factorized=TRUE)
         coefs[, i] = fit$solution
     }
 
@@ -188,4 +196,41 @@ riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
                   (2/(udv$d^2 + penalty) - d_pen^2)) / nrow(xz)
 
     list(alpha = alpha, loo = loo, nu2 = nu2)
+}
+
+# Riesz regression with bounds on the values for each observation
+# Sets ups as QP minimizing -d_vec %*% beta + (1/2) * t(beta) %*% Dmat %*% beta
+# see quadprog::solve.QP documentation
+riesz_bounds <- function(xz, z, total, weights, bounds, y, group=1, penalty=0) {
+    n = nrow(xz)
+    p = ncol(z)
+    n_x = ncol(xz) %/% (1L + p)
+    n_y = ncol(y)
+    use = c(group, n_x + p*(group-1) + seq_len(p))
+
+    dvec = numeric(ncol(xz))
+    dvec[use] = crossprod(xz[, use, drop=FALSE], total) / mean(xz[, group] * total)
+    Dmat = crossprod(xz, weights * xz) + diag(ncol(xz)) * penalty
+    R = backsolve(chol(Dmat), diag(nrow(Dmat)))
+
+    int_scale = sum(xz[1, 1:n_x])
+    enforce = is.finite(bounds)
+    avg = crossprod(xz, weights) / n
+    avg_y = crossprod(xz, weights * y) / n
+    if (all(enforce)) {
+        Amat = cbind(avg, avg_y, avg_y)
+        bvec = c(1 / int_scale, rep(bounds[1], n_y), -rep(bounds[2], n_y))
+    } else if (enforce[1]) {
+        Amat = cbind(avg, avg_y)
+        bvec = c(1 / int_scale, rep(bounds[1], n_y))
+    } else if (enforce[2]) {
+        Amat = cbind(avg, avg_y)
+        bvec = c(1 / int_scale, -rep(bounds[2], n_y))
+    } else {
+        cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
+    }
+
+    fit = quadprog::solve.QP(R, dvec, Amat, bvec, factorized=TRUE, meq=1)
+
+    list(alpha = c(xz %*% fit$solution), loo = NA, nu2 = -2 * fit$value)
 }

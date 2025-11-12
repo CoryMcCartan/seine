@@ -14,6 +14,7 @@ ei_ridge(
   ...,
   weights,
   bounds = FALSE,
+  riesz = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE
@@ -24,6 +25,7 @@ ei_ridge(
   data,
   weights,
   bounds = FALSE,
+  riesz = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -34,6 +36,7 @@ ei_ridge(
   x,
   weights,
   bounds = FALSE,
+  riesz = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -46,6 +49,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
+  riesz = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -58,13 +62,23 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
+  riesz = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
   ...
 )
 
-\method{ei_ridge}{default}(x, ...)
+\method{ei_ridge}{default}(
+  x,
+  ...,
+  weights,
+  bounds = FALSE,
+  riesz = NULL,
+  penalty = NULL,
+  scale = TRUE,
+  vcov = TRUE
+)
 }
 \arguments{
 \item{x}{Depending on the context:
@@ -93,6 +107,9 @@ unit totals and the unknown data.}
 If \code{bounds = NULL}, they will be inferred from the outcome variable:
 if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
+
+\item{riesz}{A fitted \code{\link[=ei_riesz]{ei_riesz()}} object to be used in de-biased re-fitting
+of the regression model while incorporating the bounds.}
 
 \item{penalty}{The ridge penalty (a non-negative scalar). Set to \code{NULL} to
 automatically determine the penalty which minimizes mean-square error,

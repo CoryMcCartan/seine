@@ -37,14 +37,14 @@
 #'
 #' mean(elec_1968$pres_ind_wal * weights(rr, "vap_white"))
 #' @export
-ei_riesz <- function(x, ..., weights, penalty, scale=TRUE) {
+ei_riesz <- function(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale=TRUE) {
     UseMethod("ei_riesz")
 }
 
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.formula <- function(formula, data, total, weights, penalty, scale=TRUE, ...) {
+ei_riesz.formula <- function(formula, data, total, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
     f_lhs(formula) = NULL
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -57,8 +57,10 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, scale=TRUE,
         ei_x = attr(form_preds, "term.labels"),
         ei_n = check_make_weights(!!enquo(total), data),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_riesz_blueprint"
     )
 
     processed <- hardhat::mold(form_combined, data, blueprint=bp)
@@ -69,7 +71,7 @@ ei_riesz.formula <- function(formula, data, total, weights, penalty, scale=TRUE,
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
+ei_riesz.ei_spec <- function(x, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -85,8 +87,10 @@ ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
         ei_x = attr(spec, "ei_x"),
         ei_n = attr(spec, "ei_n"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_riesz_blueprint"
     )
 
     processed <- hardhat::mold(form, spec, blueprint=bp)
@@ -96,7 +100,7 @@ ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.data.frame <- function(x, z, total, weights, penalty, scale=TRUE, ...) {
+ei_riesz.data.frame <- function(x, z, total, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
@@ -111,25 +115,30 @@ ei_riesz.data.frame <- function(x, z, total, weights, penalty, scale=TRUE, ...) 
         ei_x = colnames(x),
         ei_n = check_make_weights(!!enquo(total)),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
+        bounds = bounds,
         penalty = penalty,
-        scale = scale
+        scale = scale,
+        subclass = "ei_riesz_blueprint"
     )
     x = cbind(x, z)
 
-    processed <- hardhat::mold(x, NULL, blueprint=bp)
+    processed <- hardhat::mold(x, y, blueprint=bp)
     ei_riesz_bridge(processed, ...)
 }
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.matrix <- function(x, z, total, weights, penalty, scale=TRUE, ...) {
-    ei_riesz.data.frame(x, z, total, weights, penalty, scale, ...)
+ei_riesz.matrix <- function(x, z, total, weights, penalty, bounds = FALSE, y = NULL, scale=TRUE, ...) {
+    ei_riesz.data.frame(
+        x=x, z=z, total=total, weights=weights, penalty=penalty,
+        bounds=bounds, y=y, scale=scale, ...
+    )
 }
 
 
 #' @export
 #' @rdname ei_riesz
-ei_riesz.default <- function(x, ...) {
+ei_riesz.default <- function(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale=TRUE) {
     if (missing(x))
         cli_abort("{.fn ei_riesz} requires arguments.", call=NULL)
     cli_abort("{.fn ei_riesz} is not defined for a {.cls {class(x)}}.", call=NULL)
@@ -138,41 +147,62 @@ ei_riesz.default <- function(x, ...) {
 
 # Bridge and implementation ---------------------------------------------------
 
+# Creates bounds _after_ molding outcomes
+#' @exportS3Method hardhat::run_mold
+run_mold.ei_riesz_blueprint <- function(blueprint, ...) {
+    processed = NextMethod("run_mold")
+
+    # update bounds
+    if (is.null(processed$outcomes)) {
+        cli_abort("An outcome variable must be provided when using {.arg bounds}", call = parent.frame())
+    }
+    bounds = ei_bounds(processed$blueprint$bounds, processed$outcomes)
+    processed$blueprint = hardhat::update_blueprint(
+        processed$blueprint,
+        bounds = bounds
+    )
+
+    processed
+}
+
 ei_riesz_bridge <- function(processed, ...) {
     err_call = rlang::new_call(rlang::sym("ei_riesz"))
+    bp = processed$blueprint
     xz = processed$predictors
-    idx_x = match(processed$blueprint$ei_x, colnames(xz))
+    idx_x = match(bp$ei_x, colnames(xz))
     z = xz[, -idx_x, drop=FALSE]
     x = pull_x(xz, idx_x)
     check_preds(x, call=err_call)
-    total = processed$blueprint$ei_n
-    weights = processed$blueprint$ei_wgt
-    penalty = processed$blueprint$penalty
+    weights = bp$ei_wgt
 
     # normalize
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
-    if (isTRUE(processed$blueprint$scale)) {
+    if (isTRUE(bp$scale)) {
         z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
         z = scale_cols(z, z_scale)
     } else {
         z_scale = rep(1, ncol(z))
     }
 
+    if (!is.null(processed$outcomes)) {
+        y = as.matrix(processed$outcomes)
+    }
+
     # NA checking
     if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
     if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
 
-    fit <- ei_riesz_impl(x, z, total, weights, penalty)
+    fit <- ei_riesz_impl(x, z, bp$ei_n, weights, bp$bounds, y, bp$penalty)
 
     new_ei_riesz(
         weights = fit$alpha,
         weights_loo = fit$loo,
         nu2 = fit$nu2,
-        penalty = penalty,
+        penalty = bp$penalty,
         z_shift = z_shift,
         z_scale = z_scale,
-        blueprint = processed$blueprint
+        blueprint = bp
     )
 }
 
@@ -180,7 +210,7 @@ ei_riesz_bridge <- function(processed, ...) {
 #'
 #' @rdname ei-impl
 #' @export
-ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
+ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), bounds, y=NULL, penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)
     xz = row_kronecker(x, z, int_scale)
@@ -190,8 +220,13 @@ ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     alpha = matrix(nrow=nrow(x), ncol=ncol(x))
     loo = matrix(nrow=nrow(x), ncol=ncol(x))
     nu2 = numeric(ncol(x))
+    enforce = any(is.finite(bounds))
     for (group in seq_len(ncol(x))) {
-        fit = riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
+        fit = if (!enforce) { # unbounded
+            riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
+        } else {
+            riesz_bounds(xz, z, total, w, bounds, y, group, penalty)
+        }
         alpha[, group] = fit$alpha * int_scale * w
         loo[, group] = fit$loo * int_scale * w
         nu2[group] = fit$nu2  * int_scale^2

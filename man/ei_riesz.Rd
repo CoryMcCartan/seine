@@ -9,17 +9,47 @@
 \alias{ei_riesz.default}
 \title{Estimate Riesz representer for ecological inference}
 \usage{
-ei_riesz(x, ..., weights, penalty, scale = TRUE)
+ei_riesz(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
 
-\method{ei_riesz}{formula}(formula, data, total, weights, penalty, scale = TRUE, ...)
+\method{ei_riesz}{formula}(
+  formula,
+  data,
+  total,
+  weights,
+  penalty,
+  bounds = FALSE,
+  y = NULL,
+  scale = TRUE,
+  ...
+)
 
-\method{ei_riesz}{ei_spec}(x, weights, penalty, scale = TRUE, ...)
+\method{ei_riesz}{ei_spec}(x, weights, penalty, bounds = FALSE, y = NULL, scale = TRUE, ...)
 
-\method{ei_riesz}{data.frame}(x, z, total, weights, penalty, scale = TRUE, ...)
+\method{ei_riesz}{data.frame}(
+  x,
+  z,
+  total,
+  weights,
+  penalty,
+  bounds = FALSE,
+  y = NULL,
+  scale = TRUE,
+  ...
+)
 
-\method{ei_riesz}{matrix}(x, z, total, weights, penalty, scale = TRUE, ...)
+\method{ei_riesz}{matrix}(
+  x,
+  z,
+  total,
+  weights,
+  penalty,
+  bounds = FALSE,
+  y = NULL,
+  scale = TRUE,
+  ...
+)
 
-\method{ei_riesz}{default}(x, ...)
+\method{ei_riesz}{default}(x, ..., weights, penalty, bounds = FALSE, y = NULL, scale = TRUE)
 }
 \arguments{
 \item{x}{Depending on the context:
@@ -47,6 +77,22 @@ unit totals and the unknown data.}
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be
 specified. Recommended value is the same penalty used in \code{\link[=ei_ridge]{ei_ridge()}},
 which is stored in the \code{penalty} entry of the fitted model object.}
+
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.
+If \code{bounds = NULL}, they will be inferred from the outcome variable:
+if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
+be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
+
+\item{y}{When \code{x} is a \strong{data frame} or \strong{matrix}, \code{y} is the outcome
+specified as:
+\itemize{
+\item A \strong{data frame} with numeric columns.
+\item A \strong{matrix}
+\item A numeric \strong{vector}.
+}
+
+When the outcome is a proportion, you can use \code{\link[=ei_proportions]{ei_proportions()}} to assist
+in preparing it.}
 
 \item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
 
