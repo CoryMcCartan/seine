@@ -22,10 +22,11 @@ m = ei_ridge(spec, bounds=0:1)
 rr = ei_riesz(spec, bounds=0:1, penalty=m0$penalty)
 mc = ei_ridge(spec, bounds=0:1, riesz=rr, penalty=m0$penalty)
 ei_est(m0, rr0, data = spec) # without bounds
+ei_est(m, rr, data = spec)
 ei_est(mc, rr, data = spec) |> # with bounds
     mutate(estimate = round(estimate, 4))
-ei_est(m0, rr, data = spec)
-ei_est(mc, rr0, data = spec)
+
+ei_est(m, rr, data = spec)
 
 colMeans(weights(rr))
 crossprod(resid(m), weights(rr)) / n
