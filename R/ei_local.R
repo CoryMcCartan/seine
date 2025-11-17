@@ -24,8 +24,8 @@
 #'   local estimates will be truncated. In general, truncation will lead to
 #'   violations of the accounting identity. If `bounds = NULL`, they will be
 #'   inferred from the outcome variable: if it is contained within \eqn{[0, 1]},
-#'   for instance, then the bounds will be `c(0, 1)`. The default `bounds =
-#'   FALSE` forces unbounded estimates.
+#'   for instance, then the bounds will be `c(0, 1)`. Setting `bounds = FALSE`
+#'   forces unbounded estimates.
 #' @param conf_level A numeric specifying the level for confidence intervals.
 #'   If `FALSE` (the default), no confidence intervals are calculated.
 #'   For `regr` arguments from [ei_wrap_model()], confidence intervals will not
@@ -69,6 +69,7 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
 
     bounds = ei_bounds(bounds, y)
 
+    # Process r_cov; TODO: heteroskedastic model
     if (is.null(r_cov)) {
         r_cov = lapply(regr$sigma2, function(s2) s2 * diag(n_x))
     } else if (length(r_cov) == 1 && r_cov == 1) {
@@ -82,29 +83,25 @@ ei_est_local = function(regr, data, r_cov=NULL, bounds=NULL, conf_level=FALSE, u
             cli_abort("Invalid {.arg r_cov} found.")
         }
     }
-    r_cov = lapply(r_cov, function(r) {
-        t(chol(r))
-    })
+    r_cov = lapply(r_cov, chol)
 
-    # browser()
     ests = list()
     for (k in seq_len(n_y)) {
         eta = vapply(rl$preds, function(p) p[, k], numeric(n))
-        # browser()
-        proj = r_proj_local(eta, r_cov[[k]], rl$x, y[, k] - rl$yhat[, k])
+        eta <<- eta
+        eta_proj = local_proj(rl$x, eta, y[, k] - rl$yhat[, k], r_cov[[k]], bounds)
+        eta_proj <<- eta_proj
 
         ests[[k]] = tibble::new_tibble(list(
             .row = rep(seq_len(n), n_x),
             predictor = rep(colnames(rl$x), each=n),
             outcome = rep(colnames(y)[k], n * n_x),
-            estimate = c(proj[[1]]),
-            std.error = sqrt(c(proj[[2]]))
+            estimate = c(eta_proj),
+            std.error = NA #sqrt(c(proj[[2]]))
         ), class="ei_est_local")
     }
 
     ests = do.call(rbind, ests)
-    ests$estimate[ests$estimate < bounds[1]] = bounds[1]
-    ests$estimate[ests$estimate > bounds[2]] = bounds[2]
 
     if (!isFALSE(conf_level)) {
         fac = if (isTRUE(unimodal)) 4/9 else 1
@@ -135,3 +132,44 @@ as.array.ei_est_local = function(x, ...) {
     n = nrow(x) / n_x / n_y
     array(x$estimate, dim=c(n, n_x, n_y), dimnames=list(NULL, nm_x, nm_y))
 }
+
+# Solve QP to project estimates onto tomography plane and into bounds
+# Not the fastest possible implementation (pure C++ would be better), but fast enough
+local_proj = function(x, eta, eps, r_cov, bounds) {
+    n = nrow(eta)
+    n_x = ncol(x)
+    eta_diff = matrix(nrow = n, ncol = n_x)
+
+    zeros = rep(0, n_x)
+    Amat = cbind(zeros)
+    b0 = cbind(eps)
+    if (!is.infinite(bounds[1])) {
+        Amat = cbind(Amat, diag(n_x))
+        b0 = cbind(b0, bounds[1] - eta)
+    }
+    if (!is.infinite(bounds[2])) {
+        Amat = cbind(Amat, -diag(n_x))
+        b0 = cbind(b0, -bounds[2] + eta)
+    }
+
+    for (i in seq_len(n)) {
+        Amat[, 1] = x[i, ]
+        eta_diff[i, ] = tryCatch({
+            quadprog::solve.QP(
+                Dmat = r_cov,
+                dvec = zeros,
+                Amat = Amat,
+                bvec = b0[i, ],
+                meq = 1,
+                factorized = TRUE
+            )$solution
+        }, error = \(e) eps[i])
+    }
+
+    eta + eta_diff
+}
+
+local_basis = function(x) {
+    qr.Q(qr(cbind(x, diag(length(x)))))[,  drop=FALSE]
+}
+
