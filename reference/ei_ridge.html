@@ -54,7 +54,15 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_ridge</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'formula'</span></span>
 <span><span class="fu">ei_ridge</span><span class="op">(</span></span>
@@ -127,25 +135,6 @@ Covariates in an <a href="ei_spec.html">ei_spec</a> object are shifted to have m
 <dd><p>Not currently used, but required for extensibility.</p></dd>
 
 
-<dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>A formula such as <code>y ~ x0 + x1 | z</code> specifying the outcome <code>y</code>
-regressed on the predictors of interest <code>x</code> and any covariates <code>z</code>.
-The predictors should form a partition, that is, <code>x0 + x1 = 1</code> for each
-observation. Users can be include more than two predictors as well, e.g.
-<code>pct_white + pct_black + pct_hisp + pct_other</code>.
-If there are just two predictors, it is acceptable to only include one in
-the formula; the other will be formed as 1 minus the provided predictor.
-Include additional covariates separated by a vertical bar <code>|</code>.
-These covariates are strongly recommended for reliable ecological inference.
-Covariates are shifted to have mean zero. If <code>scale=TRUE</code> (the default),
-they are also scaled to have unit variance.</p></dd>
-
-
-<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>When a <strong>formula</strong> is used, <code>data</code> is a <strong>data frame</strong> containing
-both the predictors and the outcome.</p></dd>
-
-
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>&lt;<code><a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">data-masking</a></code>&gt; A vector of unit
 weights for estimation. These may be the same or different from the total
@@ -183,6 +172,25 @@ scaled to have mean zero and unit variance before fitting.</p></dd>
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
 <dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
 estimated coefficients. Ignored when <code>bounds</code> are provided.</p></dd>
+
+
+<dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
+<dd><p>A formula such as <code>y ~ x0 + x1 | z</code> specifying the outcome <code>y</code>
+regressed on the predictors of interest <code>x</code> and any covariates <code>z</code>.
+The predictors should form a partition, that is, <code>x0 + x1 = 1</code> for each
+observation. Users can be include more than two predictors as well, e.g.
+<code>pct_white + pct_black + pct_hisp + pct_other</code>.
+If there are just two predictors, it is acceptable to only include one in
+the formula; the other will be formed as 1 minus the provided predictor.
+Include additional covariates separated by a vertical bar <code>|</code>.
+These covariates are strongly recommended for reliable ecological inference.
+Covariates are shifted to have mean zero. If <code>scale=TRUE</code> (the default),
+they are also scaled to have unit variance.</p></dd>
+
+
+<dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dd><p>When a <strong>formula</strong> is used, <code>data</code> is a <strong>data frame</strong> containing
+both the predictors and the outcome.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -274,7 +282,7 @@ the helper functions in <code><a href="ei_wgt.html">ei_wgt()</a></code>.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

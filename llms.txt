@@ -1,0 +1,181 @@
+# **seine**: Semiparametric Ecological Inference
+
+Ecological inference (EI) is the statistical problem of learning
+individual-level associations from aggregate-level data. Without certain
+*identifying assumptions* and proper *estimation methods*, researchers
+can easily draw incorrect conclusions from aggregate data, finding
+patterns where none exist, missing important individual-level patterns,
+or even concluding an effect runs in the opposite direction than it
+actually does. This is known as the *ecological fallacy*.
+
+The **seine** package allows researchers to perform modern ecological
+inference quickly, accurately, and transparently.
+
+- **Double/debiased machine learning** allows for controlling for
+  confounding covariates, which increases the plausibility of
+  identifying assumptions. Machine learning can be used to estimate the
+  key regression model and avoid strong parametric assumptions made by
+  existing EI methods.
+- **Sensitivity analysis** and **benchmarking** let researchers
+  understand how violations of their assumptions will affect results.
+- A **tidy interface** makes the package modular and easy to use, and
+  works well with pipe-based workflows.
+- **Minimal dependencies** and efficient estimation routines keep
+  everything **fast** and lightweight.
+
+## Installation
+
+You can install the development version of **seine** with
+
+``` r
+remotes::install_github("CoryMcCartan/seine")
+```
+
+## Example
+
+The package contains county-level data from the 1968 U.S. presidential
+election for southern states, where Hubert Humphrey (Democrat) ran
+against Richard Nixon (Republican) and George Wallace (independent;
+segregationist).
+
+In this data, one might be interested in estimating vote choice by race.
+To do so, **seine** provides both a formula interface and a tidy
+interface through a new
+[`ei_spec()`](https://corymccartan.com/seine/reference/ei_spec.md)
+object. Here, we’ll demonstrate the latter.
+
+``` r
+library(seine)
+data(elec_1968)
+
+spec = ei_spec(
+    elec_1968, 
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_ind_wal, 
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+                   inc_00_03k:inc_25_99k)
+)
+
+m = ei_ridge(spec)
+rr = ei_riesz(spec, penalty = m$penalty)
+
+ei_est(regr = m, riesz = rr, data = spec, conf_level = 0.95)
+#> # A tibble: 9 × 6
+#>   predictor outcome      estimate std.error conf.low conf.high
+#>   <chr>     <chr>           <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 vap_white pres_dem_hum   0.225     0.0241   0.178     0.273 
+#> 2 vap_black pres_dem_hum   0.584     0.0601   0.467     0.702 
+#> 3 vap_other pres_dem_hum   2.92      0.744    1.46      4.38  
+#> 4 vap_white pres_rep_nix   0.435     0.0365   0.363     0.506 
+#> 5 vap_black pres_rep_nix  -0.0242    0.0367  -0.0963    0.0478
+#> 6 vap_other pres_rep_nix  -4.75      0.991   -6.69     -2.80  
+#> 7 vap_white pres_ind_wal   0.339     0.0197   0.300     0.377 
+#> 8 vap_black pres_ind_wal   0.437     0.0436   0.351     0.522 
+#> 9 vap_other pres_ind_wal   2.84      0.840    1.20      4.49
+```
+
+This workflow is explained in more detail on the [Get
+Started](https://corymccartan.com/seine/articles/seine.html) page, along
+with demonstrations of data preprocessing and sensitivity analysis.
+
+## Name
+
+In addition to being an acronym for “semiparametric ecological
+inference,” **seine** (pronounced SAYN) refers to a type of fishing net,
+which is used to catch fish like tuna in aggregate. A net also is
+visually similar to the tomography lines which are commonly used to
+visualize the interaction of the latent data and the accounting identity
+in 2×2 ecological inference.
+
+# Package index
+
+## Ecological inference
+
+Estimate global and local quantities and perform sensitivity analyses
+
+- [`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md)
+  [`as.matrix(`*`<ei_est>`*`)`](https://corymccartan.com/seine/reference/ei_est.md)
+  [`vcov(`*`<ei_est>`*`)`](https://corymccartan.com/seine/reference/ei_est.md)
+  [`nobs(`*`<ei_est>`*`)`](https://corymccartan.com/seine/reference/ei_est.md)
+  : Estimate ecological quantities
+- [`ei_est_local()`](https://corymccartan.com/seine/reference/ei_est_local.md)
+  [`as.array(`*`<ei_est_local>`*`)`](https://corymccartan.com/seine/reference/ei_est_local.md)
+  : Produce local ecological estimates
+- [`ei_sens()`](https://corymccartan.com/seine/reference/ei_sens.md) :
+  Conduct a sensitivity analysis for estimated ecological quantities
+- [`ei_sens_rv()`](https://corymccartan.com/seine/reference/ei_sens_rv.md)
+  : Robustness values for ecological inference
+- [`ei_bench()`](https://corymccartan.com/seine/reference/ei_bench.md) :
+  Benchmark sensitivity parameters from observed covariates
+- [`plot(`*`<ei_sens>`*`)`](https://corymccartan.com/seine/reference/plot.ei_sens.md)
+  : Bias contour plot for ecological inference estimates
+
+## Ecological modeling
+
+Fit regression and weighting models to aggregate data to use in
+inference
+
+- [`ei_ridge()`](https://corymccartan.com/seine/reference/ei_ridge.md) :
+  Fit an ecological inference regression model
+
+- [`ei_riesz()`](https://corymccartan.com/seine/reference/ei_riesz.md) :
+  Estimate Riesz representer for ecological inference
+
+- [`ei_wgt_unif()`](https://corymccartan.com/seine/reference/ei_wgt.md)
+  [`ei_wgt_prop()`](https://corymccartan.com/seine/reference/ei_wgt.md)
+  [`ei_wgt_sqrt()`](https://corymccartan.com/seine/reference/ei_wgt.md)
+  : Estimation weighting models
+
+- [`predict(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  [`fitted(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  [`residuals(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  [`vcov(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  [`summary(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  [`weights(`*`<ei_ridge>`*`)`](https://corymccartan.com/seine/reference/ridge-methods.md)
+  :
+
+  Methods for `ei_ridge` models
+
+- [`weights(`*`<ei_riesz>`*`)`](https://corymccartan.com/seine/reference/weights.ei_riesz.md)
+  : Extract Riesz representer weights
+
+- [`ei_ridge_impl()`](https://corymccartan.com/seine/reference/ei-impl.md)
+  [`ei_riesz_impl()`](https://corymccartan.com/seine/reference/ei-impl.md)
+  :
+
+  Low-level implementations of
+  [`ei_ridge()`](https://corymccartan.com/seine/reference/ei_ridge.md)
+  and
+  [`ei_riesz()`](https://corymccartan.com/seine/reference/ei_riesz.md)
+
+- [`ei_wrap_model()`](https://corymccartan.com/seine/reference/ei_wrap_model.md)
+  :
+
+  Wrap another predictive model for use in `ei_est`
+
+## Preprocessing
+
+Functions to set up EI problems and tidy data
+
+- [`ei_spec()`](https://corymccartan.com/seine/reference/ei_spec.md)
+  [`weights(`*`<ei_spec>`*`)`](https://corymccartan.com/seine/reference/ei_spec.md)
+  : Specify an ecological inference problem
+- [`plot(`*`<ei_spec>`*`)`](https://corymccartan.com/seine/reference/plot.ei_spec.md)
+  : Plot an EI specification
+- [`ei_proportions()`](https://corymccartan.com/seine/reference/ei_proportions.md)
+  : Convert counts to proportions
+
+## Data
+
+- [`elec_1968`](https://corymccartan.com/seine/reference/elec_1968.md) :
+  1968 U.S. presidential election data
+- [`ei_synthetic()`](https://corymccartan.com/seine/reference/ei_synthetic.md)
+  : Generate synthetic ecological data
+
+# Articles
+
+### All vignettes
+
+- [Analyzing aggregate
+  data](https://corymccartan.com/seine/articles/seine.md):
