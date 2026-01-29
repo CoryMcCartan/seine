@@ -12,7 +12,7 @@ ei_ridge(
   ...,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE
@@ -24,7 +24,7 @@ ei_ridge(
   data,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -36,7 +36,7 @@ ei_ridge(
   x,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -50,7 +50,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -64,7 +64,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -121,8 +121,9 @@ ei_ridge(x, ...)
 - sum_one:
 
   If `TRUE`, the outcome variables are constrained to sum to one. Can
-  only apply when `bounds` are enforced and there are more than one
-  outcome variables.
+  only apply when `bounds` are enforced and there is more than one
+  outcome variable. The default `NULL` infers `sum_one = TRUE` when the
+  bounds are `c(0, 1)` the outcome variables sum to 1.
 
 - penalty:
 
@@ -247,11 +248,14 @@ all.equal(
   fitted(ei_ridge(spec, bounds = NULL)),
   fitted(ei_ridge(spec, bounds = 0:1))
 )
+#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
+#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
 #> [1] TRUE
 
 # bounds enforced
 min(fitted(ei_ridge(spec)))
 #> [1] -0.1029559
 min(fitted(ei_ridge(spec, bounds = 0:1)))
-#> [1] -3.377815e-19
+#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
+#> [1] 0.00141721
 ```
