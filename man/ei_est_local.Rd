@@ -35,7 +35,8 @@ a matrix, it will be applied identically to each outcome.}
 local estimates will be truncated. In general, truncation will lead to
 violations of the accounting identity. If \code{bounds = NULL}, they will be
 inferred from the outcome variable: if it is contained within \eqn{[0, 1]},
-for instance, then the bounds will be \code{c(0, 1)}. The default \code{bounds = FALSE} forces unbounded estimates.}
+for instance, then the bounds will be \code{c(0, 1)}. Setting \code{bounds = FALSE}
+forces unbounded estimates.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE} (the default), no confidence intervals are calculated.
