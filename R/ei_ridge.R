@@ -90,6 +90,9 @@
 #'   If `bounds = NULL`, they will be inferred from the outcome variable:
 #'   if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 #'   be `c(0, 1)`. The default `bounds = FALSE` uses an unbounded outcome.
+#' @param sum_one If `TRUE`, the outcome variables are constrained to sum to one.
+#'   Can only apply when `bounds` are enforced and there are more than one
+#'   outcome variables.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param vcov If `TRUE`, calculate and return the covariance matrix of the
 #'    estimated coefficients. Ignored when `bounds` are provided.
@@ -117,15 +120,15 @@
 #' min(fitted(ei_ridge(spec)))
 #' min(fitted(ei_ridge(spec, bounds = 0:1)))
 #' @export
-ei_ridge <- function(x, ..., weights, bounds = FALSE, penalty = NULL, scale = TRUE, vcov = TRUE) {
+ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = FALSE, penalty = NULL, scale = TRUE, vcov = TRUE) {
     UseMethod("ei_ridge")
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, penalty=NULL,
-                             scale=TRUE, vcov=TRUE, ...) {
+ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = FALSE,
+                             penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
     form_combined = rlang::new_formula(forms$outcome, expr(!!forms$predictors + !!forms$covariates))
@@ -137,6 +140,7 @@ ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, penalty=NULL,
         ei_x = attr(form_preds, "term.labels"),
         ei_wgt = check_make_weights(!!enquo(weights), data, arg="weights", required=FALSE),
         bounds = bounds,
+        sum_one = sum_one,
         penalty = penalty,
         scale = scale,
         subclass = "ei_ridge_blueprint"
@@ -150,7 +154,7 @@ ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, penalty=NULL,
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, penalty=NULL,
+ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
                              scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
@@ -167,6 +171,7 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, penalty=NULL,
         ei_x = attr(spec, "ei_x"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         bounds = bounds,
+        sum_one = sum_one,
         penalty = penalty,
         scale = scale,
         subclass = "ei_ridge_blueprint"
@@ -179,7 +184,7 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, penalty=NULL,
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
+ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
                                 scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
@@ -195,6 +200,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
         ei_x = colnames(x),
         ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
         bounds = bounds,
+        sum_one = sum_one,
         penalty = penalty,
         scale = scale,
         subclass = "ei_ridge_blueprint"
@@ -207,9 +213,9 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, penalty=NULL,
+ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
                             scale=TRUE, vcov=TRUE, ...) {
-    ei_ridge.data.frame(x, y, z, weights, penalty, bounds, scale, vcov, ...)
+    ei_ridge.data.frame(x, y, z, weights, penalty, sum_one, bounds, scale, vcov, ...)
 }
 
 
@@ -270,7 +276,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
         bp$penalty = 0
     }
 
-    fit <- ei_ridge_impl(x, y, z, weights, bp$bounds, bp$penalty, vcov)
+    fit <- ei_ridge_impl(x, y, z, weights, bp$bounds, bp$sum_one, bp$penalty, vcov)
 
     new_ei_ridge(
       coef = fit$coef,
@@ -309,7 +315,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
 #' @rdname ei-impl
 #' @export
 ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
-                          bounds=c(-Inf, Inf), penalty=NULL, vcov=TRUE) {
+                          bounds=c(-Inf, Inf), sum_one=FALSE, penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))
@@ -318,6 +324,9 @@ ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
     vcov = isTRUE(vcov)
     enforce = is.finite(bounds)
     fit = if (!any(enforce)) { # unbounded
+        if (isTRUE(sum_one)) {
+            cli_abort("{.fn ei_ridge} cannot enforce sum-to-one constraint when outcome is unbounded.")
+        }
         if (is.null(penalty)) {
             ridge_auto(udv, y, sqrt_w, vcov)
         } else {
@@ -327,7 +336,7 @@ ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
         if (is.null(penalty)) {
             penalty = ridge_auto(udv, y, sqrt_w, FALSE)$penalty
         }
-        ridge_bounds(xz, z, y, weights, bounds, penalty)
+        ridge_bounds(xz, z, y, weights, bounds, sum_one, penalty)
     }
 
     rownames(fit$coef) = colnames(xz)

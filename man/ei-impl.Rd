@@ -11,6 +11,7 @@ ei_ridge_impl(
   z,
   weights = rep(1, nrow(x)),
   bounds = c(-Inf, Inf),
+  sum_one = FALSE,
   penalty = NULL,
   vcov = TRUE
 )
@@ -27,6 +28,10 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 \item{weights}{A vector of estimation weights}
 
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.}
+
+\item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
+Can only apply when \code{bounds} are enforced and there are more than one
+outcome variables.}
 
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be
 specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with

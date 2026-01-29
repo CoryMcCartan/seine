@@ -80,12 +80,18 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
 }
 
 # Ridge regression with bounds on the fitted values _for each group_
+#   and option to enforce sum-to-one on outcomes _within_ each group
 # Sets ups as QP minimizing -d_vec %*% beta + (1/2) * t(beta) %*% Dmat %*% beta
 # see quadprog::solve.QP documentation
-ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
+ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
     n = nrow(xz)
     p = ncol(z)
     n_x = ncol(xz) %/% (1L + p)
+    n_y = ncol(y)
+
+    if (n_y == 1 && isTRUE(sum_one)) {
+        cli_abort("{.fn ridge_bounds} cannot enforce sum-to-one constraint when there is a single outcome variable.")
+    }
 
     dvecs = as.matrix(crossprod(xz, weights * y))
     Dmat = crossprod(xz, weights * xz) + diag(ncol(xz)) * penalty
@@ -116,10 +122,43 @@ ridge_bounds <- function(xz, z, y, weights, bounds, penalty=0) {
         cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
     }
 
-    coefs = matrix(nrow = nrow(dvecs), ncol = ncol(dvecs))
-    for (i in seq_len(ncol(dvecs))) {
-        fit = quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized=TRUE)
-        coefs[, i] = fit$solution
+    if (isFALSE(sum_one)) {
+        coefs = matrix(nrow = nrow(dvecs), ncol = ncol(dvecs))
+        for (i in seq_len(n_y)) {
+            fit = quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized = TRUE)
+            coefs[, i] = fit$solution
+        }
+    } else {
+        R_y = diag(n_y) %x% R
+        # first set is sum-to-one; then copy in
+        Aind_y = matrix(0, nrow = (p + 1) * n_y + 1, ncol = n * n_x + ncol(Aind) * n_y)
+        Amat_y = matrix(0, nrow = (p + 1) * n_y, ncol = n * n_x + ncol(Amat) * n_y)
+        idx_st1 = seq_len(n * n_x)
+        Amat_y[, idx_st1] = matrix(1, n_y, n_x) %x% rbind(int_scale, t(z))
+        Aind_y[1, idx_st1] = n_y * (p + 1)
+        for (i in seq_len(n_y)) {
+            # sum-to-1
+            idx_row = 1 + (i - 1) * (p + 1) + seq_len(p + 1)
+            Aind_y[idx_row, idx_st1] = Aind[-1, idx_st1] + (ncol(xz) * (i - 1))
+
+            # copy in constraints
+            idx = n * n_x + (i - 1) * ncol(Aind) + seq_len(ncol(Aind))
+            Amat_y[seq_len(p + 1), idx] = Amat
+            Aind_y[1 + seq_len(p + 1), idx] = Aind[-1, ] + (ncol(xz) * (i - 1))
+            Aind_y[1, idx] = Aind[1, ]
+        }
+        bvec_y = c(rep(1, n * n_x), rep(1, n_y) %x% bvec)
+
+        fit = quadprog::solve.QP.compact(
+            R_y,
+            c(dvecs),
+            Amat_y,
+            Aind_y,
+            bvec_y,
+            meq = n * n_x,
+            factorized = TRUE
+        )
+        coefs = matrix(fit$solution, nrow = nrow(dvecs), ncol = ncol(dvecs))
     }
 
     fitted = xz %*% coefs
