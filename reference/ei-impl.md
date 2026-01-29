@@ -16,6 +16,7 @@ ei_ridge_impl(
   z,
   weights = rep(1, nrow(x)),
   bounds = c(-Inf, Inf),
+  sum_one = FALSE,
   penalty = NULL,
   vcov = TRUE
 )
@@ -44,6 +45,12 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 - bounds:
 
   A vector `c(min, max)` of bounds for the outcome.
+
+- sum_one:
+
+  If `TRUE`, the outcome variables are constrained to sum to one. Can
+  only apply when `bounds` are enforced and there are more than one
+  outcome variables.
 
 - penalty:
 

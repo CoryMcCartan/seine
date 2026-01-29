@@ -59,6 +59,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">...</span>,</span>
 <span>  <span class="va">weights</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -70,6 +71,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">weights</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -81,6 +83,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">weights</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -94,6 +97,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">z</span>,</span>
 <span>  <span class="va">weights</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -107,6 +111,7 @@ overall and unit-level estimates of conditional means using <code><a href="ei_es
 <span>  <span class="va">z</span>,</span>
 <span>  <span class="va">weights</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -150,6 +155,12 @@ unit totals and the unknown data.</p></dd>
 If <code>bounds = NULL</code>, they will be inferred from the outcome variable:
 if it is contained within \([0, 1]\), for instance, then the bounds will
 be <code>c(0, 1)</code>. The default <code>bounds = FALSE</code> uses an unbounded outcome.</p></dd>
+
+
+<dt id="arg-sum-one">sum_one<a class="anchor" aria-label="anchor" href="#arg-sum-one"></a></dt>
+<dd><p>If <code>TRUE</code>, the outcome variables are constrained to sum to one.
+Can only apply when <code>bounds</code> are enforced and there are more than one
+outcome variables.</p></dd>
 
 
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>

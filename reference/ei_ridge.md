@@ -12,6 +12,7 @@ ei_ridge(
   ...,
   weights,
   bounds = FALSE,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE
@@ -23,6 +24,7 @@ ei_ridge(
   data,
   weights,
   bounds = FALSE,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -34,6 +36,7 @@ ei_ridge(
   x,
   weights,
   bounds = FALSE,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -47,6 +50,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -60,6 +64,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -112,6 +117,12 @@ ei_ridge(x, ...)
   they will be inferred from the outcome variable: if it is contained
   within \\\[0, 1\]\\, for instance, then the bounds will be `c(0, 1)`.
   The default `bounds = FALSE` uses an unbounded outcome.
+
+- sum_one:
+
+  If `TRUE`, the outcome variables are constrained to sum to one. Can
+  only apply when `bounds` are enforced and there are more than one
+  outcome variables.
 
 - penalty:
 
