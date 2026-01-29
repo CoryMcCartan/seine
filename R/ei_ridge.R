@@ -91,8 +91,9 @@
 #'   if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 #'   be `c(0, 1)`. The default `bounds = FALSE` uses an unbounded outcome.
 #' @param sum_one If `TRUE`, the outcome variables are constrained to sum to one.
-#'   Can only apply when `bounds` are enforced and there are more than one
-#'   outcome variables.
+#'   Can only apply when `bounds` are enforced and there is more than one
+#'   outcome variable. The default `NULL` infers `sum_one = TRUE` when the bounds
+#'   are `c(0, 1)` the outcome variables sum to 1.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param vcov If `TRUE`, calculate and return the covariance matrix of the
 #'    estimated coefficients. Ignored when `bounds` are provided.
@@ -120,14 +121,14 @@
 #' min(fitted(ei_ridge(spec)))
 #' min(fitted(ei_ridge(spec, bounds = 0:1)))
 #' @export
-ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = FALSE, penalty = NULL, scale = TRUE, vcov = TRUE) {
+ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = NULL, penalty = NULL, scale = TRUE, vcov = TRUE) {
     UseMethod("ei_ridge")
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = FALSE,
+ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = NULL,
                              penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -154,7 +155,7 @@ ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = FAL
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
+ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
                              scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
@@ -184,7 +185,7 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = FALSE, penalty=
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
+ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
                                 scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
@@ -213,7 +214,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = FALSE,
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one = FALSE, penalty=NULL,
+ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
                             scale=TRUE, vcov=TRUE, ...) {
     ei_ridge.data.frame(x, y, z, weights, penalty, sum_one, bounds, scale, vcov, ...)
 }
@@ -275,6 +276,9 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
     if (ncol(z) == 0) {
         bp$penalty = 0
     }
+    if (is.null(bp$sum_one) && all(bp$bounds == c(0, 1))) {
+        bp$sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
+    }
 
     fit <- ei_ridge_impl(x, y, z, weights, bp$bounds, bp$sum_one, bp$penalty, vcov)
 
@@ -315,7 +319,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
 #' @rdname ei-impl
 #' @export
 ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
-                          bounds=c(-Inf, Inf), sum_one=FALSE, penalty=NULL, vcov=TRUE) {
+                          bounds=c(-Inf, Inf), sum_one=NULL, penalty=NULL, vcov=TRUE) {
     int_scale = if (!is.null(penalty) && penalty == 0) 1 + 1e2*sqrt(penalty) else 1e4
     xz = row_kronecker(x, z, int_scale)
     sqrt_w = sqrt(weights / mean(weights))
@@ -336,6 +340,7 @@ ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
         if (is.null(penalty)) {
             penalty = ridge_auto(udv, y, sqrt_w, FALSE)$penalty
         }
+
         ridge_bounds(xz, z, y, weights, bounds, sum_one, penalty)
     }
 
@@ -415,7 +420,9 @@ print.ei_ridge <- function(x, ...) {
              nrow(x$fitted), " observations")
     bounds = x$blueprint$bounds
     if (any(is.finite(bounds))) {
-        cat_line("With outcome bounded in (", bounds[1], ", ", bounds[2], ")")
+        sumt1 = if (isTRUE(x$blueprint$sum_one)) " and constrained to sum to 1" else ""
+        pl = if (ncol(m$y) > 1) "s" else ""
+        cat_line("With outcome", pl, " bounded in (", bounds[1], ", ", bounds[2], ")", sumt1)
     }
     cat_line("Fit with penalty = ", signif(x$penalty))
 }

@@ -14,7 +14,7 @@ ei_ridge(
   ...,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE
@@ -25,7 +25,7 @@ ei_ridge(
   data,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -36,7 +36,7 @@ ei_ridge(
   x,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -49,7 +49,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -62,7 +62,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = FALSE,
+  sum_one = NULL,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -100,8 +100,9 @@ if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
 
 \item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
-Can only apply when \code{bounds} are enforced and there are more than one
-outcome variables.}
+Can only apply when \code{bounds} are enforced and there is more than one
+outcome variable. The default \code{NULL} infers \code{sum_one = TRUE} when the bounds
+are \code{c(0, 1)} the outcome variables sum to 1.}
 
 \item{penalty}{The ridge penalty (a non-negative scalar). Set to \code{NULL} to
 automatically determine the penalty which minimizes mean-square error,

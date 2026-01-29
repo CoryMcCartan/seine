@@ -122,10 +122,19 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
     }
 
+    fit_err = \(e) {
+        cli_abort(c(
+            "Constrained ridge regression failed with inconsistent constraints.",
+            ">" = "Try setting {.arg sum_one=FALSE} or relaxing the bounds."
+        ), call = NULL)
+    }
     if (isFALSE(sum_one)) {
         coefs = matrix(nrow = nrow(dvecs), ncol = ncol(dvecs))
         for (i in seq_len(n_y)) {
-            fit = quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized = TRUE)
+            fit = tryCatch(
+                quadprog::solve.QP.compact(R, dvecs[, i], Amat, Aind, bvec, factorized = TRUE),
+                error = fit_err
+            )
             coefs[, i] = fit$solution
         }
     } else {
@@ -149,14 +158,17 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         }
         bvec_y = c(rep(1, n * n_x), rep(1, n_y) %x% bvec)
 
-        fit = quadprog::solve.QP.compact(
-            R_y,
-            c(dvecs),
-            Amat_y,
-            Aind_y,
-            bvec_y,
-            meq = n * n_x,
-            factorized = TRUE
+        do_fit = function(eq) {
+            quadprog::solve.QP.compact(R_y, c(dvecs), Amat_y, Aind_y, bvec_y, meq = eq, factorized = TRUE)
+        }
+
+        # relax to inequality constraint if sum-to-one fails
+        fit <- tryCatch(
+            do_fit(n * n_x),
+            error = \(e_outer) {
+                cli_warn("Relaxing sum-to-one constraint to inequality to achieve feasible solution.", call=NULL)
+                tryCatch(do_fit(0), error = fit_err)
+            }
         )
         coefs = matrix(fit$solution, nrow = nrow(dvecs), ncol = ncol(dvecs))
     }
