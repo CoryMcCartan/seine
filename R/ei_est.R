@@ -327,6 +327,12 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
 
     preds = list()
     sds = if (sd) matrix(nrow = n, ncol = n_x^2) else NULL
+    if (sd && is.null(regr$vcov_u)) {
+        cli_abort(c(
+            "Standard errors not available for this {.arg regr} object.",
+            ">"="Call {.fn ei_ridge} with {.arg vcov = TRUE} to enable."
+        ), call=parent.frame())
+    }
     for (group in seq_along(xcols)) {
         use = c(group, n_x + p*(group-1) + seq_len(p))
         preds[[xcols[group]]] = z %*% regr$coef[use, ]

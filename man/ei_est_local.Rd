@@ -9,7 +9,8 @@ ei_est_local(
   regr,
   data,
   r_cov = NULL,
-  bounds = NULL,
+  bounds = regr$blueprint$bounds,
+  sum_one = NULL,
   conf_level = FALSE,
   unimodal = TRUE
 )
@@ -36,7 +37,13 @@ local estimates will be truncated. In general, truncation will lead to
 violations of the accounting identity. If \code{bounds = NULL}, they will be
 inferred from the outcome variable: if it is contained within \eqn{[0, 1]},
 for instance, then the bounds will be \code{c(0, 1)}. Setting \code{bounds = FALSE}
-forces unbounded estimates.}
+forces unbounded estimates. The default uses the \code{bounds} attribute of
+\code{regr}, if available, or infers from the outcome variable otherwise.}
+
+\item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
+Can only apply when \code{bounds} are enforced and there is more than one
+outcome variable. The default \code{NULL} infers \code{sum_one = TRUE} when the bounds
+are \code{c(0, 1)} the outcome variables sum to 1.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE} (the default), no confidence intervals are calculated.

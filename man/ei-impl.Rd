@@ -39,7 +39,8 @@ specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatic
 \code{\link[=ei_ridge_impl]{ei_ridge_impl()}} by providing \code{penalty=NULL}.}
 
 \item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
-estimated coefficients. Ignored when \code{bounds} are provided.}
+estimated coefficients. When \code{bounds} are provided, the covariance matrix
+for the unbounded estimate is returned as a conservative approximation.}
 
 \item{total}{A vector of total observations per unit.}
 }

@@ -96,7 +96,8 @@
 #'   are `c(0, 1)` the outcome variables sum to 1.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param vcov If `TRUE`, calculate and return the covariance matrix of the
-#'    estimated coefficients. Ignored when `bounds` are provided.
+#'    estimated coefficients. When `bounds` are provided, the covariance matrix
+#'    for the unbounded estimate is returned as a conservative approximation.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
@@ -327,21 +328,27 @@ ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
 
     vcov = isTRUE(vcov)
     enforce = is.finite(bounds)
-    fit = if (!any(enforce)) { # unbounded
+    if (!any(enforce)) { # unbounded
         if (isTRUE(sum_one)) {
             cli_abort("{.fn ei_ridge} cannot enforce sum-to-one constraint when outcome is unbounded.")
         }
-        if (is.null(penalty)) {
+        fit = if (is.null(penalty)) {
             ridge_auto(udv, y, sqrt_w, vcov)
         } else {
             ridge_svd(udv, y, sqrt_w, penalty, vcov)
         }
     } else {
+        if (is.null(penalty) || vcov) {
+            unb_fit = ridge_auto(udv, y, sqrt_w, vcov)
+        }
         if (is.null(penalty)) {
-            penalty = ridge_auto(udv, y, sqrt_w, FALSE)$penalty
+            penalty = unb_fit$penalty
         }
 
-        ridge_bounds(xz, z, y, weights, bounds, sum_one, penalty)
+        fit = ridge_bounds(xz, z, y, weights, bounds, sum_one, penalty)
+        if (vcov) {
+            fit$vcov_u = unb_fit$vcov_u
+        }
     }
 
     rownames(fit$coef) = colnames(xz)

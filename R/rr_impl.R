@@ -163,13 +163,23 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         }
 
         # relax to inequality constraint if sum-to-one fails
-        fit <- tryCatch(
-            do_fit(n * n_x),
-            error = \(e_outer) {
-                cli_warn("Relaxing sum-to-one constraint to inequality to achieve feasible solution.", call=NULL)
-                tryCatch(do_fit(0), error = fit_err)
+        eq_constr = n * n_x
+        repeat {
+            fit = tryCatch(do_fit(eq_constr), error = \(e) NULL)
+            if (!is.null(fit)) break
+            if (eq_constr > 0) {
+                eq_constr = max(eq_constr - n, 0) # reduce by one group
+            } else {
+                fit_err()
+                break
             }
-        )
+        }
+        if (eq_constr < n * n_x) {
+            cli_warn(
+                "Relaxing {n * n_x - eq_constr} sum-to-one constraint{?s} to inequality to achieve feasible solution.",
+                call = NULL
+            )
+        }
         coefs = matrix(fit$solution, nrow = nrow(dvecs), ncol = ncol(dvecs))
     }
 
