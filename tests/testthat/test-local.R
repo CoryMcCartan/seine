@@ -5,7 +5,9 @@ test_that("local estimates satisfy constraints", {
 
     m = ei_ridge(spec)
 
-    ests = ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE)
+    suppressWarnings(
+        ests <- ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE)
+    )
     expect_true(all(ests$estimate > -1e-12))
     expect_true(all(ests$estimate < 1 + 1e-12))
     ea = as.array(ests)

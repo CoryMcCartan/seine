@@ -428,7 +428,7 @@ print.ei_ridge <- function(x, ...) {
     bounds = x$blueprint$bounds
     if (any(is.finite(bounds))) {
         sumt1 = if (isTRUE(x$blueprint$sum_one)) " and constrained to sum to 1" else ""
-        pl = if (ncol(m$y) > 1) "s" else ""
+        pl = if (ncol(x$y) > 1) "s" else ""
         cat_line("With outcome", pl, " bounded in (", bounds[1], ", ", bounds[2], ")", sumt1)
     }
     cat_line("Fit with penalty = ", signif(x$penalty))

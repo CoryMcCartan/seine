@@ -92,7 +92,7 @@ test_that("leave-one-out shortcut is correct for Riesz regression", {
     expect_equal(fit_naive$loo, loo_act, tolerance = 0.2)
 })
 
-test_that("ridge constraints work", {
+test_that("ridge bounds work", {
     d = elec_1968
     form = pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~ vap_white  |
         pop_urban + pop_rural + farm + educ_elem + educ_hsch + educ_coll +
@@ -100,13 +100,25 @@ test_that("ridge constraints work", {
 
     m = ei_ridge(form, data=elec_1968)
     m01 = ei_ridge(form, data=elec_1968, bounds=0:1, sum_one=FALSE)
-    m01s = ei_ridge(form, data=elec_1968, bounds=c(0, 1), sum_one=TRUE)
-    m01def = ei_ridge(form, data=elec_1968, bounds=NULL, sum_one=NULL)
 
     expect_true(min(fitted(m)) < 0)
     expect_true(min(fitted(m01)) > -1e-12)
     expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate > 0))
     expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate < 1))
+})
+
+test_that("ridge sum-to-1 constraint work", {
+    skip_on_cran()
+    skip_on_ci()
+
+    d = elec_1968
+    form = pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~ vap_white  |
+        pop_urban + pop_rural + farm + educ_elem + educ_hsch + educ_coll +
+        inc_00_03k + inc_03_08k + inc_08_25k + inc_25_99k + log(pop) + pres_turn
+
+    m = ei_ridge(form, data=elec_1968)
+    m01s = ei_ridge(form, data=elec_1968, bounds=c(0, 1), sum_one=TRUE)
+    m01def = ei_ridge(form, data=elec_1968, bounds=NULL, sum_one=NULL)
 
     expect_true(min(fitted(m01s)) > -1e-12)
     expect_true(all(ei_est(m01s, data=elec_1968, total=pres_total)$estimate > 0))

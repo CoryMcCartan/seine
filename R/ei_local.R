@@ -123,8 +123,8 @@ ei_est_local = function(
             ),
             class = "ei_est_local"
         )
-    }) |>
-        do.call(rbind, args = _)
+    })
+    ests = do.call(rbind, ests)
     attr(ests, "proj_misses") = attr(eta_proj, "misses")
 
     if (!isFALSE(conf_level)) {
