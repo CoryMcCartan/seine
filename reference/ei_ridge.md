@@ -144,7 +144,8 @@ ei_ridge(x, ...)
 - vcov:
 
   If `TRUE`, calculate and return the covariance matrix of the estimated
-  coefficients. Ignored when `bounds` are provided.
+  coefficients. When `bounds` are provided, the covariance matrix for
+  the unbounded estimate is returned as a conservative approximation.
 
 - formula:
 
@@ -248,14 +249,17 @@ all.equal(
   fitted(ei_ridge(spec, bounds = NULL)),
   fitted(ei_ridge(spec, bounds = 0:1))
 )
-#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
-#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
+#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
+#> solution.
+#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
+#> solution.
 #> [1] TRUE
 
 # bounds enforced
 min(fitted(ei_ridge(spec)))
 #> [1] -0.1029559
 min(fitted(ei_ridge(spec, bounds = 0:1)))
-#> Warning: Relaxing sum-to-one constraint to inequality to achieve feasible solution.
-#> [1] 0.00141721
+#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
+#> solution.
+#> [1] 2.744825e-18
 ```

@@ -64,7 +64,8 @@ estimates may be truncated to variable bounds.</p>
 <span>  <span class="va">regr</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  r_cov <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bounds <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bounds <span class="op">=</span> <span class="va">regr</span><span class="op">$</span><span class="va">blueprint</span><span class="op">$</span><span class="va">bounds</span>,</span>
+<span>  sum_one <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  conf_level <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  unimodal <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -103,7 +104,15 @@ local estimates will be truncated. In general, truncation will lead to
 violations of the accounting identity. If <code>bounds = NULL</code>, they will be
 inferred from the outcome variable: if it is contained within \([0, 1]\),
 for instance, then the bounds will be <code>c(0, 1)</code>. Setting <code>bounds = FALSE</code>
-forces unbounded estimates.</p></dd>
+forces unbounded estimates. The default uses the <code>bounds</code> attribute of
+<code>regr</code>, if available, or infers from the outcome variable otherwise.</p></dd>
+
+
+<dt id="arg-sum-one">sum_one<a class="anchor" aria-label="anchor" href="#arg-sum-one"></a></dt>
+<dd><p>If <code>TRUE</code>, the outcome variables are constrained to sum to one.
+Can only apply when <code>bounds</code> are enforced and there is more than one
+outcome variable. The default <code>NULL</code> infers <code>sum_one = TRUE</code> when the bounds
+are <code>c(0, 1)</code> the outcome variables sum to 1.</p></dd>
 
 
 <dt id="arg-conf-level">conf_level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>

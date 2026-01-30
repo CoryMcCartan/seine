@@ -12,7 +12,8 @@ ei_est_local(
   regr,
   data,
   r_cov = NULL,
-  bounds = NULL,
+  bounds = regr$blueprint$bounds,
+  sum_one = NULL,
   conf_level = FALSE,
   unimodal = TRUE
 )
@@ -54,7 +55,16 @@ as.array(x, ...)
   violations of the accounting identity. If `bounds = NULL`, they will
   be inferred from the outcome variable: if it is contained within
   \\\[0, 1\]\\, for instance, then the bounds will be `c(0, 1)`. Setting
-  `bounds = FALSE` forces unbounded estimates.
+  `bounds = FALSE` forces unbounded estimates. The default uses the
+  `bounds` attribute of `regr`, if available, or infers from the outcome
+  variable otherwise.
+
+- sum_one:
+
+  If `TRUE`, the outcome variables are constrained to sum to one. Can
+  only apply when `bounds` are enforced and there is more than one
+  outcome variable. The default `NULL` infers `sum_one = TRUE` when the
+  bounds are `c(0, 1)` the outcome variables sum to 1.
 
 - conf_level:
 

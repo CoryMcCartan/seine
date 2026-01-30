@@ -62,7 +62,8 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 - vcov:
 
   If `TRUE`, calculate and return the covariance matrix of the estimated
-  coefficients. Ignored when `bounds` are provided.
+  coefficients. When `bounds` are provided, the covariance matrix for
+  the unbounded estimate is returned as a conservative approximation.
 
 - total:
 

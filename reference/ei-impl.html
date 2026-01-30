@@ -113,7 +113,8 @@ specified for <code>ei_riesz_impl()</code> but can be automatically estimated wi
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
 <dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
-estimated coefficients. Ignored when <code>bounds</code> are provided.</p></dd>
+estimated coefficients. When <code>bounds</code> are provided, the covariance matrix
+for the unbounded estimate is returned as a conservative approximation.</p></dd>
 
 
 <dt id="arg-total">total<a class="anchor" aria-label="anchor" href="#arg-total"></a></dt>
