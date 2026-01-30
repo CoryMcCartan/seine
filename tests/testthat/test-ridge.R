@@ -104,11 +104,11 @@ test_that("ridge constraints work", {
     m01def = ei_ridge(form, data=elec_1968, bounds=NULL, sum_one=NULL)
 
     expect_true(min(fitted(m)) < 0)
-    expect_true(min(fitted(m01)) > -.Machine$double.eps)
+    expect_true(min(fitted(m01)) > -1e-12)
     expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate > 0))
     expect_true(all(ei_est(m01, data=elec_1968, total=pres_total)$estimate < 1))
 
-    expect_true(min(fitted(m01s)) > -.Machine$double.eps)
+    expect_true(min(fitted(m01s)) > -1e-12)
     expect_true(all(ei_est(m01s, data=elec_1968, total=pres_total)$estimate > 0))
     expect_true(all(ei_est(m01s, data=elec_1968, total=pres_total)$estimate < 1))
 

@@ -62,7 +62,7 @@ test_that("Shrinkage has the expected effect", {
 
     expect_lt(mean(est_p$std.error), mean(est_p0$std.error))
     expect_lt(mean(est_w$std.error), mean(est_w0$std.error))
-    # expect_lt(mean(est_d$std.error), mean(est_d0$std.error))
+    # expect_lt(mean(est_d$std.error), mean(est_d0$std.error)) # not always
 })
 
 test_that("Estimation methods work with no predictors", {

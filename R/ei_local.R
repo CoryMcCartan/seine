@@ -104,16 +104,14 @@ ei_est_local = function(
     }
     r_cov = lapply(r_cov, chol)
 
-    ests = list()
-    ests[[k]] =
-    eta = do.call(cbind, rl$preds)
-    eps = y - rl$yhat
     R_cov = diag(n_x * n_y)
     for (k in seq_len(n_y)) {
         idx = (k - 1) * n_x + seq_len(n_x)
         R_cov[idx, idx] = r_cov[[k]]
     }
-    eta_proj = local_proj(rl$x, eta, eps, R_cov, bounds, sum_one)
+    eta = do.call(cbind, rl$preds)
+    eta_proj = local_proj(rl$x, eta, y - rl$yhat, R_cov, bounds, sum_one)
+
     ests = lapply(seq_len(n_y), function(k) {
         tibble::new_tibble(
             list(

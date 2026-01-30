@@ -3,15 +3,19 @@ library(tidyverse)
 
 data(elec_1968)
 elec_1968 = elec_1968 |>
-    mutate(vap_nonwhite = 1 - vap_white, pres_abs = pmax(1e-6, pres_abs)) |>
+    mutate(
+        vap_nonwhite = 1 - vap_white,
+        pres_abs = pmax(1e-6, pres_abs),
+        z = bases::b_bart(pop_urban, pop_rural, educ_elem, educ_hsch, educ_coll, farm,
+            inc_00_03k, inc_03_08k, inc_08_25k, inc_25_99k)
+    ) |>
     ei_proportions(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs, clamp = 1e-12) |>
     select(-.total)
 
 spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
-               total = pres_total, covariates = c(state, pop_urban, pop_rural, educ_elem:educ_coll, farm, inc_00_03k:inc_25_99k))
+               total = pres_total, covariates = c(state, z))
 
-m = ei_ridge(spec, bounds=0:1, sum_one=F)
-m = ei_ridge(spec, bounds=F)
+m = ei_ridge(spec)#, bounds=0:1, sum_one=T)
 rr = ei_riesz(spec, penalty = m$penalty)
 
 # mean(c(y - rowSums(eta * x)) * weights(rr)[, 2])
@@ -27,15 +31,10 @@ ei_est(m, rr, data = spec) |>
 # vcov = crossprod(shift_cols(eif, est)) / (n - 1)^2
 # cbind(estimate=est, std.error=sqrt(diag(vcov)))
 
-ei_est_local(m, spec, conf_level = 0.95, bounds=c(0, 1), sum_one = F) |>
-# ei_est_local(m, spec, conf_level = 0.95, bounds=F, sum_one = F) |>
-    (\(x) { print(attr(x, "proj_misses")); x })() |>
-    # dplyr::filter(estimate < -1e-6 | estimate > 1)
-    # print()
-    summarize(err = sum(estimate) - 1, .by = c(.row, predictor)) |>
-    # arrange(-err)
-    pull() |>
-    hist()
+ei_est_local(m, spec, conf_level = 0.95, bounds=c(0, 1), sum_one = T) |>
+    ggplot(aes(estimate)) +
+    facet_grid(outcome ~ predictor) +
+    geom_histogram(bins=20)
 
 k = 1
 n = nrow(spec)
