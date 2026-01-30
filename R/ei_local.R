@@ -220,7 +220,7 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
         repeat {
             ans = tryCatch(constr_pt(r_cov, b0[i, ], tol), error = \(e) NULL)
             if (!is.null(ans)) break
-            if (tol > 0.005) {
+            if (tol > 0.0005) {
                 misses <<- c(misses, i)
                 ans = rep(eps[i, ], n_x)
                 break
