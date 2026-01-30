@@ -5,21 +5,36 @@
 #' each set of local estimates satisfies the accounting identity. Local
 #' estimates may be truncated to variable bounds.
 #'
-#' Local estimates are produced independently for each outcome variable.
-#' Truncation to bounds, if used, will in general lead to estimates that do
-#' not satisfy the accounting identity.
+#' Local estimates are produced jointly across outcome variables. When bounds
+#' are applied, unless `sum_one = TRUE`, the estimates for each observation may
+#' not satisfy logical constraints, including the accounting identity.
+#'
+#' Projections are done obliquely in accordance with `r_cov` via quadratic
+#' programming. Occasionally, the quadratic program may be infeasible due to
+#' the specific data, features of `r_cov`, or numerical errors. Various
+#' relaxations of the accounting identity and `r_cov` are attempted in these cases;
+#' indices where relaxations of `r_cov` were used are stored in the `proj_relax`
+#' attribute of the output, and indices of infeasible projections are stored in
+#' the `proj_misses` attribute.
 #'
 #' @param regr A fitted regression model, from [ei_ridge()], or another kind
 #'    of regression model wrapped with [ei_wrap_model()].
 #' @param data The data frame, matrix, or [ei_spec] object that was used to fit
 #'   the regression.
+#' @param total <[`tidy-select`][tidyselect::select_helpers]> A variable
+#'   containing the total number of observations in each aggregate unit. For
+#'   example, the column containing the total number of voters. Required if
+#'   `data` is not an [ei_spec()] object.
 #' @param r_cov A covariance matrix of the residuals to use in projecting the
-#'   local estimates onto the accounting constraint, or a list of matrices, one
-#'   for each outcome variable. Defaults to the identity matrix scaled by the
-#'   residual variance of `regr`, corresponding to orthogonal projection. Set
-#'   `r_cov=1` to use a degenerate covariance matrix corresponding to a (local)
-#'   neighborhood model. When there are multiple outcome variables and `r_cov` is
-#'   a matrix, it will be applied identically to each outcome.
+#'   local estimates onto the accounting constraint, such as one estimated with
+#'   [ei_resid_cov()]. Defaults to the identity matrix scaled by the residual
+#'   variance of `regr`, corresponding to orthogonal projection.
+#'   Set `r_cov=1` to use a degenerate covariance matrix corresponding to a
+#'   (local) neighborhood model. When there are multiple outcome variables and
+#'   r_cov` is a matrix with entries for each predictor, it will be applied
+#'   identically to each outcome. Alternatively, a matrix with entries for each
+#'   predictor-outcome combination may be provided, with entries in the order
+#'   (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
 #' @param bounds A vector `c(min, max)` of bounds for the outcome, to which the
 #'   local estimates will be truncated. In general, truncation will lead to
 #'   violations of the accounting identity. If `bounds = NULL`, they will be
@@ -37,8 +52,10 @@
 #'   width of confidence intervals by a factor of 4/9.
 #'
 #' @returns A data frame with estimates. The `.row` column in the output
-#'   corresponds to the observation index in the input. It has class
-#'   `ei_est_local`, supporting several methods.
+#'   corresponds to the observation index in the input. The `wt` column contains
+#'   the product of the predictor variable and total for each observation.
+#'   Taking a weighted average of the estimate against this column will produce
+#'   a global estimate. It has class `ei_est_local`, supporting several methods.
 #'
 #' @examples
 #' data(elec_1968)
@@ -49,10 +66,16 @@
 #' m = ei_ridge(spec)
 #'
 #' ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+#'
+#' r_cov = ei_resid_cov(m, spec)
+#' e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+#' e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE)
+#' e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE)
 #' @export
 ei_est_local = function(
     regr,
     data,
+    total,
     r_cov = NULL,
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
@@ -86,29 +109,27 @@ ei_est_local = function(
         sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
     }
 
-    # Process r_cov; TODO: heteroskedastic model
-    if (is.null(r_cov)) {
-        r_cov = lapply(regr$sigma2, function(s2) s2 * diag(n_x))
-    } else if (length(r_cov) == 1 && r_cov == 1) {
-        r_cov = lapply(regr$sigma2, function(s2) s2 * (1 + diag(n_x) * 1e-8))
-    }
-    if (!is.list(r_cov)) {
-        r_cov = lapply(seq_len(n_y), function(i) r_cov)
-    }
-    for (r in r_cov) {
-        if (!is.matrix(r) || nrow(r) != ncol(r) || nrow(r) != n_x) {
-            cli_abort("Invalid {.arg r_cov} found.")
+    if (missing(total)) {
+        if (inherits(data, "ei_spec")) {
+            total = attr(data, "ei_n")
+        } else {
+            cli_abort("{.arg total} is required when {.arg data} is not an {.cls ei_spec} object.")
         }
+    } else {
+        total = eval_tidy(enquo(total), data)
     }
-    r_cov = lapply(r_cov, chol)
 
-    R_cov = diag(n_x * n_y)
-    for (k in seq_len(n_y)) {
-        idx = (k - 1) * n_x + seq_len(n_x)
-        R_cov[idx, idx] = r_cov[[k]]
+    r_cov = check_proc_r_cov(r_cov, regr$sigma2, n_x)
+
+    eta = matrix(nrow = n, ncol = n_x * n_y)
+    nms = character(n_x * n_y)
+    for (k in seq_len(n_x)) {
+        idx = k + seq(0, by = n_x, length.out = n_y)
+        eta[, idx] = rl$preds[[k]]
+        nms[idx] = paste0(colnames(rl$x)[k], ":", colnames(y))
     }
-    eta = do.call(cbind, rl$preds)
-    eta_proj = local_proj(rl$x, eta, y - rl$yhat, R_cov, bounds, sum_one)
+    colnames(eta) = nms # helps debug
+    eta_proj = local_proj(rl$x, eta, y - rl$yhat, r_cov, bounds, sum_one)
 
     ests = lapply(seq_len(n_y), function(k) {
         tibble::new_tibble(
@@ -116,7 +137,8 @@ ei_est_local = function(
                 .row = rep(seq_len(n), n_x),
                 predictor = rep(colnames(rl$x), each = n),
                 outcome = rep(colnames(y)[k], n * n_x),
-                estimate = c(eta_proj[, k + seq(0, by=n_y, length.out=n_x)]),
+                wt = c(rl$x * total),
+                estimate = c(eta_proj[, (k - 1) * n_x + seq_len(n_x)]),
                 std.error = NA #sqrt(c(proj[[2]]))
             ),
             class = "ei_est_local"
@@ -124,6 +146,7 @@ ei_est_local = function(
     })
     ests = do.call(rbind, ests)
     attr(ests, "proj_misses") = attr(eta_proj, "misses")
+    attr(ests, "proj_relax") = attr(eta_proj, "relax")
 
     if (!isFALSE(conf_level)) {
         fac = if (isTRUE(unimodal)) 4 / 9 else 1
@@ -155,6 +178,92 @@ as.array.ei_est_local = function(x, ...) {
     array(x$estimate, dim=c(n, n_x, n_y), dimnames=list(NULL, nm_x, nm_y))
 }
 
+#' Estimate the residual covariance of the local estimands
+#'
+#' Under a slightly stronger coarsening at random assumption (applying to
+#' second moments), and an assumption of homoskedasticity, this function
+#' estimates the covariance matrix of the local estimands
+#' \eqn{\beta_{gj}=\mathbb{E}[Y | X_j=1, Z=z_g, G=g]} around their local mean.
+#'
+#' @param regr A fitted regression model, from [ei_ridge()], or another kind
+#'    of regression model wrapped with [ei_wrap_model()].
+#' @param data The data frame, matrix, or [ei_spec] object that was used to fit
+#'   the regression.
+#'
+#' @returns A covariance matrix. The variables are ordered by predictor within
+#'   outcome, e.g. (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
+#'
+#' @export
+ei_resid_cov <- function(regr, data) {
+    if (!inherits(regr, "ei_ridge")) {
+        cli_abort("{.fun ei_resid_cov} only supports regressions fit with {.fn ei_ridge}.")
+    }
+    y = regr$y
+    n = nrow(y)
+    n_y = ncol(y)
+
+    xcols = regr$blueprint$ei_x
+    idx_x = match(xcols, colnames(data))
+    x = as.matrix(pull_x(data, idx_x))
+    n_x = length(xcols)
+
+    idx_tri = c(lower.tri(diag(n_y), diag = TRUE))
+    yr = row_kronecker(resid(regr), resid(regr), 0)[, idx_tri]
+    udv = svd(cbind(row_kronecker(x, x, 0)))
+
+    fit = ridge_auto(udv, yr, rep(1, n), vcov = FALSE)
+    pred_sigma = function(j, k) {
+        x_plug = numeric(n_x)
+        x_plug[c(j, k)] = 1
+        sigma = matrix(0, n_y, n_y)
+        pred = 0.5 * (x_plug %x% x_plug) %*% fit$coef
+        sigma[lower.tri(sigma, diag = TRUE)] = pred
+        sigma[upper.tri(sigma)] = t(sigma)[upper.tri(sigma)]
+        sigma
+    }
+
+    r_cov0 = matrix(0, n_x * n_y, n_x * n_y)
+    for (j in seq_len(n_x)) {
+        for (k in seq_len(j)) {
+            off = (seq_len(n_y) - 1) * n_x
+            pred_part = 2 * (pred_sigma(j, k) - 0.25 * pred_sigma(j, j) - 0.25 * pred_sigma(k, k))
+            r_cov0[j + off, k + off] = pred_part
+            r_cov0[k + off, j + off] = pred_part
+        }
+    }
+    eig = eigen(r_cov0)
+    r_cov = eig$vectors %*% diag(pmax(eig$values, 1e-8)) %*% t(eig$vectors)
+
+    cov_nm = c(outer(colnames(x), colnames(y), paste, sep=":"))
+    colnames(r_cov) <- rownames(r_cov) <- cov_nm
+
+    r_cov
+}
+
+# Process r_cov
+check_proc_r_cov <- function(r_cov, sigma2, n_x) {
+    n_y = length(sigma2)
+    if (is.matrix(r_cov)) {
+        if (all(dim(r_cov) == n_x * n_y)) {
+            # ok
+        } else if (all(dim(r_cov) == n_x)) {
+            r_cov = diag(n_y) %x% r_cov
+        } else {
+            cli_abort(c(
+                "Invalid {.arg r_cov} matrix dimensions.",
+                ">" = "Expected either {n_x}x{n_x} or {n_x * n_y}x{n_x * n_y}."
+            ), call = parent.frame())
+        }
+    } else if (is.null(r_cov)) {
+        r_cov = diag(sigma2) %x% diag(n_x)
+    } else if (length(r_cov) == 1 && r_cov == 1) {
+        r_cov = diag(sigma2) %x% (1 + diag(n_x) * 1e-8)
+    } else {
+        cli_abort("Invalid {.arg r_cov} format. Consult documentation.", call = parent.frame())
+    }
+    chol(r_cov)
+}
+
 # Solve QP to project estimates onto tomography plane and into bounds
 # Not the fastest possible implementation (pure C++ would be better), but fast enough
 local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
@@ -168,11 +277,12 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     r_cov = r_cov / sqrt(norm(crossprod(r_cov), "2"))
 
     # parameters are the displacement in each estimate
-    # (x1y1, x1y2, x1y3, x2y1, x2y2, x2y3, ...)
+    # (x1y1, x2y1, x3y1, x1y2, x2y2, x3y2, ...)
     # minimize overall displacement st x-weighted displacement = residual
     # and (optionally) bounds and sum-to-one constraints are satisfied
     zeros = rep(0, n_x * n_y)
     Amat = matrix(0, nrow = n_x * n_y, ncol = n_y * 2) # i-specific, filled later
+    rownames(Amat) = colnames(eta) # helps debug
     b0 = cbind(eps, -eps)
     if (sum_one) {
         if (n_y == 1 || all(bounds == c(-Inf, Inf))) {
@@ -181,7 +291,7 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
                 call = parent.frame()
             )
         }
-        rs_mat = diag(n_x) %x% rep(1, n_y)
+        rs_mat =  rep(1, n_y) %x% diag(n_x)
         Amat = cbind(rs_mat, Amat)
         b0 = cbind(1 - eta %*% rs_mat, b0)
     }
@@ -210,14 +320,24 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     }
 
     misses = integer(0)
+    relaxations = 0
+    r_cov_relax = diag(diag(r_cov) + 1e-3)
     for (i in seq_len(n)) {
-        Amat[, idx_eps] = x[i, ] %x% patt_eps
+        Amat[, idx_eps] = patt_eps %x% x[i, ]
         tol = 1e-12
+        relax_D = FALSE
         repeat {
-            ans = tryCatch(constr_pt(r_cov, b0[i, ], tol), error = \(e) NULL)
+            Dmat = if (!relax_D) r_cov else r_cov_relax
+            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = \(e) NULL)
             if (!is.null(ans)) break
             if (tol > 0.0005) {
-                misses <<- c(misses, i)
+                if (!relax_D) {
+                    relaxations = relaxations + 1
+                    relax_D = TRUE
+                    tol = 1e-12
+                    next
+                }
+                misses <- c(misses, i)
                 ans = rep(eps[i, ], n_x)
                 break
             }
@@ -227,6 +347,13 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     }
 
     out = eta + eta_diff
+    if (!is.infinite(bounds[1])) {
+        out[out < bounds[1]] = bounds[1]
+    }
+    if (!is.infinite(bounds[2])) {
+        out[out > bounds[2]] = bounds[2]
+    }
+    attr(out, "relax") = relaxations
     attr(out, "misses") = misses
     out
 }

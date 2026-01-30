@@ -8,6 +8,7 @@
 ei_est_local(
   regr,
   data,
+  total,
   r_cov = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
@@ -24,13 +25,21 @@ of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.}
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression.}
 
+\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+containing the total number of observations in each aggregate unit. For
+example, the column containing the total number of voters. Required if
+\code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object.}
+
 \item{r_cov}{A covariance matrix of the residuals to use in projecting the
-local estimates onto the accounting constraint, or a list of matrices, one
-for each outcome variable. Defaults to the identity matrix scaled by the
-residual variance of \code{regr}, corresponding to orthogonal projection. Set
-\code{r_cov=1} to use a degenerate covariance matrix corresponding to a (local)
-neighborhood model. When there are multiple outcome variables and \code{r_cov} is
-a matrix, it will be applied identically to each outcome.}
+local estimates onto the accounting constraint, such as one estimated with
+\code{\link[=ei_resid_cov]{ei_resid_cov()}}. Defaults to the identity matrix scaled by the residual
+variance of \code{regr}, corresponding to orthogonal projection.
+Set \code{r_cov=1} to use a degenerate covariance matrix corresponding to a
+(local) neighborhood model. When there are multiple outcome variables and
+r_cov` is a matrix with entries for each predictor, it will be applied
+identically to each outcome. Alternatively, a matrix with entries for each
+predictor-outcome combination may be provided, with entries in the order
+(Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).}
 
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, to which the
 local estimates will be truncated. In general, truncation will lead to
@@ -60,8 +69,10 @@ width of confidence intervals by a factor of 4/9.}
 }
 \value{
 A data frame with estimates. The \code{.row} column in the output
-corresponds to the observation index in the input. It has class
-\code{ei_est_local}, supporting several methods.
+corresponds to the observation index in the input. The \code{n} column contains
+the product of the predictor variable and total for each observation.
+Taking a weighted average of the estimate against this column will produce
+a global estimate. It has class \code{ei_est_local}, supporting several methods.
 }
 \description{
 Projects predictions from a fitted regression model onto the accounting
@@ -70,9 +81,17 @@ each set of local estimates satisfies the accounting identity. Local
 estimates may be truncated to variable bounds.
 }
 \details{
-Local estimates are produced independently for each outcome variable.
-Truncation to bounds, if used, will in general lead to estimates that do
-not satisfy the accounting identity.
+Local estimates are produced jointly across outcome variables. When bounds
+are applied, unless \code{sum_one = TRUE}, the estimates for each observation may
+not satisfy logical constraints, including the accounting identity.
+
+Projections are done obliquely in accordance with \code{r_cov} via quadratic
+programming. Occasionally, the quadratic program may be infeasible due to
+the specific data, features of \code{r_cov}, or numerical errors. Various
+relaxations of the accounting identity and \code{r_cov} are attempted in these cases;
+indices where relaxations of \code{r_cov} were used are stored in the \code{proj_relax}
+attribute of the output, and indices of infeasible projections are stored in
+the \code{proj_misses} attribute.
 }
 \section{Methods (by generic)}{
 \itemize{
@@ -89,4 +108,9 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 m = ei_ridge(spec)
 
 ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+
+r_cov = ei_resid_cov(m, spec)
+e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE)
+e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE)
 }
