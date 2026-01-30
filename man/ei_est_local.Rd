@@ -81,7 +81,6 @@ not satisfy the accounting identity.
 
 }}
 \examples{
-\dontrun{
 data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
@@ -89,7 +88,5 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 
 m = ei_ridge(spec)
 
-ei_est_local(m, spec, conf_level = 0.95)
-suppressWarnings(ei_est_local(m, spec, bounds=c(0.01, 0.2)))
-}
+ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
 }
