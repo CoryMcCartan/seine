@@ -101,11 +101,6 @@ ei_est_local = function(
     n = nrow(y)
     n_y = ncol(y)
 
-    cli_warn(
-        "Local confidence intervals do not yet incorporate prediction uncertainty.",
-        .frequency = "regularly",
-        .frequency_id = "ei_est_local_temp"
-    )
     if (inherits(regr, "ei_wrapped") && isTRUE(regr_var) && !isFALSE(conf_level)) {
         cli_warn(
             "Local confidence intervals with wrapped model objects
