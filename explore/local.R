@@ -26,12 +26,12 @@ ei_est(m, rr, data = spec) |>
     summarize(err = sum(estimate) - 1, .by = predictor)
 
 
-r_cov = ei_resid_cov(m, spec)
+b_cov = ei_local_cov(m, spec)
 cov_x = cov2cor(c(20, 1, 2) %o% c(20, 1, 2) + diag(3)*1e-2)
 cov_y = cov(m$y) + diag(4)*1e-4
-r_cov2 = cov_y %x% cov_x
+b_cov2 = cov_y %x% cov_x
 
-ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = TRUE) |>
+ei_est_local(m, spec, b_cov = b_cov2, bounds=c(0, 1), sum_one = TRUE) |>
     # summarize(est = weighted.mean(estimate, wt), .by = c(predictor, outcome)) |>
     # arrange(predictor)
     ggplot(aes(estimate)) +
@@ -39,12 +39,12 @@ ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = TRUE) |>
     geom_histogram(bins=20)
 
 
-ei_est_local(m, spec, r_cov = r_cov2, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
+ei_est_local(m, spec, b_cov = b_cov2, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
     dplyr::filter(.row == 592) |>
     ggplot(aes(estimate, paste0(outcome, " | ", predictor))) +
     geom_pointrange(aes(xmin = conf.low, xmax = conf.high))
 
-ei_est_local(m, spec, r_cov = r_cov2, contrast = list(outcome=c(1, -1, 0, 0)), bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
+ei_est_local(m, spec, b_cov = b_cov2, contrast = list(outcome=c(1, -1, 0, 0)), bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
     dplyr::filter(.row == 592) |>
         print() |>
     ggplot(aes(estimate, predictor)) +
@@ -52,7 +52,7 @@ ei_est_local(m, spec, r_cov = r_cov2, contrast = list(outcome=c(1, -1, 0, 0)), b
 
 
 H = diag(n_y) %x% local_basis(x[1, ])
-R = chol(r_cov)
+R = chol(b_cov)
 
 eig = eigen(oblique_proj(H, R))
 ev = ifelse(eig$values > 1e-8, 1/eig$values, 0)

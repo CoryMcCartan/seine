@@ -9,11 +9,11 @@
 #' are applied, unless `sum_one = TRUE`, the estimates for each observation may
 #' not satisfy logical constraints, including the accounting identity.
 #'
-#' Projections are done obliquely in accordance with `r_cov` via quadratic
+#' Projections are done obliquely in accordance with `b_cov` via quadratic
 #' programming. Occasionally, the quadratic program may be infeasible due to
-#' the specific data, features of `r_cov`, or numerical errors. Various
-#' relaxations of the accounting identity and `r_cov` are attempted in these cases;
-#' indices where relaxations of `r_cov` were used are stored in the `proj_relax`
+#' the specific data, features of `b_cov`, or numerical errors. Various
+#' relaxations of the accounting identity and `b_cov` are attempted in these cases;
+#' indices where relaxations of `b_cov` were used are stored in the `proj_relax`
 #' attribute of the output, and indices of infeasible projections are stored in
 #' the `proj_misses` attribute.
 #'
@@ -25,13 +25,13 @@
 #'   containing the total number of observations in each aggregate unit. For
 #'   example, the column containing the total number of voters. Required if
 #'   `data` is not an [ei_spec()] object.
-#' @param r_cov A covariance matrix of the residuals to use in projecting the
+#' @param b_cov A covariance matrix to use in projecting the
 #'   local estimates onto the accounting constraint, such as one estimated with
-#'   [ei_resid_cov()]. Defaults to the identity matrix scaled by the residual
+#'   [ei_local_cov()]. Defaults to the identity matrix scaled by the residual
 #'   variance of `regr`, corresponding to orthogonal projection.
-#'   Set `r_cov=1` to use a degenerate covariance matrix corresponding to a
+#'   Set `b_cov=1` to use a degenerate covariance matrix corresponding to a
 #'   (local) neighborhood model. When there are multiple outcome variables and
-#'   r_cov` is a matrix with entries for each predictor, it will be applied
+#'   `b_cov` is a matrix with entries for each predictor, it will be applied
 #'   identically to each outcome. Alternatively, a matrix with entries for each
 #'   predictor-outcome combination may be provided, with entries in the order
 #'   (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
@@ -74,10 +74,10 @@
 #'
 #' ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 #'
-#' r_cov = ei_resid_cov(m, spec)
+#' b_cov = ei_local_cov(m, spec)
 #' e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-#' e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-#' e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#' e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#' e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 #' # average interval width
 #' c(
 #'     e_orth = mean(e_orth$conf.high - e_orth$conf.low),
@@ -89,7 +89,7 @@ ei_est_local = function(
     regr,
     data,
     total,
-    r_cov = NULL,
+    b_cov = NULL,
     contrast = NULL,
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
@@ -129,7 +129,7 @@ ei_est_local = function(
         total = eval_tidy(enquo(total), data)
     }
 
-    r_cov = check_proc_r_cov(r_cov, regr$sigma2, n_x)
+    b_cov = check_proc_b_cov(b_cov, regr$sigma2, n_x)
 
     contr = check_contrast(contrast, colnames(rl$x), colnames(y))
     x_nm = contr$x_nm
@@ -140,13 +140,13 @@ ei_est_local = function(
         idx = k + seq(0, by = n_x, length.out = n_y)
         eta[, idx] = rl$preds[[k]]
     }
-    eta_proj = local_proj(rl$x, eta, y - rl$yhat, r_cov, bounds, sum_one)
+    eta_proj = local_proj(rl$x, eta, y - rl$yhat, b_cov, bounds, sum_one)
     if (!is.null(contrast)) {
         eta_proj = eta_proj %*% contr$m
     }
 
     sds = if (!isFALSE(conf_level)) {
-        local_sds(rl$x, r_cov, rl$vcov, contr$m, !is.null(contrast))
+        local_sds(rl$x, b_cov, rl$vcov, contr$m, !is.null(contrast))
     } else {
         NULL
     }
@@ -228,9 +228,9 @@ as.array.ei_est_local = function(x, ...) {
 #' @inherit ei_est references
 #'
 #' @export
-ei_resid_cov <- function(regr, data) {
+ei_local_cov <- function(regr, data) {
     if (!inherits(regr, "ei_ridge")) {
-        cli_abort("{.fun ei_resid_cov} only supports regressions fit with {.fn ei_ridge}.")
+        cli_abort("{.fun ei_local_cov} only supports regressions fit with {.fn ei_ridge}.")
     }
     y = regr$y
     n = nrow(y)
@@ -256,52 +256,52 @@ ei_resid_cov <- function(regr, data) {
         sigma
     }
 
-    r_cov0 = matrix(0, n_x * n_y, n_x * n_y)
+    b_cov0 = matrix(0, n_x * n_y, n_x * n_y)
     for (j in seq_len(n_x)) {
         for (k in seq_len(j)) {
             off = (seq_len(n_y) - 1) * n_x
             pred_part = 2 * (pred_sigma(j, k) - 0.25 * pred_sigma(j, j) - 0.25 * pred_sigma(k, k))
-            r_cov0[j + off, k + off] = pred_part
-            r_cov0[k + off, j + off] = pred_part
+            b_cov0[j + off, k + off] = pred_part
+            b_cov0[k + off, j + off] = pred_part
         }
     }
-    eig = eigen(r_cov0)
-    r_cov = eig$vectors %*% diag(pmax(eig$values, 1e-8)) %*% t(eig$vectors)
+    eig = eigen(b_cov0)
+    b_cov = eig$vectors %*% diag(pmax(eig$values, 1e-8)) %*% t(eig$vectors)
 
     cov_nm = c(outer(colnames(x), colnames(y), paste, sep=":"))
-    colnames(r_cov) <- rownames(r_cov) <- cov_nm
+    colnames(b_cov) <- rownames(b_cov) <- cov_nm
 
-    r_cov
+    b_cov
 }
 
-# Process r_cov
-check_proc_r_cov <- function(r_cov, sigma2, n_x) {
+# Process b_cov
+check_proc_b_cov <- function(b_cov, sigma2, n_x) {
     n_y = length(sigma2)
-    if (is.matrix(r_cov)) {
-        if (all(dim(r_cov) == n_x * n_y)) {
+    if (is.matrix(b_cov)) {
+        if (all(dim(b_cov) == n_x * n_y)) {
             # ok
-        } else if (all(dim(r_cov) == n_x)) {
-            r_cov = diag(n_y) %x% r_cov
+        } else if (all(dim(b_cov) == n_x)) {
+            b_cov = diag(n_y) %x% b_cov
         } else {
             cli_abort(c(
-                "Invalid {.arg r_cov} matrix dimensions.",
+                "Invalid {.arg b_cov} matrix dimensions.",
                 ">" = "Expected either {n_x}x{n_x} or {n_x * n_y}x{n_x * n_y}."
             ), call = parent.frame())
         }
-    } else if (is.null(r_cov)) {
-        r_cov = diag(sigma2) %x% diag(n_x)
-    } else if (length(r_cov) == 1 && r_cov == 1) {
-        r_cov = diag(sigma2) %x% (1 + diag(n_x) * 1e-8)
+    } else if (is.null(b_cov)) {
+        b_cov = diag(sigma2) %x% diag(n_x)
+    } else if (length(b_cov) == 1 && b_cov == 1) {
+        b_cov = diag(sigma2) %x% (1 + diag(n_x) * 1e-8)
     } else {
-        cli_abort("Invalid {.arg r_cov} format. Consult documentation.", call = parent.frame())
+        cli_abort("Invalid {.arg b_cov} format. Consult documentation.", call = parent.frame())
     }
-    chol(r_cov)
+    chol(b_cov)
 }
 
 # Solve QP to project estimates onto tomography plane and into bounds
 # Not the fastest possible implementation (pure C++ would be better), but fast enough
-# r_cov here is Cholesky factor
-local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
+# b_cov here is Cholesky factor
+local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
     n = nrow(eta)
     n_x = ncol(x)
     n_y = ncol(eps)
@@ -309,7 +309,7 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     eta_diff = matrix(nrow = n, ncol = n_x * n_y)
 
     # avoid overflow
-    r_cov = r_cov / sqrt(norm(crossprod(r_cov), "2"))
+    b_cov = b_cov / sqrt(norm(crossprod(b_cov), "2"))
 
     # parameters are the displacement in each estimate
     # (x1y1, x2y1, x3y1, x1y2, x2y2, x3y2, ...)
@@ -356,13 +356,13 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
 
     misses = integer(0)
     relaxations = 0
-    r_cov_relax = diag(diag(r_cov) + 1e-3)
+    b_cov_relax = diag(diag(b_cov) + 1e-3)
     for (i in seq_len(n)) {
         Amat[, idx_eps] = patt_eps %x% x[i, ]
         tol = 1e-12
         relax_D = FALSE
         repeat {
-            Dmat = if (!relax_D) r_cov else r_cov_relax
+            Dmat = if (!relax_D) b_cov else b_cov_relax
             ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = \(e) NULL)
             if (!is.null(ans)) break
             if (tol > 0.0005) {
@@ -393,18 +393,18 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     out
 }
 
-# r_cov here is Cholesky factor
-local_sds = function(x, r_cov, regr_cov, contr_m, is_contr = FALSE) {
+# b_cov here is Cholesky factor
+local_sds = function(x, b_cov, regb_cov, contr_m, is_contr = FALSE) {
     n = nrow(x)
     n_x = ncol(x)
-    n_y = nrow(r_cov) / n_x
+    n_y = nrow(b_cov) / n_x
     sds = matrix(nrow = n, ncol = ncol(contr_m))
     for (i in seq_len(n)) {
         H = diag(n_y) %x% local_basis(x[i, ])
-        R_i = if (!is.null(regr_cov)) {
-            chol(crossprod(r_cov) + (diag(n_y) %x% matrix(regr_cov[i, ], n_x, n_x)))
+        R_i = if (!is.null(regb_cov)) {
+            chol(crossprod(b_cov) + (diag(n_y) %x% matrix(regb_cov[i, ], n_x, n_x)))
         } else {
-            r_cov
+            b_cov
         }
         Pi_Sigma = oblique_proj(H, R_i)
 
@@ -421,8 +421,8 @@ local_basis = function(x) {
     qr.Q(qr(cbind(x, diag(length(x)))))[, -1, drop=FALSE]
 }
 
-# project onto plane spanned by H along metric defined by R = chol(r_cov)
-# returns this projection matrix multiplied by r_cov, which is symmetric
+# project onto plane spanned by H along metric defined by R = chol(b_cov)
+# returns this projection matrix multiplied by b_cov, which is symmetric
 oblique_proj = function(H, R) {
     H_tilde = backsolve(R, H, transpose = TRUE)
     tcrossprod(H %*% solve(qr.R(qr(H_tilde))))

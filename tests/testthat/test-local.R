@@ -23,8 +23,8 @@ test_that("Local oblique projection is calculated correctly", {
     n_y = 2
     n_x = 3
     H = diag(n_y) %x% local_basis(c(0.0, 0.3, 0.7))
-    r_cov = (diag(n_y)*1.2 - 0.2) %x% (diag(n_x)*0.5 + 0.5)
-    R = chol(r_cov)
+    b_cov = (diag(n_y)*1.2 - 0.2) %x% (diag(n_x)*0.5 + 0.5)
+    R = chol(b_cov)
 
     Pi = oblique_proj(H, R) %*% chol2inv(R) # get back to proj matrix Pi for which we have tests
     expect_equal(max(abs(Pi %*% Pi - Pi)), 0) # test idempotency

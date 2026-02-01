@@ -55,13 +55,6 @@ extern "C" SEXP _seine_r_proj_mvn(SEXP eta, SEXP l, SEXP x, SEXP eps) {
     return cpp11::as_sexp(r_proj_mvn(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(l), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
   END_CPP11
 }
-// R_interface.cpp
-list r_proj_local(const doubles_matrix<>& eta, const doubles_matrix<>& e_cov, const doubles_matrix<>& r_cov, const doubles_matrix<>& x, const doubles eps);
-extern "C" SEXP _seine_r_proj_local(SEXP eta, SEXP e_cov, SEXP r_cov, SEXP x, SEXP eps) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(r_proj_local(cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(e_cov), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(r_cov), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(x), cpp11::as_cpp<cpp11::decay_t<const doubles>>(eps)));
-  END_CPP11
-}
 
 extern "C" {
 /* .Call calls */
@@ -74,7 +67,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_seine_R_llik",        (DL_FUNC) &_seine_R_llik,        7},
     {"_seine_R_sync_rng",    (DL_FUNC) &_seine_R_sync_rng,    0},
     {"_seine_R_utn_moments", (DL_FUNC) &_seine_R_utn_moments, 2},
-    {"_seine_r_proj_local",  (DL_FUNC) &_seine_r_proj_local,  5},
     {"_seine_r_proj_mvn",    (DL_FUNC) &_seine_r_proj_mvn,    4},
     {"run_testthat_tests",   (DL_FUNC) &run_testthat_tests,   1},
     {NULL, NULL, 0}

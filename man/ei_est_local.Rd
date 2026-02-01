@@ -9,7 +9,7 @@ ei_est_local(
   regr,
   data,
   total,
-  r_cov = NULL,
+  b_cov = NULL,
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
@@ -32,13 +32,13 @@ containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required if
 \code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object.}
 
-\item{r_cov}{A covariance matrix of the residuals to use in projecting the
+\item{b_cov}{A covariance matrix to use in projecting the
 local estimates onto the accounting constraint, such as one estimated with
-\code{\link[=ei_resid_cov]{ei_resid_cov()}}. Defaults to the identity matrix scaled by the residual
+\code{\link[=ei_local_cov]{ei_local_cov()}}. Defaults to the identity matrix scaled by the residual
 variance of \code{regr}, corresponding to orthogonal projection.
-Set \code{r_cov=1} to use a degenerate covariance matrix corresponding to a
+Set \code{b_cov=1} to use a degenerate covariance matrix corresponding to a
 (local) neighborhood model. When there are multiple outcome variables and
-r_cov` is a matrix with entries for each predictor, it will be applied
+\code{b_cov} is a matrix with entries for each predictor, it will be applied
 identically to each outcome. Alternatively, a matrix with entries for each
 predictor-outcome combination may be provided, with entries in the order
 (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).}
@@ -102,11 +102,11 @@ Local estimates are produced jointly across outcome variables. When bounds
 are applied, unless \code{sum_one = TRUE}, the estimates for each observation may
 not satisfy logical constraints, including the accounting identity.
 
-Projections are done obliquely in accordance with \code{r_cov} via quadratic
+Projections are done obliquely in accordance with \code{b_cov} via quadratic
 programming. Occasionally, the quadratic program may be infeasible due to
-the specific data, features of \code{r_cov}, or numerical errors. Various
-relaxations of the accounting identity and \code{r_cov} are attempted in these cases;
-indices where relaxations of \code{r_cov} were used are stored in the \code{proj_relax}
+the specific data, features of \code{b_cov}, or numerical errors. Various
+relaxations of the accounting identity and \code{b_cov} are attempted in these cases;
+indices where relaxations of \code{b_cov} were used are stored in the \code{proj_relax}
 attribute of the output, and indices of infeasible projections are stored in
 the \code{proj_misses} attribute.
 }
@@ -126,10 +126,10 @@ m = ei_ridge(spec)
 
 ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 
-r_cov = ei_resid_cov(m, spec)
+b_cov = ei_local_cov(m, spec)
 e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 # average interval width
 c(
     e_orth = mean(e_orth$conf.high - e_orth$conf.low),
