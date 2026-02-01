@@ -5,17 +5,14 @@ data(elec_1968)
 elec_1968 = elec_1968 |>
     mutate(
         vap_nonwhite = 1 - vap_white,
-        pres_abs = pmax(1e-6, pres_abs),
         z = bases::b_bart(pop_urban, pop_rural, educ_elem, educ_hsch, educ_coll, farm,
             inc_00_03k, inc_03_08k, inc_08_25k, inc_25_99k)
-    ) |>
-    ei_proportions(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs, clamp = 1e-12) |>
-    select(-.total)
+    )
 
 spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
                total = pres_total, covariates = c(state, z))
 
-m = ei_ridge(spec, bounds=F, sum_one=F, penalty=1000000)
+m = ei_ridge(spec, bounds=F, sum_one=F)
 rr = ei_riesz(spec, penalty = m$penalty)
 
 colMeans(est_check_regr(m, spec, nrow(spec), NULL, 4, T)$vcov) |>
@@ -77,3 +74,6 @@ plot(alphas, sapply(alphas, \(alpha) {
 })); abline(0, 1, col='red')
 
 sqrt(diag(Sigma))
+
+
+
