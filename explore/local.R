@@ -14,11 +14,14 @@ elec_1968 = elec_1968 |>
 
 spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
                total = pres_total, covariates = c(state, z))
-spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
-               total = pres_total, covariates = c(state))
 
-m = ei_ridge(spec)#, bounds=0:1, sum_one=T)
+m = ei_ridge(spec, bounds=F, sum_one=F, penalty=1000000)
 rr = ei_riesz(spec, penalty = m$penalty)
+
+colMeans(est_check_regr(m, spec, nrow(spec), NULL, 4, T)$vcov) |>
+    matrix(3, 3) |>
+    diag() |>
+    sqrt()
 
 ei_est(m, data = spec) |>
     summarize(err = sum(estimate) - 1, .by = predictor)
@@ -29,7 +32,6 @@ ei_est(m, rr, data = spec) |>
 r_cov = ei_resid_cov(m, spec)
 cov_x = cov2cor(c(20, 1, 2) %o% c(20, 1, 2) + diag(3)*1e-2)
 cov_y = cov(m$y) + diag(4)*1e-4
-# cov_y = diag(m$sigma2)
 r_cov2 = cov_y %x% cov_x
 
 ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = TRUE) |>
@@ -40,9 +42,15 @@ ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = TRUE) |>
     geom_histogram(bins=20)
 
 
-ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.5, regr_var = F, unimodal = TRUE) |>
-    dplyr::filter(.row == 1) |>
+ei_est_local(m, spec, r_cov = r_cov2, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
+    dplyr::filter(.row == 592) |>
     ggplot(aes(estimate, paste0(outcome, " | ", predictor))) +
+    geom_pointrange(aes(xmin = conf.low, xmax = conf.high))
+
+ei_est_local(m, spec, r_cov = r_cov2, contrast = list(outcome=c(1, -1, 0, 0)), bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
+    dplyr::filter(.row == 592) |>
+        print() |>
+    ggplot(aes(estimate, predictor)) +
     geom_pointrange(aes(xmin = conf.low, xmax = conf.high))
 
 

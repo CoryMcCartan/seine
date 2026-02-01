@@ -154,19 +154,23 @@ ei_est_local = function(
         NULL
     }
 
+    ests = list(
+        .row = rep(seq_len(n), length(x_nm)),
+        predictor = rep(x_nm, each = n),
+        outcome = rep(y_nm, each = n),
+        wt = if (is.null(contrast)) rep(c(rl$x * total), n_y) else NULL,
+        estimate = c(eta_proj),
+        std.error = c(sds)
+    )
+    if (!is.null(contrast)) {
+        ests[["wt"]] = NULL
+    }
     ests = tibble::new_tibble(
-        list(
-            .row = rep(seq_len(n), length(x_nm)),
-            predictor = rep(x_nm, each = n),
-            outcome = rep(y_nm, each = n),
-            wt = if (is.null(contrast)) rep(c(rl$x * total), n_y) else NULL,
-            estimate = c(eta_proj),
-            std.error = c(sds)
-        ),
+        ests,
+        proj_misses = attr(eta_proj, "misses"),
+        proj_relax = attr(eta_proj, "relax"),
         class = "ei_est_local"
     )
-    attr(ests, "proj_misses") = attr(eta_proj, "misses")
-    attr(ests, "proj_relax") = attr(eta_proj, "relax")
 
     if (!isFALSE(conf_level)) {
         fac = if (isTRUE(unimodal)) 4 / 9 else 1

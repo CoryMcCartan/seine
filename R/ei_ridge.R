@@ -289,7 +289,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
       fitted = fit$fitted,
       vcov_u = fit$vcov_u,
       sigma2 = fit$sigma2,
-      r2 = if (ncol(z) > 0) diag(as.matrix(cor(fit$fitted, y)^2)) else 0,
+      r2 = diag(as.matrix(cor(fit$fitted, y)^2)),
       penalty = fit$penalty,
       int_scale = fit$int_scale,
       z_shift = z_shift,
