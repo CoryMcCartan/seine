@@ -21,6 +21,7 @@ ridge_naive <- function(X, y, weights, penalty=0, vcov=TRUE) {
         vcov_u = vcov_u,
         fitted = fitted,
         sigma2 = sigma2,
+        df = df,
         penalty = penalty
     )
 }
@@ -39,13 +40,15 @@ ridge_svd <- function(udv, y, sqrt_w, penalty=0, vcov=TRUE) {
     }
     # Neyman-orthogonal estimate of residual variance
     # with ridge df adjustment
-    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - sum(d_pen_c), 1)
+    df = sum(d_pen_c)
+    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - df, 1)
 
     list(
         coef = udv$v %*% d_uy,
         vcov_u = vcov_u,
         fitted = fitted,
         sigma2 = sigma2,
+        df = df,
         penalty = penalty
     )
 }
@@ -65,7 +68,6 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
 
     penalty = 10^(optimize(loo_mse, c(-8, 8), tol=0.01)$minimum)
     d_pen_c = udv$d / (udv$d^2 + penalty)
-    browser()
     fitted = uow %*% (d_pen_c * udv$d * uy)
     vcov_u = if (vcov) {
         tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v)
@@ -74,13 +76,15 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
     }
     # Neyman-orthogonal estimate of residual variance
     # with ridge df adjustment
-    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - sum(d_pen_c), 1)
+    df = sum(d_pen_c)
+    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - df, 1)
 
     list(
         coef = udv$v %*% (d_pen_c * uy),
         vcov_u = vcov_u,
         fitted = fitted,
         sigma2 = sigma2,
+        df = df,
         penalty = penalty
     )
 }
@@ -197,6 +201,7 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         vcov_u = NULL,
         fitted = fitted,
         sigma2 = sigma2,
+        df = NULL,
         penalty = penalty
     )
 }

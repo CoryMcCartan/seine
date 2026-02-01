@@ -295,6 +295,7 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
       fitted = fit$fitted,
       vcov_u = fit$vcov_u,
       sigma2 = fit$sigma2,
+      df = fit$df,
       r2 = diag(as.matrix(cor(fit$fitted, y)^2)),
       penalty = fit$penalty,
       int_scale = fit$int_scale,
@@ -352,6 +353,7 @@ ei_ridge_impl <- function(x, y, z, weights=rep(1, nrow(x)),
         }
 
         fit = ridge_bounds(xz, z, y, weights, bounds, sum_one, penalty)
+        fit$df = unb_fit$df
         if (vcov) {
             fit$vcov_u = unb_fit$vcov_u
         }
