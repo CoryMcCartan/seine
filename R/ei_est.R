@@ -376,7 +376,7 @@ est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
         }
     }
 
-    list(yhat=regr$fitted, preds=preds, vcov=xcov, x=x)
+    list(yhat=regr$fitted, preds=preds, vcov_u=xcov, x=x)
 }
 
 #' Wrap another predictive model for use in `ei_est`

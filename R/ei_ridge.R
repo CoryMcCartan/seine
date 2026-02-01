@@ -95,9 +95,13 @@
 #'   outcome variable. If `NULL`, infers `sum_one = TRUE` when the bounds
 #'   are `c(0, 1)` the outcome variables sum to 1.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
-#' @param vcov If `TRUE`, calculate and return the covariance matrix of the
-#'    estimated coefficients. When `bounds` are provided, the covariance matrix
-#'    for the unbounded estimate is returned as a conservative approximation.
+#' @param vcov If `TRUE`, calculate and return the a scaled covariance matrix of
+#'    the estimated coefficients. When `bounds` are provided, the (scaled)
+#'    covariance matrix for the unbounded estimate is returned as a conservative
+#'    approximation.
+#'    The covariance matrix is "scaled" because it does not include the
+#'    residual variance. For the covariance for a particular outcome variable,
+#'    multiply the returned `$vcov_u` by `sigma2` for that outcome.
 #' @param ... Not currently used, but required for extensibility.
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].

@@ -117,9 +117,13 @@ scaled to have mean zero and unit variance before fitting.}
 
 \item{scale}{If \code{TRUE}, scale covariates \code{z} to have unit variance.}
 
-\item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
-estimated coefficients. When \code{bounds} are provided, the covariance matrix
-for the unbounded estimate is returned as a conservative approximation.}
+\item{vcov}{If \code{TRUE}, calculate and return the a scaled covariance matrix of
+the estimated coefficients. When \code{bounds} are provided, the (scaled)
+covariance matrix for the unbounded estimate is returned as a conservative
+approximation.
+The covariance matrix is "scaled" because it does not include the
+residual variance. For the covariance for a particular outcome variable,
+multiply the returned \verb{$vcov_u} by \code{sigma2} for that outcome.}
 
 \item{formula}{A formula such as \code{y ~ x0 + x1 | z} specifying the outcome \code{y}
 regressed on the predictors of interest \code{x} and any covariates \code{z}.

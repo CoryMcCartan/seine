@@ -38,9 +38,13 @@ are \code{c(0, 1)} the outcome variables sum to 1.}
 specified for \code{\link[=ei_riesz_impl]{ei_riesz_impl()}} but can be automatically estimated with
 \code{\link[=ei_ridge_impl]{ei_ridge_impl()}} by providing \code{penalty=NULL}.}
 
-\item{vcov}{If \code{TRUE}, calculate and return the covariance matrix of the
-estimated coefficients. When \code{bounds} are provided, the covariance matrix
-for the unbounded estimate is returned as a conservative approximation.}
+\item{vcov}{If \code{TRUE}, calculate and return the a scaled covariance matrix of
+the estimated coefficients. When \code{bounds} are provided, the (scaled)
+covariance matrix for the unbounded estimate is returned as a conservative
+approximation.
+The covariance matrix is "scaled" because it does not include the
+residual variance. For the covariance for a particular outcome variable,
+multiply the returned \verb{$vcov_u} by \code{sigma2} for that outcome.}
 
 \item{total}{A vector of total observations per unit.}
 }

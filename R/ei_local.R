@@ -146,7 +146,7 @@ ei_est_local = function(
     }
 
     sds = if (!isFALSE(conf_level)) {
-        local_sds(rl$x, b_cov, rl$vcov, contr$m, !is.null(contrast))
+        local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
     } else {
         NULL
     }
@@ -394,7 +394,7 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
 }
 
 # b_cov here is Cholesky factor
-local_sds = function(x, b_cov, regb_cov, contr_m, is_contr = FALSE) {
+local_sds = function(x, b_cov, regb_cov, sigma2, contr_m, is_contr = FALSE) {
     n = nrow(x)
     n_x = ncol(x)
     n_y = nrow(b_cov) / n_x
@@ -402,7 +402,7 @@ local_sds = function(x, b_cov, regb_cov, contr_m, is_contr = FALSE) {
     for (i in seq_len(n)) {
         H = diag(n_y) %x% local_basis(x[i, ])
         R_i = if (!is.null(regb_cov)) {
-            chol(crossprod(b_cov) + (diag(n_y) %x% matrix(regb_cov[i, ], n_x, n_x)))
+            chol(crossprod(b_cov) + (diag(sigma2) %x% matrix(regb_cov[i, ], n_x, n_x)))
         } else {
             b_cov
         }
