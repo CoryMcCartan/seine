@@ -133,8 +133,8 @@ as.matrix(sens, "conf.high")
 #>            outcome
 #> predictor   pres_ind_wal
 #>   vap_white    0.5229302
-#>   vap_black    0.8985835
-#>   vap_other    7.0320672
+#>   vap_black    0.8985834
+#>   vap_other    7.0320692
 
 # Works for contrasts as well
 est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))

@@ -50,8 +50,8 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 
   If `TRUE`, the outcome variables are constrained to sum to one. Can
   only apply when `bounds` are enforced and there is more than one
-  outcome variable. The default `NULL` infers `sum_one = TRUE` when the
-  bounds are `c(0, 1)` the outcome variables sum to 1.
+  outcome variable. If `NULL`, infers `sum_one = TRUE` when the bounds
+  are `c(0, 1)` the outcome variables sum to 1.
 
 - penalty:
 

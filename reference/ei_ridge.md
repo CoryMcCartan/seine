@@ -12,7 +12,7 @@ ei_ridge(
   ...,
   weights,
   bounds = FALSE,
-  sum_one = NULL,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE
@@ -24,7 +24,7 @@ ei_ridge(
   data,
   weights,
   bounds = FALSE,
-  sum_one = NULL,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -36,7 +36,7 @@ ei_ridge(
   x,
   weights,
   bounds = FALSE,
-  sum_one = NULL,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -50,7 +50,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = NULL,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -64,7 +64,7 @@ ei_ridge(
   z,
   weights,
   bounds = FALSE,
-  sum_one = NULL,
+  sum_one = FALSE,
   penalty = NULL,
   scale = TRUE,
   vcov = TRUE,
@@ -122,8 +122,8 @@ ei_ridge(x, ...)
 
   If `TRUE`, the outcome variables are constrained to sum to one. Can
   only apply when `bounds` are enforced and there is more than one
-  outcome variable. The default `NULL` infers `sum_one = TRUE` when the
-  bounds are `c(0, 1)` the outcome variables sum to 1.
+  outcome variable. If `NULL`, infers `sum_one = TRUE` when the bounds
+  are `c(0, 1)` the outcome variables sum to 1.
 
 - penalty:
 
@@ -228,6 +228,12 @@ variance in the outcome receive less weight. Various bulit-in options
 are provided by the helper functions in
 [`ei_wgt()`](https://corymccartan.com/seine/reference/ei_wgt.md).
 
+## References
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data. Working paper
+[arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+
 ## Examples
 
 ``` r
@@ -249,17 +255,11 @@ all.equal(
   fitted(ei_ridge(spec, bounds = NULL)),
   fitted(ei_ridge(spec, bounds = 0:1))
 )
-#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
-#> solution.
-#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
-#> solution.
 #> [1] TRUE
 
 # bounds enforced
 min(fitted(ei_ridge(spec)))
-#> [1] -0.1029559
+#> [1] -0.1029557
 min(fitted(ei_ridge(spec, bounds = 0:1)))
-#> Warning: Relaxing 1143 sum-to-one constraints to inequality to achieve feasible
-#> solution.
-#> [1] 2.744825e-18
+#> [1] 3.765682e-20
 ```

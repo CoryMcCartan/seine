@@ -86,9 +86,9 @@ ei_sens_rv(est, estimate - y_avg)
 as.matrix(ei_sens_rv(est, 0.2), "rv")
 #>            outcome
 #> predictor   pres_ind_wal
-#>   vap_white  0.545120562
-#>   vap_black  0.203654212
-#>   vap_other  0.009796171
+#>   vap_white  0.545120508
+#>   vap_black  0.203654194
+#>   vap_other  0.009796166
 
 # Works for contrasts as well
 est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))

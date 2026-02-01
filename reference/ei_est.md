@@ -131,6 +131,12 @@ aggregate units used in estimation (the number of rows in `data`).
 
 - `nobs(ei_est)`: Extract number of units covered by estimates
 
+## References
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data. Working paper
+[arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+
 ## Examples
 
 ``` r
@@ -156,8 +162,8 @@ ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 #>  8 vap_black pres_ind_wal  0.488    0.0446    0.401      0.576  
 #>  9 vap_other pres_ind_wal -1.05     0.131    -1.30      -0.789  
 #> 10 vap_white pres_abs      0.00152  0.000251  0.00102    0.00201
-#> 11 vap_black pres_abs      0.00109  0.000227  0.000640   0.00153
-#> 12 vap_other pres_abs      0.00117  0.000471  0.000249   0.00210
+#> 11 vap_black pres_abs      0.00109  0.000227  0.000641   0.00153
+#> 12 vap_other pres_abs      0.00118  0.000470  0.000260   0.00210
 ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 #> # A tibble: 12 × 4
 #>    predictor outcome      estimate std.error
@@ -173,32 +179,32 @@ ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
 #>  9 vap_other pres_ind_wal -1.05     1.98    
 #> 10 vap_white pres_abs      0.00152  0.000252
 #> 11 vap_black pres_abs      0.00109  0.000840
-#> 12 vap_other pres_abs      0.00117  0.0134  
+#> 12 vap_other pres_abs      0.00118  0.0134  
 est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
 # Working with the output
 as.matrix(est)
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs
-#>   vap_white    0.2296810    0.3814135    0.3873821 0.0015233731
-#>   vap_black    0.5856278   -0.0768011    0.4901049 0.0010683650
-#>   vap_other    1.6370000    0.5979725   -1.2351002 0.0001277371
+#>   vap_white    0.2296810   0.38141344    0.3873821 0.0015234356
+#>   vap_black    0.5856274  -0.07680138    0.4901047 0.0010692501
+#>   vap_other    1.6369943   0.59796879   -1.2351021 0.0001390607
 as.matrix(est, "std.error")
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs
-#>   vap_white   0.02346882   0.03061363   0.02459608 0.0002801522
-#>   vap_black   0.04997948   0.02670867   0.05056769 0.0005101309
-#>   vap_other   0.47024050   0.33462988   0.55488723 0.0058597394
+#>   vap_white   0.02346882   0.03061363   0.02459607 0.0002801553
+#>   vap_black   0.04997943   0.02670867   0.05056767 0.0005101201
+#>   vap_other   0.47023983   0.33462954   0.55488728 0.0058597715
 vcov(est)[1:4, 1:4]
 #>                        vap_white:pres_dem_hum vap_black:pres_dem_hum
-#> vap_white:pres_dem_hum           0.0005507857           0.0004144159
-#> vap_black:pres_dem_hum           0.0004144159           0.0024979486
-#> vap_other:pres_dem_hum           0.0021912165           0.0056012709
-#> vap_white:pres_rep_nix           0.0006103741           0.0007945676
+#> vap_white:pres_dem_hum           0.0005507853           0.0004144131
+#> vap_black:pres_dem_hum           0.0004144131           0.0024979436
+#> vap_other:pres_dem_hum           0.0021911962           0.0056012336
+#> vap_white:pres_rep_nix           0.0006103737           0.0007945651
 #>                        vap_other:pres_dem_hum vap_white:pres_rep_nix
-#> vap_white:pres_dem_hum            0.002191216           0.0006103741
-#> vap_black:pres_dem_hum            0.005601271           0.0007945676
-#> vap_other:pres_dem_hum            0.221126131           0.0045939440
-#> vap_white:pres_rep_nix            0.004593944           0.0009371944
+#> vap_white:pres_dem_hum            0.002191196           0.0006103737
+#> vap_black:pres_dem_hum            0.005601234           0.0007945651
+#> vap_other:pres_dem_hum            0.221125499           0.0045939233
+#> vap_white:pres_rep_nix            0.004593923           0.0009371941
 
 # Contrasts
 ei_est(regr = m, riesz = rr, data = spec, contrast = list(predictor = c(1, -1, 0)))
@@ -208,7 +214,7 @@ ei_est(regr = m, riesz = rr, data = spec, contrast = list(predictor = c(1, -1, 0
 #> 1 vap_white - vap_black pres_dem_hum -0.356     0.0471  
 #> 2 vap_white - vap_black pres_rep_nix  0.458     0.0495  
 #> 3 vap_white - vap_black pres_ind_wal -0.103     0.0458  
-#> 4 vap_white - vap_black pres_abs      0.000455  0.000542
+#> 4 vap_white - vap_black pres_abs      0.000454  0.000542
 ei_est(regr = m, riesz = rr, data = spec,
        contrast = list(predictor = c(-1, 1, 0), outcome = c(1, -1, 0, 0)))
 #> # A tibble: 1 × 4
@@ -221,9 +227,9 @@ est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))
 as.matrix(est)
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal    pres_abs
-#>   vap_white  0.006649839   0.16292434    0.8158650 0.014560791
-#>   vap_black  0.733211508  -0.04036185    0.2995285 0.007621831
-#>   vap_other  1.803101753   0.16471677   -0.9702721 0.002453595
+#>   vap_white  0.006649819   0.16292432    0.8158650 0.014560833
+#>   vap_black  0.733211405  -0.04036192    0.2995285 0.007622046
+#>   vap_other  1.803096491   0.16471413   -0.9702743 0.002463645
 nobs(est)
 #> [1] 67
 ```

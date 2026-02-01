@@ -85,7 +85,7 @@ function would let us create a new turnout proportion variable from our
 existing data.
 
 ``` r
-elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total, 
+elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total,
                                 .total = vap, clamp = 0.01)
 
 subset(elec_1968_turn, select = c(fips, state, county, turnout, vap, .other))
@@ -198,11 +198,11 @@ and the column with the total number of people in each aggregation unit.
 
 ``` r
 spec = ei_spec(
-    elec_1968, 
+    elec_1968,
     predictors = vap_white:vap_other,
-    outcome = pres_dem_hum:pres_abs, 
+    outcome = pres_dem_hum:pres_abs,
     total = pres_total,
-    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll,
                    inc_00_03k:inc_25_99k)
 )
 
@@ -273,8 +273,8 @@ predictors and covariates by a vertical bar.
 
 ``` r
 m_form = ei_ridge(
-    cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~ 
-        vap_white + vap_black + vap_other | 
+    cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~
+        vap_white + vap_black + vap_other |
         state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
                      inc_03_08k + inc_08_25k + inc_25_99k),
     data = elec_1968, total = pres_total
@@ -282,7 +282,7 @@ m_form = ei_ridge(
 
 print(m_form)
 #> An ecological inference model with 4 outcomes, 3 groups, and 1143 observations
-#> Fit with penalty = 5.22561
+#> Fit with penalty = 5.22562
 ```
 
 The [`summary()`](https://rdrr.io/r/base/summary.html) method of fitted
@@ -297,16 +297,16 @@ predictions indicates there is at least some model misspecification.
 summary(m)
 #> Fitted values:
 #>   pres_dem_hum      pres_rep_nix      pres_ind_wal         pres_abs         
-#>  Min.   :0.01289   Min.   :-0.0296   Min.   :-0.01479   Min.   :-0.0012395  
+#>  Min.   :0.01289   Min.   :-0.0296   Min.   :-0.01479   Min.   :-0.0012398  
 #>  1st Qu.:0.23672   1st Qu.: 0.1911   1st Qu.: 0.26210   1st Qu.:-0.0001323  
 #>  Median :0.29178   Median : 0.3110   Median : 0.37332   Median : 0.0001229  
-#>  Mean   :0.30163   Mean   : 0.2970   Mean   : 0.40004   Mean   : 0.0013323  
+#>  Mean   :0.30163   Mean   : 0.2970   Mean   : 0.40004   Mean   : 0.0013324  
 #>  3rd Qu.:0.37902   3rd Qu.: 0.3890   3rd Qu.: 0.53561   3rd Qu.: 0.0005280  
-#>  Max.   :0.70426   Max.   : 0.6481   Max.   : 0.84246   Max.   : 0.0142096  
+#>  Max.   :0.70426   Max.   : 0.6481   Max.   : 0.84246   Max.   : 0.0142095  
 #> 
 #> R-squared by outcome:
 #> pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs 
-#>    0.6880171    0.7165231    0.8114222    0.5441581
+#>    0.6880172    0.7165230    0.8114222    0.5441608
 ```
 
 ### Fitting the Riesz representer
@@ -333,7 +333,7 @@ tidy interface obviates the need to worry about this.
 
 ``` r
 rr_form = ei_riesz(
-    ~ vap_white + vap_black + vap_other | 
+    ~ vap_white + vap_black + vap_other |
         state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
                      inc_03_08k + inc_08_25k + inc_25_99k),
     data = elec_1968, total = pres_total, penalty = m_form$penalty
@@ -348,11 +348,11 @@ useful information for evaluating the Riesz representer.
 summary(rr)
 #> Second moment of representer:
 #>    vap_white    vap_black    vap_other 
-#>     15.01799    228.39141 103472.19420 
+#>     15.01799    228.39141 103472.16521 
 #> 
 #> Second moment of representer (leave-one-out):
 #>    vap_white    vap_black    vap_other 
-#>     17.25841    257.75390 144881.23787
+#>     17.25841    257.75390 144881.19296
 ```
 
 Large second moments of the Riesz representer are indicative of a more
@@ -389,8 +389,8 @@ print(est)
 #>  8 vap_black pres_ind_wal  0.437    0.0436    0.351      0.522  
 #>  9 vap_other pres_ind_wal  2.84     0.840     1.20       4.49   
 #> 10 vap_white pres_abs      0.00145  0.000384  0.000691   0.00220
-#> 11 vap_black pres_abs      0.00314  0.00111   0.000955   0.00532
-#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0334
+#> 11 vap_black pres_abs      0.00314  0.00111   0.000956   0.00533
+#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0335
 ```
 
 The same call works with the formula interface.
@@ -410,16 +410,16 @@ matrix of all estimates is also accessible via
 as.matrix(est)
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs
-#>   vap_white    0.2253004   0.43469163    0.3385627  0.001445307
-#>   vap_black    0.5844989  -0.02422778    0.4365898  0.003139145
-#>   vap_other    2.9232285  -4.74841187    2.8437828 -0.018599469
+#>   vap_white    0.2253004   0.43469161    0.3385627  0.001445356
+#>   vap_black    0.5844980  -0.02422833    0.4365894  0.003140922
+#>   vap_other    2.9232057  -4.74842538    2.8437735 -0.018553886
 
 as.matrix(est, which = "conf.low")
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal      pres_abs
-#>   vap_white    0.1780393   0.36310751    0.2998458  0.0006909335
-#>   vap_black    0.4665612  -0.09625072    0.3511356  0.0009548326
-#>   vap_other    1.4642962  -6.69250655    1.1953827 -0.0706095646
+#>   vap_white    0.1780393   0.36310750    0.2998458  0.0006909597
+#>   vap_black    0.4665604  -0.09625122    0.3511352  0.0009563848
+#>   vap_other    1.4642763  -6.69252141    1.1953741 -0.0705602357
 ```
 
 Sometimes, estimates within a set of geographies are of interest. The
@@ -431,9 +431,9 @@ for producing estimates in these smaller areas.
 as.matrix(ei_est(m, rr, spec, subset = (state == "Mississippi")))
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs
-#>   vap_white  0.002209141   0.19864269    0.7995612 -0.000413015
-#>   vap_black  0.738043281   0.01895925    0.2413356  0.001661887
-#>   vap_other  1.405217200  -2.76253073    2.3609276 -0.003614053
+#>   vap_white  0.002209124   0.19864268    0.7995612 -0.000412980
+#>   vap_black  0.738043251   0.01895923    0.2413356  0.001661951
+#>   vap_other  1.405206104  -2.76253736    2.3609227 -0.003591483
 ```
 
 Finally,
@@ -449,7 +449,7 @@ est_m = ei_est(regr = m, data = spec)
 est_rr = ei_est(riesz = rr, data = spec)
 
 sd(est_m$estimate - est_rr$estimate) # estimates (here) are close
-#> [1] 0.005069123
+#> [1] 0.005069122
 sd(est_m$std.error - est_rr$std.error) # standard errors are very different
 #> [1] 1.331431
 ```
@@ -520,7 +520,7 @@ ei_sens(est, c_outcome = 1, bias_bound = 0.05)
 #>  9 vap_other pres_i…  2.84     0.840      1.15      4.54           1  0.00000155
 #> 10 vap_white pres_a…  0.00145  0.000384  -0.0493    0.0522         1  0.940     
 #> 11 vap_black pres_a…  0.00314  0.00111   -0.0490    0.0553         1  0.547     
-#> 12 vap_other pres_a… -0.0186   0.0265    -0.121     0.0834         1  0.00126   
+#> 12 vap_other pres_a… -0.0186   0.0265    -0.121     0.0835         1  0.00126   
 #> # ℹ 1 more variable: bias_bound <dbl>
 ```
 
@@ -606,8 +606,8 @@ ei_sens_rv(est, bias_bound = 1 * std.error)
 #>  8 vap_black pres_ind_wal  0.437    0.0436    0.351      0.522   0.0331
 #>  9 vap_other pres_ind_wal  2.84     0.840     1.20       4.49    0.0207
 #> 10 vap_white pres_abs      0.00145  0.000384  0.000691   0.00220 0.0299
-#> 11 vap_black pres_abs      0.00314  0.00111   0.000955   0.00532 0.0242
-#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0334  0.0186
+#> 11 vap_black pres_abs      0.00314  0.00111   0.000956   0.00533 0.0242
+#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0335  0.0186
 ```
 
 All of the robustness values (one for each predictor/outcome
@@ -639,12 +639,13 @@ benchmarking analysis.
 
 ## References
 
-McCartan, C. and Kuriwaki, S. (2025+). *Estimation of conditional means
-from aggregate data.* Working paper.
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data. Working paper
+[arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
 
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V.
-(2024). *Long story short: Omitted variable bias in causal machine
-learning* (No. w30302). National Bureau of Economic Research.
+(2024). Long story short: Omitted variable bias in causal machine
+learning (No. w30302). *National Bureau of Economic Research.*
 
 ------------------------------------------------------------------------
 

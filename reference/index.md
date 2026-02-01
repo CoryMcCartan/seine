@@ -32,6 +32,9 @@ inference
 - [`ei_riesz()`](https://corymccartan.com/seine/reference/ei_riesz.md) :
   Estimate Riesz representer for ecological inference
 
+- [`ei_resid_cov()`](https://corymccartan.com/seine/reference/ei_resid_cov.md)
+  : Estimate the residual covariance of the local estimands
+
 - [`ei_wgt_unif()`](https://corymccartan.com/seine/reference/ei_wgt.md)
   [`ei_wgt_prop()`](https://corymccartan.com/seine/reference/ei_wgt.md)
   [`ei_wgt_sqrt()`](https://corymccartan.com/seine/reference/ei_wgt.md)

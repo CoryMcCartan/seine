@@ -153,7 +153,7 @@ mentioned in the previous paragraph. The <code><a href="../reference/ei_proporti
 function would let us create a new turnout proportion variable from our
 existing data.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">elec_1968_turn</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_proportions.html">ei_proportions</a></span><span class="op">(</span><span class="va">elec_1968</span>, turnout <span class="op">=</span> <span class="va">pres_total</span>, </span>
+<code class="sourceCode R"><span><span class="va">elec_1968_turn</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_proportions.html">ei_proportions</a></span><span class="op">(</span><span class="va">elec_1968</span>, turnout <span class="op">=</span> <span class="va">pres_total</span>,</span>
 <span>                                .total <span class="op">=</span> <span class="va">vap</span>, clamp <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">elec_1968_turn</span>, select <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fips</span>, <span class="va">state</span>, <span class="va">county</span>, <span class="va">turnout</span>, <span class="va">vap</span>, <span class="va">.other</span><span class="op">)</span><span class="op">)</span></span>
@@ -359,11 +359,11 @@ the outcome, predictors, covariates, and the column with the total
 number of people in each aggregation unit.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_spec.html">ei_spec</a></span><span class="op">(</span></span>
-<span>    <span class="va">elec_1968</span>, </span>
+<span>    <span class="va">elec_1968</span>,</span>
 <span>    predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span>
-<span>    outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_abs</span>, </span>
+<span>    outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_abs</span>,</span>
 <span>    total <span class="op">=</span> <span class="va">pres_total</span>,</span>
-<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">pop_city</span><span class="op">:</span><span class="va">pop_rural</span>, <span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, </span>
+<span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">state</span>, <span class="va">pop_city</span><span class="op">:</span><span class="va">pop_rural</span>, <span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>,</span>
 <span>                   <span class="va">inc_00_03k</span><span class="op">:</span><span class="va">inc_25_99k</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -424,8 +424,8 @@ let us specify our own interaction terms; here, we interact
 covariates by a vertical bar.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pres_dem_hum</span>, <span class="va">pres_rep_nix</span>, <span class="va">pres_ind_wal</span>, <span class="va">pres_abs</span><span class="op">)</span> <span class="op">~</span> </span>
-<span>        <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pres_dem_hum</span>, <span class="va">pres_rep_nix</span>, <span class="va">pres_ind_wal</span>, <span class="va">pres_abs</span><span class="op">)</span> <span class="op">~</span></span>
+<span>        <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span></span>
 <span>        <span class="va">state</span> <span class="op">*</span> <span class="op">(</span><span class="va">pop_urban</span> <span class="op">+</span> <span class="va">pop_rural</span> <span class="op">+</span> <span class="va">farm</span> <span class="op">+</span> <span class="va">educ_hsch</span> <span class="op">+</span> <span class="va">educ_coll</span> <span class="op">+</span></span>
 <span>                     <span class="va">inc_03_08k</span> <span class="op">+</span> <span class="va">inc_08_25k</span> <span class="op">+</span> <span class="va">inc_25_99k</span><span class="op">)</span>,</span>
 <span>    data <span class="op">=</span> <span class="va">elec_1968</span>, total <span class="op">=</span> <span class="va">pres_total</span></span>
@@ -433,7 +433,7 @@ covariates by a vertical bar.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_form</span><span class="op">)</span></span>
 <span><span class="co">#&gt; An ecological inference model with 4 outcomes, 3 groups, and 1143 observations</span></span>
-<span><span class="co">#&gt; Fit with penalty = 5.22561</span></span></code></pre></div>
+<span><span class="co">#&gt; Fit with penalty = 5.22562</span></span></code></pre></div>
 <p>The <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method of fitted regression objects shows
 summary statistics for fitted values, which can help diagnose
 misspecification, and shows the <span class="math inline">\(R^2\)</span>
@@ -446,16 +446,16 @@ model misspecification.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Fitted values:</span></span>
 <span><span class="co">#&gt;   pres_dem_hum      pres_rep_nix      pres_ind_wal         pres_abs         </span></span>
-<span><span class="co">#&gt;  Min.   :0.01289   Min.   :-0.0296   Min.   :-0.01479   Min.   :-0.0012395  </span></span>
+<span><span class="co">#&gt;  Min.   :0.01289   Min.   :-0.0296   Min.   :-0.01479   Min.   :-0.0012398  </span></span>
 <span><span class="co">#&gt;  1st Qu.:0.23672   1st Qu.: 0.1911   1st Qu.: 0.26210   1st Qu.:-0.0001323  </span></span>
 <span><span class="co">#&gt;  Median :0.29178   Median : 0.3110   Median : 0.37332   Median : 0.0001229  </span></span>
-<span><span class="co">#&gt;  Mean   :0.30163   Mean   : 0.2970   Mean   : 0.40004   Mean   : 0.0013323  </span></span>
+<span><span class="co">#&gt;  Mean   :0.30163   Mean   : 0.2970   Mean   : 0.40004   Mean   : 0.0013324  </span></span>
 <span><span class="co">#&gt;  3rd Qu.:0.37902   3rd Qu.: 0.3890   3rd Qu.: 0.53561   3rd Qu.: 0.0005280  </span></span>
-<span><span class="co">#&gt;  Max.   :0.70426   Max.   : 0.6481   Max.   : 0.84246   Max.   : 0.0142096  </span></span>
+<span><span class="co">#&gt;  Max.   :0.70426   Max.   : 0.6481   Max.   : 0.84246   Max.   : 0.0142095  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; R-squared by outcome:</span></span>
 <span><span class="co">#&gt; pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs </span></span>
-<span><span class="co">#&gt;    0.6880171    0.7165231    0.8114222    0.5441581</span></span></code></pre></div>
+<span><span class="co">#&gt;    0.6880172    0.7165230    0.8114222    0.5441608</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="fitting-the-riesz-representer">Fitting the Riesz representer<a class="anchor" aria-label="anchor" href="#fitting-the-riesz-representer"></a>
@@ -474,7 +474,7 @@ outcome variable); the tidy interface obviates the need to worry about
 this.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rr_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_riesz.html">ei_riesz</a></span><span class="op">(</span></span>
-<span>    <span class="op">~</span> <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span> </span>
+<span>    <span class="op">~</span> <span class="va">vap_white</span> <span class="op">+</span> <span class="va">vap_black</span> <span class="op">+</span> <span class="va">vap_other</span> <span class="op">|</span></span>
 <span>        <span class="va">state</span> <span class="op">*</span> <span class="op">(</span><span class="va">pop_urban</span> <span class="op">+</span> <span class="va">pop_rural</span> <span class="op">+</span> <span class="va">farm</span> <span class="op">+</span> <span class="va">educ_hsch</span> <span class="op">+</span> <span class="va">educ_coll</span> <span class="op">+</span></span>
 <span>                     <span class="va">inc_03_08k</span> <span class="op">+</span> <span class="va">inc_08_25k</span> <span class="op">+</span> <span class="va">inc_25_99k</span><span class="op">)</span>,</span>
 <span>    data <span class="op">=</span> <span class="va">elec_1968</span>, total <span class="op">=</span> <span class="va">pres_total</span>, penalty <span class="op">=</span> <span class="va">m_form</span><span class="op">$</span><span class="va">penalty</span></span>
@@ -485,11 +485,11 @@ provides useful information for evaluating the Riesz representer.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Second moment of representer:</span></span>
 <span><span class="co">#&gt;    vap_white    vap_black    vap_other </span></span>
-<span><span class="co">#&gt;     15.01799    228.39141 103472.19420 </span></span>
+<span><span class="co">#&gt;     15.01799    228.39141 103472.16521 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Second moment of representer (leave-one-out):</span></span>
 <span><span class="co">#&gt;    vap_white    vap_black    vap_other </span></span>
-<span><span class="co">#&gt;     17.25841    257.75390 144881.23787</span></span></code></pre></div>
+<span><span class="co">#&gt;     17.25841    257.75390 144881.19296</span></span></code></pre></div>
 <p>Large second moments of the Riesz representer are indicative of a
 more difficult EI problem, likely due to limited variation in the
 predictor, given covariates. Here we see that there is very little
@@ -525,8 +525,8 @@ approximation.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> vap_black pres_ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>    0.351      0.522  </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> vap_other pres_ind_wal  2.84     0.840     1.20       4.49   </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> vap_white pres_abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  0.000<span style="text-decoration: underline;">691</span>   0.002<span style="text-decoration: underline;">20</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">955</span>   0.005<span style="text-decoration: underline;">32</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">4</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">956</span>   0.005<span style="text-decoration: underline;">33</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">5</span></span></span></code></pre></div>
 <p>The same call works with the formula interface.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">est_form</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m_form</span>, <span class="va">rr_form</span>, <span class="va">elec_1968</span><span class="op">)</span></span></code></pre></div>
@@ -539,16 +539,16 @@ all estimates is also accessible via <code><a href="https://rdrr.io/r/stats/vcov
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            outcome</span></span>
 <span><span class="co">#&gt; predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs</span></span>
-<span><span class="co">#&gt;   vap_white    0.2253004   0.43469163    0.3385627  0.001445307</span></span>
-<span><span class="co">#&gt;   vap_black    0.5844989  -0.02422778    0.4365898  0.003139145</span></span>
-<span><span class="co">#&gt;   vap_other    2.9232285  -4.74841187    2.8437828 -0.018599469</span></span>
+<span><span class="co">#&gt;   vap_white    0.2253004   0.43469161    0.3385627  0.001445356</span></span>
+<span><span class="co">#&gt;   vap_black    0.5844980  -0.02422833    0.4365894  0.003140922</span></span>
+<span><span class="co">#&gt;   vap_other    2.9232057  -4.74842538    2.8437735 -0.018553886</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">est</span>, which <span class="op">=</span> <span class="st">"conf.low"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            outcome</span></span>
 <span><span class="co">#&gt; predictor   pres_dem_hum pres_rep_nix pres_ind_wal      pres_abs</span></span>
-<span><span class="co">#&gt;   vap_white    0.1780393   0.36310751    0.2998458  0.0006909335</span></span>
-<span><span class="co">#&gt;   vap_black    0.4665612  -0.09625072    0.3511356  0.0009548326</span></span>
-<span><span class="co">#&gt;   vap_other    1.4642962  -6.69250655    1.1953827 -0.0706095646</span></span></code></pre></div>
+<span><span class="co">#&gt;   vap_white    0.1780393   0.36310750    0.2998458  0.0006909597</span></span>
+<span><span class="co">#&gt;   vap_black    0.4665604  -0.09625122    0.3511352  0.0009563848</span></span>
+<span><span class="co">#&gt;   vap_other    1.4642763  -6.69252141    1.1953741 -0.0705602357</span></span></code></pre></div>
 <p>Sometimes, estimates within a set of geographies are of interest. The
 <code>subset=</code> argument to <code><a href="../reference/ei_est.html">ei_est()</a></code> allows for
 producing estimates in these smaller areas.</p>
@@ -556,9 +556,9 @@ producing estimates in these smaller areas.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, subset <span class="op">=</span> <span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"Mississippi"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            outcome</span></span>
 <span><span class="co">#&gt; predictor   pres_dem_hum pres_rep_nix pres_ind_wal     pres_abs</span></span>
-<span><span class="co">#&gt;   vap_white  0.002209141   0.19864269    0.7995612 -0.000413015</span></span>
-<span><span class="co">#&gt;   vap_black  0.738043281   0.01895925    0.2413356  0.001661887</span></span>
-<span><span class="co">#&gt;   vap_other  1.405217200  -2.76253073    2.3609276 -0.003614053</span></span></code></pre></div>
+<span><span class="co">#&gt;   vap_white  0.002209124   0.19864268    0.7995612 -0.000412980</span></span>
+<span><span class="co">#&gt;   vap_black  0.738043251   0.01895923    0.2413356  0.001661951</span></span>
+<span><span class="co">#&gt;   vap_other  1.405206104  -2.76253736    2.3609227 -0.003591483</span></span></code></pre></div>
 <p>Finally, <code><a href="../reference/ei_est.html">ei_est()</a></code> actually also works with a regression
 model alone, or a Riesz representer alone. However, these estimates are
 not debiased, and may have higher error. They generally have improperly
@@ -569,7 +569,7 @@ calibrated confidence intervals.</p>
 <span><span class="va">est_rr</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span>riesz <span class="op">=</span> <span class="va">rr</span>, data <span class="op">=</span> <span class="va">spec</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">est_m</span><span class="op">$</span><span class="va">estimate</span> <span class="op">-</span> <span class="va">est_rr</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span> <span class="co"># estimates (here) are close</span></span>
-<span><span class="co">#&gt; [1] 0.005069123</span></span>
+<span><span class="co">#&gt; [1] 0.005069122</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">est_m</span><span class="op">$</span><span class="va">std.error</span> <span class="op">-</span> <span class="va">est_rr</span><span class="op">$</span><span class="va">std.error</span><span class="op">)</span> <span class="co"># standard errors are very different</span></span>
 <span><span class="co">#&gt; [1] 1.331431</span></span></code></pre></div>
 <!--# Future: local estimates -->
@@ -635,7 +635,7 @@ Riesz representer to produce a bias of up to 5pp.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> vap_other pres_i…  2.84     0.840      1.15      4.54           1  0.000<span style="text-decoration: underline;">001</span>55</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> vap_white pres_a…  0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">3</span>    0.052<span style="text-decoration: underline;">2</span>         1  0.940     </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_a…  0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   -<span style="color: #BB0000;">0.049</span><span style="color: #BB0000; text-decoration: underline;">0</span>    0.055<span style="text-decoration: underline;">3</span>         1  0.547     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_a… -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>    -<span style="color: #BB0000;">0.121</span>     0.083<span style="text-decoration: underline;">4</span>         1  0.001<span style="text-decoration: underline;">26</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_a… -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>    -<span style="color: #BB0000;">0.121</span>     0.083<span style="text-decoration: underline;">5</span>         1  0.001<span style="text-decoration: underline;">26</span>   </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: bias_bound &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>For most predictors and outcomes, the answer is not very much!</p>
 <p>The <code>c_outcome</code> parameter is relatively easy to
@@ -709,8 +709,8 @@ intervals.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> vap_black pres_ind_wal  0.437    0.043<span style="text-decoration: underline;">6</span>    0.351      0.522   0.033<span style="text-decoration: underline;">1</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> vap_other pres_ind_wal  2.84     0.840     1.20       4.49    0.020<span style="text-decoration: underline;">7</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> vap_white pres_abs      0.001<span style="text-decoration: underline;">45</span>  0.000<span style="text-decoration: underline;">384</span>  0.000<span style="text-decoration: underline;">691</span>   0.002<span style="text-decoration: underline;">20</span> 0.029<span style="text-decoration: underline;">9</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">955</span>   0.005<span style="text-decoration: underline;">32</span> 0.024<span style="text-decoration: underline;">2</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">4</span>  0.018<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_abs      0.003<span style="text-decoration: underline;">14</span>  0.001<span style="text-decoration: underline;">11</span>   0.000<span style="text-decoration: underline;">956</span>   0.005<span style="text-decoration: underline;">33</span> 0.024<span style="text-decoration: underline;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_abs     -<span style="color: #BB0000;">0.018</span><span style="color: #BB0000; text-decoration: underline;">6</span>   0.026<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.070</span><span style="color: #BB0000; text-decoration: underline;">6</span>     0.033<span style="text-decoration: underline;">5</span>  0.018<span style="text-decoration: underline;">6</span></span></span></code></pre></div>
 <p>All of the robustness values (one for each predictor/outcome
 combination) are relatively small, indicating low robustness (high
 sensitivity). In particular, they are all far smaller than the amount of
@@ -736,12 +736,13 @@ benchmarking analysis.</p>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>McCartan, C. and Kuriwaki, S. (2025+). <em>Estimation of conditional
-means from aggregate data.</em> Working paper.</p>
+<p>McCartan, C., &amp; Kuriwaki, S. (2025+). Identification and
+semiparametric estimation of conditional means from aggregate data.
+Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">arXiv:2509.20194</a>.</p>
 <p>Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., &amp;
-Syrgkanis, V. (2024). <em>Long story short: Omitted variable bias in
-causal machine learning</em> (No. w30302). National Bureau of Economic
-Research.</p>
+Syrgkanis, V. (2024). Long story short: Omitted variable bias in causal
+machine learning (No. w30302). <em>National Bureau of Economic
+Research.</em></p>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
