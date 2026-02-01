@@ -12,12 +12,16 @@ test_that("ridge regression methods agree", {
 
         expect_equal(fit_naive$coef, fit_svd$coef, ignore_attr=TRUE)
         expect_equal(fit_naive$fitted, fit_svd$fitted, ignore_attr=TRUE)
+        expect_equal(fit_naive$vcov_u, fit_svd$vcov_u, ignore_attr=TRUE)
+        expect_equal(fit_naive$sigma2, fit_svd$sigma2, ignore_attr=TRUE)
 
         fit_naive = ridge_naive(x, y, w, penalty=lambda)
         fit_svd = ridge_svd(udvw, y, sqrt(w), penalty=lambda)
 
         expect_equal(fit_naive$coef, fit_svd$coef, ignore_attr=TRUE)
         expect_equal(fit_naive$fitted, fit_svd$fitted, ignore_attr=TRUE)
+        expect_equal(fit_naive$vcov_u, fit_svd$vcov_u, ignore_attr=TRUE)
+        expect_equal(fit_naive$sigma2, fit_svd$sigma2, ignore_attr=TRUE)
     }
 })
 

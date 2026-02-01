@@ -3,15 +3,18 @@
 # Does ridge regression with the normal equations
 ridge_naive <- function(X, y, weights, penalty=0, vcov=TRUE) {
     Lambda = diag(rep(penalty, ncol(X)))
-    coef = solve(crossprod(X, weights * X) + Lambda, crossprod(X, weights * y))
+    XXinv = solve(crossprod(X, weights * X) + Lambda)
+    coef = XXinv %*% crossprod(X, weights * y)
     fitted = X %*% coef
     vcov_u = if (vcov) {
-        tcrossprod(solve(crossprod(X, weights * X) + Lambda, t(X)))
+        crossprod(sqrt(weights) * X %*% XXinv)
     } else {
         NULL
     }
     # Neyman-orthogonal estimate of residual variance
-    sigma2 = colMeans((y - fitted)^2 * weights)
+    # with ridge df adjustment
+    df = sum(ridge_hat_naive(X, weights, XXinv))
+    sigma2 = colSums((y - fitted)^2 * weights) / max(nrow(y) - df, 1)
 
     list(
         coef = coef,
@@ -35,7 +38,8 @@ ridge_svd <- function(udv, y, sqrt_w, penalty=0, vcov=TRUE) {
         NULL
     }
     # Neyman-orthogonal estimate of residual variance
-    sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
+    # with ridge df adjustment
+    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - sum(d_pen_c), 1)
 
     list(
         coef = udv$v %*% d_uy,
@@ -61,6 +65,7 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
 
     penalty = 10^(optimize(loo_mse, c(-8, 8), tol=0.01)$minimum)
     d_pen_c = udv$d / (udv$d^2 + penalty)
+    browser()
     fitted = uow %*% (d_pen_c * udv$d * uy)
     vcov_u = if (vcov) {
         tcrossprod(scale_cols(udv$v, d_pen_c^2), udv$v)
@@ -68,7 +73,8 @@ ridge_auto <- function(udv, y, sqrt_w, vcov=TRUE) {
         NULL
     }
     # Neyman-orthogonal estimate of residual variance
-    sigma2 = colMeans(((y - fitted) * sqrt_w)^2)
+    # with ridge df adjustment
+    sigma2 = colSums(((y - fitted) * sqrt_w)^2) / max(nrow(y) - sum(d_pen_c), 1)
 
     list(
         coef = udv$v %*% (d_pen_c * uy),
