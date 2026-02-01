@@ -92,7 +92,7 @@
 #'   be `c(0, 1)`. The default `bounds = FALSE` uses an unbounded outcome.
 #' @param sum_one If `TRUE`, the outcome variables are constrained to sum to one.
 #'   Can only apply when `bounds` are enforced and there is more than one
-#'   outcome variable. The default `NULL` infers `sum_one = TRUE` when the bounds
+#'   outcome variable. If `NULL`, infers `sum_one = TRUE` when the bounds
 #'   are `c(0, 1)` the outcome variables sum to 1.
 #' @param scale If `TRUE`, scale covariates `z` to have unit variance.
 #' @param vcov If `TRUE`, calculate and return the covariance matrix of the
@@ -122,14 +122,14 @@
 #' min(fitted(ei_ridge(spec)))
 #' min(fitted(ei_ridge(spec, bounds = 0:1)))
 #' @export
-ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = NULL, penalty = NULL, scale = TRUE, vcov = TRUE) {
+ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = FALSE, penalty = NULL, scale = TRUE, vcov = TRUE) {
     UseMethod("ei_ridge")
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = NULL,
+ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one=FALSE,
                              penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -156,7 +156,7 @@ ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one = NUL
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
+ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
                              scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
@@ -186,7 +186,7 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one = NULL, penalty=N
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
+ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
                                 scale=TRUE, vcov=TRUE, ...) {
     if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
@@ -215,7 +215,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one = NULL, 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one = NULL, penalty=NULL,
+ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
                             scale=TRUE, vcov=TRUE, ...) {
     ei_ridge.data.frame(x, y, z, weights, penalty, sum_one, bounds, scale, vcov, ...)
 }

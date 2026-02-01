@@ -31,7 +31,7 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 
 \item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
 Can only apply when \code{bounds} are enforced and there is more than one
-outcome variable. The default \code{NULL} infers \code{sum_one = TRUE} when the bounds
+outcome variable. If \code{NULL}, infers \code{sum_one = TRUE} when the bounds
 are \code{c(0, 1)} the outcome variables sum to 1.}
 
 \item{penalty}{The ridge penalty (a non-negative scalar), which must be

@@ -10,9 +10,11 @@ ei_est_local(
   data,
   total,
   r_cov = NULL,
+  contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
   conf_level = FALSE,
+  regr_var = TRUE,
   unimodal = TRUE
 )
 
@@ -41,17 +43,28 @@ identically to each outcome. Alternatively, a matrix with entries for each
 predictor-outcome combination may be provided, with entries in the order
 (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).}
 
+\item{contrast}{If provided, a list containing entries \code{predictor} and
+\code{outcome}, each containing a contrast vector.  If only one of \code{predictor}
+or \code{outcome} is provided, the contrast will be calculated for all levels of
+the other variable.  For example \code{list(predictor = c(1, -1, 0))} will
+calculate the difference in each outcome between the first and second
+predictor groups; \code{list(outcome = c(1, -1))} will calculate the difference
+between the two outcomes for each predictor group; and
+\code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
+difference in differences.}
+
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, to which the
 local estimates will be truncated. In general, truncation will lead to
 violations of the accounting identity. If \code{bounds = NULL}, they will be
 inferred from the outcome variable: if it is contained within \eqn{[0, 1]},
 for instance, then the bounds will be \code{c(0, 1)}. Setting \code{bounds = FALSE}
 forces unbounded estimates. The default uses the \code{bounds} attribute of
-\code{regr}, if available, or infers from the outcome variable otherwise.}
+\code{regr}, if available, or infers from the outcome variable otherwise.
+Note that bounds are currently not applied if \code{contrast} is provided.}
 
 \item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
 Can only apply when \code{bounds} are enforced and there is more than one
-outcome variable. The default \code{NULL} infers \code{sum_one = TRUE} when the bounds
+outcome variable. If \code{NULL}, infers \code{sum_one = TRUE} when the bounds
 are \code{c(0, 1)} the outcome variables sum to 1.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
@@ -59,6 +72,10 @@ If \code{FALSE} (the default), no confidence intervals are calculated.
 For \code{regr} arguments from \code{\link[=ei_wrap_model]{ei_wrap_model()}}, confidence intervals will not
 incorporate uncertainty in the prediction itself, just the residual. This
 will trigger a warning periodically.}
+
+\item{regr_var}{If \code{TRUE}, incorporate uncertainty from the regression model
+when calculating confidence intervals. Only applies when \code{regr} is fitted
+with \code{\link[=ei_ridge]{ei_ridge()}}, and requires that function be called with \code{vcov = TRUE}.}
 
 \item{unimodal}{If \code{TRUE}, assume a unimodal residual distribution. Improves
 width of confidence intervals by a factor of 4/9.}
@@ -69,7 +86,7 @@ width of confidence intervals by a factor of 4/9.}
 }
 \value{
 A data frame with estimates. The \code{.row} column in the output
-corresponds to the observation index in the input. The \code{n} column contains
+corresponds to the observation index in the input. The \code{wt} column contains
 the product of the predictor variable and total for each observation.
 Taking a weighted average of the estimate against this column will produce
 a global estimate. It has class \code{ei_est_local}, supporting several methods.
@@ -107,10 +124,16 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 
 m = ei_ridge(spec)
 
-ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 
 r_cov = ei_resid_cov(m, spec)
-e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
-e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE)
-e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+# average interval width
+c(
+    e_orth = mean(e_orth$conf.high - e_orth$conf.low),
+    e_nbhd = mean(e_nbhd$conf.high - e_nbhd$conf.low),
+    e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
+)
 }

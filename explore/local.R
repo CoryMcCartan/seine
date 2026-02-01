@@ -14,6 +14,8 @@ elec_1968 = elec_1968 |>
 
 spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
                total = pres_total, covariates = c(state, z))
+spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs),
+               total = pres_total, covariates = c(state))
 
 m = ei_ridge(spec)#, bounds=0:1, sum_one=T)
 rr = ei_riesz(spec, penalty = m$penalty)
@@ -25,16 +27,45 @@ ei_est(m, rr, data = spec) |>
 
 
 r_cov = ei_resid_cov(m, spec)
-cov_x = cov2cor(c(20, 1, 1) %o% c(20, 1, 1) + diag(3)*1e-2)
-# cov_y = cov(m$y) + diag(4)*1e-4
-cov_y = diag(m$sigma2)
+cov_x = cov2cor(c(20, 1, 2) %o% c(20, 1, 2) + diag(3)*1e-2)
+cov_y = cov(m$y) + diag(4)*1e-4
+# cov_y = diag(m$sigma2)
 r_cov2 = cov_y %x% cov_x
 
-ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = T) |>
+ei_est_local(m, spec, r_cov = r_cov2, bounds=c(0, 1), sum_one = TRUE) |>
     # summarize(est = weighted.mean(estimate, wt), .by = c(predictor, outcome)) |>
     # arrange(predictor)
     ggplot(aes(estimate)) +
     facet_grid(outcome ~ predictor, scales="free") +
     geom_histogram(bins=20)
 
+
+ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.5, regr_var = F, unimodal = TRUE) |>
+    dplyr::filter(.row == 1) |>
+    ggplot(aes(estimate, paste0(outcome, " | ", predictor))) +
+    geom_pointrange(aes(xmin = conf.low, xmax = conf.high))
+
+
 H = diag(n_y) %x% local_basis(x[1, ])
+R = chol(r_cov)
+
+eig = eigen(oblique_proj(H, R))
+ev = ifelse(eig$values > 1e-8, 1/eig$values, 0)
+eig$vectors %*% diag(ev) %*% t(eig$vectors)
+
+oblique_proj(H, R)
+
+sqrt(diag(oblique_proj(H, R)))
+
+Sigma = matrix(c(4, 1, 1, 1), 2, 2)
+n = 1e4
+z = matrix(rnorm(2*n), nrow=n) %*% chol(Sigma)
+plot(z, cex=0.25, pch=16)
+
+alphas = seq(0.05, 1, 0.05)^2
+plot(alphas, sapply(alphas, \(alpha) {
+#   1 - mean(rowSums((z %*% solve(Sigma)) * z) <= (2 - 1)/alpha)
+    1 - mean(t(abs(z)) <= 2/3 * sqrt(diag(Sigma)) / sqrt(alpha))
+})); abline(0, 1, col='red')
+
+sqrt(diag(Sigma))

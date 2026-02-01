@@ -42,12 +42,17 @@
 #'   for instance, then the bounds will be `c(0, 1)`. Setting `bounds = FALSE`
 #'   forces unbounded estimates. The default uses the `bounds` attribute of
 #'   `regr`, if available, or infers from the outcome variable otherwise.
+#'   Note that bounds are currently not applied if `contrast` is provided.
 #' @inheritParams ei_ridge
+#' @inheritParams ei_est
 #' @param conf_level A numeric specifying the level for confidence intervals.
 #'   If `FALSE` (the default), no confidence intervals are calculated.
 #'   For `regr` arguments from [ei_wrap_model()], confidence intervals will not
 #'   incorporate uncertainty in the prediction itself, just the residual. This
 #'   will trigger a warning periodically.
+#' @param regr_var If `TRUE`, incorporate uncertainty from the regression model
+#'   when calculating confidence intervals. Only applies when `regr` is fitted
+#'   with [ei_ridge()], and requires that function be called with `vcov = TRUE`.
 #' @param unimodal If `TRUE`, assume a unimodal residual distribution. Improves
 #'   width of confidence intervals by a factor of 4/9.
 #'
@@ -65,21 +70,29 @@
 #'
 #' m = ei_ridge(spec)
 #'
-#' ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+#' ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 #'
 #' r_cov = ei_resid_cov(m, spec)
-#' e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
-#' e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE)
-#' e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE)
+#' e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#' e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#' e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#' # average interval width
+#' c(
+#'     e_orth = mean(e_orth$conf.high - e_orth$conf.low),
+#'     e_nbhd = mean(e_nbhd$conf.high - e_nbhd$conf.low),
+#'     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
+#' )
 #' @export
 ei_est_local = function(
     regr,
     data,
     total,
     r_cov = NULL,
+    contrast = NULL,
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
     conf_level = FALSE,
+    regr_var = TRUE,
     unimodal = TRUE
 ) {
     y = est_check_outcome(regr, data, NULL)
@@ -91,18 +104,18 @@ ei_est_local = function(
         .frequency = "regularly",
         .frequency_id = "ei_est_local_temp"
     )
-
-    rl = est_check_regr(regr, data, n, NULL, n_y, sd = TRUE)
-    rl <<- rl
-    n_x = length(rl$preds)
-    if (inherits(regr, "ei_wrapped") && !isFALSE(conf_level)) {
+    if (inherits(regr, "ei_wrapped") && isTRUE(regr_var) && !isFALSE(conf_level)) {
         cli_warn(
             "Local confidence intervals with wrapped model objects
                   do not incorporate prediction uncertainty.",
             .frequency = "regularly",
             .frequency_id = "ei_est_local"
         )
+        regr_var = FALSE
     }
+
+    rl = est_check_regr(regr, data, n, NULL, n_y, vcov = isTRUE(regr_var))
+    n_x = length(rl$preds)
 
     bounds = ei_bounds(bounds, y, clamp = 1e-8)
     if (is.null(sum_one) && all(bounds == c(0, 1))) {
@@ -121,30 +134,37 @@ ei_est_local = function(
 
     r_cov = check_proc_r_cov(r_cov, regr$sigma2, n_x)
 
+    contr = check_contrast(contrast, colnames(rl$x), colnames(y))
+    x_nm = contr$x_nm
+    y_nm = contr$y_nm
+
     eta = matrix(nrow = n, ncol = n_x * n_y)
-    nms = character(n_x * n_y)
     for (k in seq_len(n_x)) {
         idx = k + seq(0, by = n_x, length.out = n_y)
         eta[, idx] = rl$preds[[k]]
-        nms[idx] = paste0(colnames(rl$x)[k], ":", colnames(y))
     }
-    colnames(eta) = nms # helps debug
     eta_proj = local_proj(rl$x, eta, y - rl$yhat, r_cov, bounds, sum_one)
+    if (!is.null(contrast)) {
+        eta_proj = eta_proj %*% contr$m
+    }
 
-    ests = lapply(seq_len(n_y), function(k) {
-        tibble::new_tibble(
-            list(
-                .row = rep(seq_len(n), n_x),
-                predictor = rep(colnames(rl$x), each = n),
-                outcome = rep(colnames(y)[k], n * n_x),
-                wt = c(rl$x * total),
-                estimate = c(eta_proj[, (k - 1) * n_x + seq_len(n_x)]),
-                std.error = NA #sqrt(c(proj[[2]]))
-            ),
-            class = "ei_est_local"
-        )
-    })
-    ests = do.call(rbind, ests)
+    sds = if (!isFALSE(conf_level)) {
+        local_sds(rl$x, r_cov, rl$vcov, contr$m, !is.null(contrast))
+    } else {
+        NULL
+    }
+
+    ests = tibble::new_tibble(
+        list(
+            .row = rep(seq_len(n), length(x_nm)),
+            predictor = rep(x_nm, each = n),
+            outcome = rep(y_nm, each = n),
+            wt = if (is.null(contrast)) rep(c(rl$x * total), n_y) else NULL,
+            estimate = c(eta_proj),
+            std.error = c(sds)
+        ),
+        class = "ei_est_local"
+    )
     attr(ests, "proj_misses") = attr(eta_proj, "misses")
     attr(ests, "proj_relax") = attr(eta_proj, "relax")
 
@@ -154,10 +174,12 @@ ei_est_local = function(
         ests$conf.low = ests$estimate - chebyshev * ests$std.error
         ests$conf.high = ests$estimate + chebyshev * ests$std.error
 
-        ests$conf.low[ests$conf.low < bounds[1]] = bounds[1]
-        ests$conf.high[ests$conf.high < bounds[1]] = bounds[1]
-        ests$conf.low[ests$conf.low > bounds[2]] = bounds[2]
-        ests$conf.high[ests$conf.high > bounds[2]] = bounds[2]
+        if (is.null(contrast)) {
+            ests$conf.low[ests$conf.low < bounds[1]] = bounds[1]
+            ests$conf.high[ests$conf.high < bounds[1]] = bounds[1]
+            ests$conf.low[ests$conf.low > bounds[2]] = bounds[2]
+            ests$conf.high[ests$conf.high > bounds[2]] = bounds[2]
+        }
     }
     ests$std.error = NULL
 
@@ -266,6 +288,7 @@ check_proc_r_cov <- function(r_cov, sigma2, n_x) {
 
 # Solve QP to project estimates onto tomography plane and into bounds
 # Not the fastest possible implementation (pure C++ would be better), but fast enough
+# r_cov here is Cholesky factor
 local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     n = nrow(eta)
     n_x = ncol(x)
@@ -358,7 +381,37 @@ local_proj = function(x, eta, eps, r_cov, bounds, sum_one) {
     out
 }
 
-local_basis = function(x) {
-    qr.Q(qr(cbind(x, diag(length(x)))))[,  drop=FALSE]
+# r_cov here is Cholesky factor
+local_sds = function(x, r_cov, regr_cov, contr_m, is_contr = FALSE) {
+    n = nrow(x)
+    n_x = ncol(x)
+    n_y = nrow(r_cov) / n_x
+    sds = matrix(nrow = n, ncol = ncol(contr_m))
+    for (i in seq_len(n)) {
+        H = diag(n_y) %x% local_basis(x[i, ])
+        R_i = if (!is.null(regr_cov)) {
+            chol(crossprod(r_cov) + (diag(n_y) %x% matrix(regr_cov[i, ], n_x, n_x)))
+        } else {
+            r_cov
+        }
+        Pi_Sigma = oblique_proj(H, R_i)
+
+        if (is_contr) {
+            sds[i, ] = sqrt(colSums((Pi_Sigma %*% contr_m) * contr_m))
+        } else {
+            sds[i, ] = sqrt(diag(Pi_Sigma))
+        }
+    }
+    sds
 }
 
+local_basis = function(x) {
+    qr.Q(qr(cbind(x, diag(length(x)))))[, -1, drop=FALSE]
+}
+
+# project onto plane spanned by H along metric defined by R = chol(r_cov)
+# returns this projection matrix multiplied by r_cov, which is symmetric
+oblique_proj = function(H, R) {
+    H_tilde = backsolve(R, H, transpose = TRUE)
+    tcrossprod(H %*% solve(qr.R(qr(H_tilde))))
+}

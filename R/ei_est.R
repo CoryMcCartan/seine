@@ -121,13 +121,13 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
 
     # build predictions and RR
     rm = est_check_riesz(riesz, data, w, n, regr) # riesz matrix
-    rl = est_check_regr(regr, data, n, colnames(rm), n_y) # regr list
+    rl = est_check_regr(regr, data, n, colnames(rm), n_y, vcov = FALSE) # regr list
 
     # evaluate EIF
     n_x = ncol(rm)
     x_nm = names(rl$preds)
     y_nm = colnames(y)
-    eif = matrix(nrow=n, ncol=n_y*n_x) # x varies faster than y
+    eif = matrix(nrow=n, ncol=n_y * n_x) # x varies faster than y
     for (i in seq_len(n_x)) {
         plugin = rl$preds[[x_nm[i]]] * rl$x[, i] * w / mean(rl$x[, i] * w)
         wtd = rm[, i] * (y - rl$yhat)
@@ -135,48 +135,12 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     }
 
     # apply contrast if necessary
-    if (!is.null(contrast)) {
-        if (
-            is.list(contrast) &&
-                length(contrast) %in% 1:2 &&
-                all(names(contrast) %in% c("predictor", "outcome"))
-        ) {
-            has_x = has_y = FALSE
-            if (!is.null(contrast$predictor)) {
-                has_x = TRUE
-                if (length(contrast$predictor) != n_x) {
-                    cli_abort("{.arg contrast$predictor} must have length {n_x}.")
-                }
-            }
-            if (!is.null(contrast$outcome)) {
-                has_y = TRUE
-                if (length(contrast$outcome) != n_y) {
-                    cli_abort("{.arg contrast$outcome} must have length {n_y}.")
-                }
-            }
-
-            if (has_x && !has_y) {
-                contrast$outcome = diag(n_y)
-                x_nm = rep(fmt_contrast(contrast$predictor, x_nm), n_y)
-            } else if (!has_x && has_y) {
-                contrast$predictor = diag(n_x)
-                y_nm = rep(fmt_contrast(contrast$outcome, y_nm), each=n_x)
-            } else {
-                x_nm = fmt_contrast(contrast$predictor, x_nm)
-                y_nm = fmt_contrast(contrast$outcome, y_nm)
-            }
-        } else {
-            cli_abort("The {.arg contrast} argument must be a list with entries
-            {.code predictor} and/or {.code outcome}.")
-        }
-        contr_m = as.matrix(contrast$outcome %x% contrast$predictor)
-
-        eif = eif %*% contr_m
-        vcov_nm = paste(x_nm, y_nm, sep=":")
-    } else {
-        vcov_nm = c(outer(x_nm, y_nm, paste, sep=":"))
-        x_nm = rep(x_nm, n_y)
-        y_nm = rep(y_nm, each=n_x)
+    contr = check_contrast(contrast, x_nm, y_nm)
+    x_nm = contr$x_nm
+    y_nm = contr$y_nm
+    vcov_nm = paste(x_nm, y_nm, sep=":")
+    if (!is.null(contrast)) { # avoid extra work
+        eif = eif %*% contr$m
     }
 
     # save data for sensitivity analysis
@@ -186,8 +150,16 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
             sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
         } else {
             # re-compute but too late to do Neyman orthogonal Riesz
-            nu_c = colMeans((riesz$weights %*% contrast$predictor)^2)
-            sigma_c = colMeans(((y - rl$yhat) %*% contrast$outcome)^2)
+            nu_c = if (!is.null(contrast$predictor)) {
+                colMeans((riesz$weights %*% contrast$predictor)^2)
+            } else {
+                riesz$nu2
+            }
+            sigma_c = if (!is.null(contrast$outcome)) {
+                colMeans(((y - rl$yhat) %*% contrast$outcome)^2)
+            } else {
+                regr$sigma2
+            }
             sens_s = sqrt(nu_c %o% sigma_c)
             rownames(sens_s) = unique(x_nm)
             colnames(sens_s) = unique(y_nm)
@@ -229,6 +201,59 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     }
 
     out
+}
+
+check_contrast <- function(contrast, x_nm, y_nm) {
+    n_x = length(x_nm)
+    n_y = length(y_nm)
+
+    if (is.null(contrast)) {
+        return(list(
+            m = diag(n_x * n_y),
+            x_nm = rep(x_nm, n_y),
+            y_nm = rep(y_nm, each = n_x)
+        ))
+    }
+
+    if (
+        is.list(contrast) &&
+            length(contrast) %in% 1:2 &&
+            all(names(contrast) %in% c("predictor", "outcome"))
+    ) {
+        has_x = has_y = FALSE
+        if (!is.null(contrast$predictor)) {
+            has_x = TRUE
+            if (length(contrast$predictor) != n_x) {
+                cli_abort("{.arg contrast$predictor} must have length {n_x}.")
+            }
+        }
+        if (!is.null(contrast$outcome)) {
+            has_y = TRUE
+            if (length(contrast$outcome) != n_y) {
+                cli_abort("{.arg contrast$outcome} must have length {n_y}.")
+            }
+        }
+
+        if (has_x && !has_y) {
+            contrast$outcome = diag(n_y)
+            x_nm = rep(fmt_contrast(contrast$predictor, x_nm), n_y)
+        } else if (!has_x && has_y) {
+            contrast$predictor = diag(n_x)
+            y_nm = rep(fmt_contrast(contrast$outcome, y_nm), each=n_x)
+        } else {
+            x_nm = fmt_contrast(contrast$predictor, x_nm)
+            y_nm = fmt_contrast(contrast$outcome, y_nm)
+        }
+    } else {
+        cli_abort("The {.arg contrast} argument must be a list with entries
+        {.code predictor} and/or {.code outcome}.")
+    }
+
+    list(
+        m = as.matrix(contrast$outcome %x% contrast$predictor),
+        x_nm = x_nm,
+        y_nm = y_nm
+    )
 }
 
 fmt_contrast <- function(cc, nm) {
@@ -294,7 +319,7 @@ est_check_riesz = function(riesz, data, weights, n, regr) {
     riesz
 }
 
-est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
+est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
     if (is.null(regr)) {
         preds = lapply(xcols, function(.) matrix(0, nrow=n, ncol=n_y))
         names(preds) = xcols
@@ -326,8 +351,8 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
     z = cbind(regr$int_scale, z)
 
     preds = list()
-    sds = if (sd) matrix(nrow = n, ncol = n_x^2) else NULL
-    if (sd && is.null(regr$vcov_u)) {
+    xcov = if (vcov) matrix(nrow = n, ncol = n_x^2) else NULL
+    if (vcov && is.null(regr$vcov_u)) {
         cli_abort(c(
             "Standard errors not available for this {.arg regr} object.",
             ">"="Call {.fn ei_ridge} with {.arg vcov = TRUE} to enable."
@@ -337,16 +362,16 @@ est_check_regr = function(regr, data, n, xcols, n_y, sd = FALSE) {
         use = c(group, n_x + p*(group-1) + seq_len(p))
         preds[[xcols[group]]] = z %*% regr$coef[use, ]
 
-        if (sd) {
+        if (vcov) {
             for (g2 in seq_len(group)) {
                 use2 = c(g2, n_x + p*(g2-1) + seq_len(p))
-                sds[, (group - 1)*n_x + g2] = rowSums(z * (z %*% regr$vcov_u[use, use2]))
-                sds[, (g2 - 1)*n_x + group] = sds[, (group - 1)*n_x + g2]
+                xcov[, (group - 1)*n_x + g2] = rowSums(z * (z %*% regr$vcov_u[use, use2]))
+                xcov[, (g2 - 1)*n_x + group] = xcov[, (group - 1)*n_x + g2]
             }
         }
     }
 
-    list(yhat=regr$fitted, preds=preds, sds=sds, x=x)
+    list(yhat=regr$fitted, preds=preds, vcov=xcov, x=x)
 }
 
 #' Wrap another predictive model for use in `ei_est`
