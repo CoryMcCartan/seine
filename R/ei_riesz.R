@@ -17,6 +17,8 @@
 #'
 #' @returns An `ei_riesz` object.
 #'
+#' @inherit ei_est references
+#'
 #' @examples
 #' data(elec_1968)
 #'

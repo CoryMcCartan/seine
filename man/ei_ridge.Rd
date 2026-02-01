@@ -213,3 +213,8 @@ all.equal(
 min(fitted(ei_ridge(spec)))
 min(fitted(ei_ridge(spec, bounds = 0:1)))
 }
+\references{
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
+}

@@ -128,3 +128,8 @@ colMeans(weights(rr))
 
 mean(elec_1968$pres_ind_wal * weights(rr, "vap_white"))
 }
+\references{
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
+}

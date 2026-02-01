@@ -34,6 +34,7 @@ reference:
   contents:
   - ei_ridge
   - ei_riesz
+  - ei_resid_cov
   - ei_wgt
   - ridge-methods
   - weights.ei_riesz

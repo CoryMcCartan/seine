@@ -74,7 +74,7 @@ in the previous paragraph.
 The `ei_proportions()` function would let us create a new turnout proportion
 variable from our existing data.
 ```{r}
-elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total, 
+elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total,
                                 .total = vap, clamp = 0.01)
 
 subset(elec_1968_turn, select = c(fips, state, county, turnout, vap, .other))
@@ -118,9 +118,9 @@ agriculture, education, and income.
 
 ```{r echo=FALSE}
 set.seed(35005)
-subs = subset(elec_1968, select=c(state, county, pop_city:pop_rural, farm:educ_coll, 
+subs = subset(elec_1968, select=c(state, county, pop_city:pop_rural, farm:educ_coll,
                                   inc_00_03k:inc_25_99k, vap_white:vap_other, pres_total))
-km = kmeans(model.matrix(~ 0 + . - county - vap_white - vap_black - 
+km = kmeans(model.matrix(~ 0 + . - county - vap_white - vap_black -
                              vap_other - pres_total, subs), centers = 400)
 cl = which.max(tapply(subs$vap_black, km$cluster, mad)) # largest Black sd
 d_z = subset(subs, km$cluster == cl, c(state, county, pop_urban, farm, educ_elem:inc_25_99k))
@@ -156,7 +156,7 @@ models before combining them for a final estimate:
    and covariates
 1. A **Riesz representer** model, which yields a special set of "weights" that
    can be used in estimation.
-   
+
 By carefully combining the fitted regression and Riesz representer, we can
 reduce the sensitivity to biases in each component.
 
@@ -164,7 +164,7 @@ reduce the sensitivity to biases in each component.
 
 **seine** provides both a formula interface and a tidy interface
 through a new `ei_spec()` object.
-We recommend the `ei_spec()` approach for most analyses, since it dovetails 
+We recommend the `ei_spec()` approach for most analyses, since it dovetails
 well with the other estimation and sensitivity functions.
 We will demonstrate both approaches here, however.
 
@@ -174,11 +174,11 @@ number of people in each aggregation unit.
 
 ```{r}
 spec = ei_spec(
-    elec_1968, 
+    elec_1968,
     predictors = vap_white:vap_other,
-    outcome = pres_dem_hum:pres_abs, 
+    outcome = pres_dem_hum:pres_abs,
     total = pres_total,
-    covariates = c(state, pop_city:pop_rural, farm:educ_coll, 
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll,
                    inc_00_03k:inc_25_99k)
 )
 
@@ -227,8 +227,8 @@ a vertical bar.
 
 ```{r}
 m_form = ei_ridge(
-    cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~ 
-        vap_white + vap_black + vap_other | 
+    cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~
+        vap_white + vap_black + vap_other |
         state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
                      inc_03_08k + inc_08_25k + inc_25_99k),
     data = elec_1968, total = pres_total
@@ -267,14 +267,14 @@ variable); the tidy interface obviates the need to worry about this.
 
 ```{r}
 rr_form = ei_riesz(
-    ~ vap_white + vap_black + vap_other | 
+    ~ vap_white + vap_black + vap_other |
         state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
                      inc_03_08k + inc_08_25k + inc_25_99k),
     data = elec_1968, total = pres_total, penalty = m_form$penalty
 )
 ```
 
-As with the regression model, the `summary()` function provides useful 
+As with the regression model, the `summary()` function provides useful
 information for evaluating the Riesz representer.
 
 ```{r}
@@ -290,7 +290,7 @@ cases of possible overfitting, where a higher penalty may be useful.
 
 ## DML for ecological estimates
 
-With the regression function and Riesz representer now fitted, we are ready to 
+With the regression function and Riesz representer now fitted, we are ready to
 combine them to estimate our quantities of interest: vote choice by race.
 This is accomplished with the `ei_est()` function, which takes in both fitted
 models and the original `ei_spec` object, and returns a tidy data frame of
@@ -376,7 +376,7 @@ We can also work backwards and ask what one of the sensitivity parameters would
 have to be in order to produce a certain amount of bias.
 For example, if we assumed a worst-case scenario where the confounder explains
 the entire outcome (`c_outcome = 1`), we can ask how strongly that confounder
-would need to be related to the Riesz representer to produce a bias of up to 
+would need to be related to the Riesz representer to produce a bias of up to
 5pp.
 
 ```{r}
@@ -388,7 +388,7 @@ For most predictors and outcomes, the answer is not very much!
 The `c_outcome` parameter is relatively easy to understand, but `c_predictor`
 is more difficult to interpret (though see the methodology paper for more
 discussion).
-To help understand plausible values of these parameters, we can conduct a 
+To help understand plausible values of these parameters, we can conduct a
 **benchmarking analysis** that treats each of our *observed* covariates in turn
 as a hypothetical *unobserved* confounder, and then calculates the values of the
 sensitivity parameters in that instance.
@@ -423,12 +423,12 @@ sens = ei_sens(est) # the default evaluates on a grid of parameters
 plot(sens, bench = bench)
 ```
 
-The contour lines indicate how much bias could result from an unobserved 
+The contour lines indicate how much bias could result from an unobserved
 confounder with the specified sensitivity parameters.
 The blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
 This is a helpful value to compare against, because bias of that size
 corresponds to a predictable drop in coverage rates of confidence intervals.
-For example, bias of 1 standard error means that a confidence interval with 
+For example, bias of 1 standard error means that a confidence interval with
 95% nominal coverage will actually have coverage of only around 80%.
 
 The red asterisks indicate the benchmark values for each covariate.
@@ -475,10 +475,10 @@ analysis.
 
 # References
 
-McCartan, C. and Kuriwaki, S. (2025+).
-*Estimation of conditional means from aggregate data.*
-Working paper.
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
 
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
-*Long story short: Omitted variable bias in causal machine learning*
-(No. w30302). National Bureau of Economic Research.
+Long story short: Omitted variable bias in causal machine learning
+(No. w30302). *National Bureau of Economic Research.*

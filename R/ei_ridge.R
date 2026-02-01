@@ -102,6 +102,8 @@
 #'
 #' @returns An `ei_ridge` object, which supports various [ridge-methods].
 #'
+#' @inherit ei_est references
+#'
 #' @examples
 #' data(elec_1968)
 #'

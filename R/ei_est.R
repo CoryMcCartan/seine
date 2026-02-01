@@ -47,6 +47,11 @@
 #'   number of aggregate units used in estimation (the number of rows in
 #'   `data`).
 #'
+#' @references
+#' McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+#' estimation of conditional means from aggregate data.
+#' Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+#'
 #' @examples
 #' data(elec_1968)
 #'

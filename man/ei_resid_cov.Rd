@@ -19,7 +19,22 @@ outcome, e.g. (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
 }
 \description{
 Under a slightly stronger coarsening at random assumption (applying to
-second moments), and an assumption of homoskedasticity, this function
-estimates the covariance matrix of the local estimands
+second moments), \emph{and} an assumption of homoskedasticity in the covariates,
+this function estimates the covariance matrix of the local estimands
 \eqn{\beta_{gj}=\mathbb{E}[Y | X_j=1, Z=z_g, G=g]} around their local mean.
+See the reference for more detail.
+}
+\details{
+Homoskedasticity in the covariates implies that the variance of the residuals
+depends linearly on the entries of \eqn{\bar{X}\bar{X}^\top}. This function
+fits an auto-tuned ridge regression of the empirical second moments of the
+residuals on these predictors, and uses the polarization identity discussed
+in the references to estimate the covariance for each local estimand. When
+the estiamated covariance is not positive semidefinite, it is projected onto
+the cone of positive semidefinite matrices.
+}
+\references{
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
 }
