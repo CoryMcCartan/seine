@@ -12,7 +12,7 @@ ei_est_local(
   regr,
   data,
   total,
-  r_cov = NULL,
+  b_cov = NULL,
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
@@ -49,15 +49,15 @@ as.array(x, ...)
   [`ei_spec()`](https://corymccartan.com/seine/reference/ei_spec.md)
   object.
 
-- r_cov:
+- b_cov:
 
-  A covariance matrix of the residuals to use in projecting the local
-  estimates onto the accounting constraint, such as one estimated with
-  [`ei_resid_cov()`](https://corymccartan.com/seine/reference/ei_resid_cov.md).
+  A covariance matrix to use in projecting the local estimates onto the
+  accounting constraint, such as one estimated with
+  [`ei_local_cov()`](https://corymccartan.com/seine/reference/ei_local_cov.md).
   Defaults to the identity matrix scaled by the residual variance of
-  `regr`, corresponding to orthogonal projection. Set `r_cov=1` to use a
+  `regr`, corresponding to orthogonal projection. Set `b_cov=1` to use a
   degenerate covariance matrix corresponding to a (local) neighborhood
-  model. When there are multiple outcome variables and r_cov\` is a
+  model. When there are multiple outcome variables and `b_cov` is a
   matrix with entries for each predictor, it will be applied identically
   to each outcome. Alternatively, a matrix with entries for each
   predictor-outcome combination may be provided, with entries in the
@@ -141,11 +141,11 @@ bounds are applied, unless `sum_one = TRUE`, the estimates for each
 observation may not satisfy logical constraints, including the
 accounting identity.
 
-Projections are done obliquely in accordance with `r_cov` via quadratic
+Projections are done obliquely in accordance with `b_cov` via quadratic
 programming. Occasionally, the quadratic program may be infeasible due
-to the specific data, features of `r_cov`, or numerical errors. Various
-relaxations of the accounting identity and `r_cov` are attempted in
-these cases; indices where relaxations of `r_cov` were used are stored
+to the specific data, features of `b_cov`, or numerical errors. Various
+relaxations of the accounting identity and `b_cov` are attempted in
+these cases; indices where relaxations of `b_cov` were used are stored
 in the `proj_relax` attribute of the output, and indices of infeasible
 projections are stored in the `proj_misses` attribute.
 
@@ -172,27 +172,25 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 m = ei_ridge(spec)
 
 ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-#> Warning: Local confidence intervals do not yet incorporate prediction uncertainty.
-#> This warning is displayed once every 8 hours.
 #> # A tibble: 13,716 × 7
 #>     .row predictor outcome          wt estimate conf.low conf.high
 #>    <int> <chr>     <chr>         <dbl>    <dbl>    <dbl>     <dbl>
-#>  1     1 vap_white pres_dem_hum  5877. 4.56e- 2        0    0.552 
-#>  2     2 vap_white pres_dem_hum 16131. 8.85e- 3        0    0.259 
-#>  3     3 vap_white pres_dem_hum  4872. 1.73e-18        0    0.651 
-#>  4     4 vap_white pres_dem_hum  3566. 8.67e-19        0    0.481 
-#>  5     5 vap_white pres_dem_hum  8801. 2.53e- 2        0    0.0537
-#>  6     6 vap_white pres_dem_hum  1698. 6.72e- 2        0    0.685 
-#>  7     7 vap_white pres_dem_hum  4970. 6.94e-18        0    0.611 
-#>  8     8 vap_white pres_dem_hum 22844. 6.02e- 2        0    0.370 
-#>  9     9 vap_white pres_dem_hum  7731. 0               0    0.562 
-#> 10    10 vap_white pres_dem_hum  5259. 3.49e- 2        0    0.148 
+#>  1     1 vap_white pres_dem_hum  5877. 4.56e- 2   0         0.124 
+#>  2     2 vap_white pres_dem_hum 16131. 8.85e- 3   0         0.0499
+#>  3     3 vap_white pres_dem_hum  4872. 3.47e-18   0         0.138 
+#>  4     4 vap_white pres_dem_hum  3566. 0          0         0.0708
+#>  5     5 vap_white pres_dem_hum  8801. 2.53e- 2   0.0204    0.0302
+#>  6     6 vap_white pres_dem_hum  1698. 6.72e- 2   0         0.274 
+#>  7     7 vap_white pres_dem_hum  4970. 1.04e-17   0         0.110 
+#>  8     8 vap_white pres_dem_hum 22844. 6.02e- 2   0.0144    0.106 
+#>  9     9 vap_white pres_dem_hum  7731. 3.47e-18   0         0.0916
+#> 10    10 vap_white pres_dem_hum  5259. 3.49e- 2   0.0153    0.0546
 #> # ℹ 13,706 more rows
 
-r_cov = ei_resid_cov(m, spec)
+b_cov = ei_local_cov(m, spec)
 e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_nbhd = ei_est_local(m, spec, r_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_rcov = ei_est_local(m, spec, r_cov = r_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 # average interval width
 c(
     e_orth = mean(e_orth$conf.high - e_orth$conf.low),
@@ -200,5 +198,5 @@ c(
     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
 )
 #>    e_orth    e_nbhd    e_rcov 
-#> 0.8235659 0.8234180 0.8348127 
+#> 0.4151625 0.3491863 0.5026159 
 ```

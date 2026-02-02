@@ -182,9 +182,13 @@ scaled to have mean zero and unit variance before fitting.</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
-<dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
-estimated coefficients. When <code>bounds</code> are provided, the covariance matrix
-for the unbounded estimate is returned as a conservative approximation.</p></dd>
+<dd><p>If <code>TRUE</code>, calculate and return the a scaled covariance matrix of
+the estimated coefficients. When <code>bounds</code> are provided, the (scaled)
+covariance matrix for the unbounded estimate is returned as a conservative
+approximation.
+The covariance matrix is "scaled" because it does not include the
+residual variance. For the covariance for a particular outcome variable,
+multiply the returned <code>$vcov_u</code> by <code>sigma2</code> for that outcome.</p></dd>
 
 
 <dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
@@ -289,7 +293,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.1029557</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="fu">ei_ridge</span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.765682e-20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 9.701731e-20</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

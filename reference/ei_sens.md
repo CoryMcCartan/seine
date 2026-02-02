@@ -108,12 +108,12 @@ ei_sens(est, c_outcome=0.2)
 #>  2 vap_black pres_ind_wal    0.490    0.0505       0.2      0         0      
 #>  3 vap_other pres_ind_wal   -1.19     0.528        0.2      0         0      
 #>  4 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0001    0.00111
-#>  5 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0001    0.00392
-#>  6 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0001    0.0909 
-#>  7 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0004    0.00221
-#>  8 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0004    0.00784
-#>  9 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0004    0.182  
-#> 10 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0009    0.00332
+#>  5 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0001    0.00395
+#>  6 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0001    0.0915 
+#>  7 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0004    0.00223
+#>  8 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0004    0.00790
+#>  9 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0004    0.183  
+#> 10 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0009    0.00335
 #> # ℹ 293 more rows
 
 # How much variation would the regression residual need to explain of
@@ -122,9 +122,9 @@ ei_sens(est, c_outcome=1, bias_bound=0.4)
 #> # A tibble: 3 × 7
 #>   predictor outcome      estimate std.error c_outcome c_predictor bias_bound
 #>   <chr>     <chr>           <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white pres_ind_wal    0.387    0.0246         1    0.723           0.4
-#> 2 vap_black pres_ind_wal    0.490    0.0505         1    0.172           0.4
-#> 3 vap_other pres_ind_wal   -1.19     0.528          1    0.000388        0.4
+#> 1 vap_white pres_ind_wal    0.387    0.0246         1    0.720           0.4
+#> 2 vap_black pres_ind_wal    0.490    0.0505         1    0.170           0.4
+#> 3 vap_other pres_ind_wal   -1.19     0.528          1    0.000382        0.4
 
 # Update confidence intervals and extract as matrix
 est = ei_est(m, rr, spec, conf_level=0.95)
@@ -132,9 +132,9 @@ sens = ei_sens(est, c_outcome=0.5, c_predictor=0.2)
 as.matrix(sens, "conf.high")
 #>            outcome
 #> predictor   pres_ind_wal
-#>   vap_white    0.5229302
-#>   vap_black    0.8985834
-#>   vap_other    7.0320692
+#>   vap_white    0.5235864
+#>   vap_black    0.9009076
+#>   vap_other    7.0859487
 
 # Works for contrasts as well
 est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
@@ -142,5 +142,5 @@ ei_sens(est, c_outcome=0.5, c_predictor=0.5)
 #> # A tibble: 1 × 7
 #>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
 #>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white - vap_b… pres_i…   -0.102    0.0457       0.5         0.5      0.737
+#> 1 vap_white - vap_b… pres_i…   -0.102    0.0457       0.5         0.5      0.743
 ```

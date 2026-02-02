@@ -143,9 +143,13 @@ ei_ridge(x, ...)
 
 - vcov:
 
-  If `TRUE`, calculate and return the covariance matrix of the estimated
-  coefficients. When `bounds` are provided, the covariance matrix for
-  the unbounded estimate is returned as a conservative approximation.
+  If `TRUE`, calculate and return the a scaled covariance matrix of the
+  estimated coefficients. When `bounds` are provided, the (scaled)
+  covariance matrix for the unbounded estimate is returned as a
+  conservative approximation. The covariance matrix is "scaled" because
+  it does not include the residual variance. For the covariance for a
+  particular outcome variable, multiply the returned `$vcov_u` by
+  `sigma2` for that outcome.
 
 - formula:
 
@@ -261,5 +265,5 @@ all.equal(
 min(fitted(ei_ridge(spec)))
 #> [1] -0.1029557
 min(fitted(ei_ridge(spec, bounds = 0:1)))
-#> [1] 3.765682e-20
+#> [1] 9.701731e-20
 ```

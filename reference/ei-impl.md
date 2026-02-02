@@ -61,9 +61,13 @@ ei_riesz_impl(x, z, total, weights = rep(1, nrow(x)), penalty)
 
 - vcov:
 
-  If `TRUE`, calculate and return the covariance matrix of the estimated
-  coefficients. When `bounds` are provided, the covariance matrix for
-  the unbounded estimate is returned as a conservative approximation.
+  If `TRUE`, calculate and return the a scaled covariance matrix of the
+  estimated coefficients. When `bounds` are provided, the (scaled)
+  covariance matrix for the unbounded estimate is returned as a
+  conservative approximation. The covariance matrix is "scaled" because
+  it does not include the residual variance. For the covariance for a
+  particular outcome variable, multiply the returned `$vcov_u` by
+  `sigma2` for that outcome.
 
 - total:
 

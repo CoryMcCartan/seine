@@ -61,16 +61,16 @@ ei_sens_rv(est, 0.1) # how much confounding for bias of 0.1
 #> # A tibble: 3 × 5
 #>   predictor outcome      estimate std.error      rv
 #>   <chr>     <chr>           <dbl>     <dbl>   <dbl>
-#> 1 vap_white pres_ind_wal    0.387    0.0246 0.331  
-#> 2 vap_black pres_ind_wal    0.490    0.0505 0.108  
-#> 3 vap_other pres_ind_wal   -1.19     0.528  0.00491
+#> 1 vap_white pres_ind_wal    0.387    0.0246 0.329  
+#> 2 vap_black pres_ind_wal    0.490    0.0505 0.107  
+#> 3 vap_other pres_ind_wal   -1.19     0.528  0.00487
 ei_sens_rv(est, 2 * std.error) # how much confounding for bias of 2 SE
 #> # A tibble: 3 × 5
 #>   predictor outcome      estimate std.error     rv
 #>   <chr>     <chr>           <dbl>     <dbl>  <dbl>
-#> 1 vap_white pres_ind_wal    0.387    0.0246 0.180 
-#> 2 vap_black pres_ind_wal    0.490    0.0505 0.109 
-#> 3 vap_other pres_ind_wal   -1.19     0.528  0.0506
+#> 1 vap_white pres_ind_wal    0.387    0.0246 0.179 
+#> 2 vap_black pres_ind_wal    0.490    0.0505 0.108 
+#> 3 vap_other pres_ind_wal   -1.19     0.528  0.0502
 
 # How much confounding to equalize all estimates (no polarization)
 y_avg = weighted.mean(elec_1968$pres_ind_wal, elec_1968$pres_total)
@@ -78,17 +78,17 @@ ei_sens_rv(est, estimate - y_avg)
 #> # A tibble: 3 × 5
 #>   predictor outcome      estimate std.error     rv
 #>   <chr>     <chr>           <dbl>     <dbl>  <dbl>
-#> 1 vap_white pres_ind_wal    0.387    0.0246 0.164 
-#> 2 vap_black pres_ind_wal    0.490    0.0505 0.154 
-#> 3 vap_other pres_ind_wal   -1.19     0.528  0.0725
+#> 1 vap_white pres_ind_wal    0.387    0.0246 0.163 
+#> 2 vap_black pres_ind_wal    0.490    0.0505 0.153 
+#> 3 vap_other pres_ind_wal   -1.19     0.528  0.0720
 
 # Extract as matrix
 as.matrix(ei_sens_rv(est, 0.2), "rv")
 #>            outcome
 #> predictor   pres_ind_wal
-#>   vap_white  0.545120508
-#>   vap_black  0.203654194
-#>   vap_other  0.009796166
+#>   vap_white  0.542574154
+#>   vap_black  0.202308613
+#>   vap_other  0.009723586
 
 # Works for contrasts as well
 est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
@@ -96,5 +96,5 @@ ei_sens_rv(est, estimate) # how much to eliminate disparity
 #> # A tibble: 1 × 5
 #>   predictor             outcome      estimate std.error     rv
 #>   <chr>                 <chr>           <dbl>     <dbl>  <dbl>
-#> 1 vap_white - vap_black pres_ind_wal   -0.102    0.0457 0.0935
+#> 1 vap_white - vap_black pres_ind_wal   -0.102    0.0457 0.0928
 ```

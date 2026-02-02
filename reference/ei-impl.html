@@ -112,9 +112,13 @@ specified for <code>ei_riesz_impl()</code> but can be automatically estimated wi
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>
-<dd><p>If <code>TRUE</code>, calculate and return the covariance matrix of the
-estimated coefficients. When <code>bounds</code> are provided, the covariance matrix
-for the unbounded estimate is returned as a conservative approximation.</p></dd>
+<dd><p>If <code>TRUE</code>, calculate and return the a scaled covariance matrix of
+the estimated coefficients. When <code>bounds</code> are provided, the (scaled)
+covariance matrix for the unbounded estimate is returned as a conservative
+approximation.
+The covariance matrix is "scaled" because it does not include the
+residual variance. For the covariance for a particular outcome variable,
+multiply the returned <code>$vcov_u</code> by <code>sigma2</code> for that outcome.</p></dd>
 
 
 <dt id="arg-total">total<a class="anchor" aria-label="anchor" href="#arg-total"></a></dt>

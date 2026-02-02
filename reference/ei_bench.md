@@ -20,10 +20,12 @@ ei_bench(spec, preproc = NULL, subset = NULL)
 
 - preproc:
 
-  An optional function which takes in a `ei_spec` object (`spec` with
-  one covariate removed) and returns a modified object that includes
-  modified object. Useful to apply any preprocessing, such as a basis
-  transformation, as part of the benchmarking process.
+  An optional function which takes in a data frame of covariates and
+  returns a transformed data frame or matrix of covariates. Useful to
+  apply any preprocessing, such as a basis transformation, as part of
+  the benchmarking process. Passed to
+  [`rlang::as_function()`](https://rlang.r-lib.org/reference/as_function.html),
+  and so supports `purrr`-style lambda functions.
 
 - subset:
 
@@ -59,14 +61,7 @@ ei_bench(spec)
 #> 9 farm      vap_other pres_ind_wal    0.125       0.289       0.471   1.72  
 
 # preprocess to add all 2-way interactions
-ei_bench(spec, preproc = function(s) {
-    z_cols = match(attr(s, "ei_z"), names(s))
-    s_out = s[-z_cols]
-    z_new = model.matrix(~ .^2 - 1, data = s[z_cols])
-    s_out = cbind(s_out, z_new)
-    ei_spec(s_out, vap_white:vap_other, pres_ind_wal,
-            total = attr(s, "ei_n"), covariates = colnames(z_new))
-})
+ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
 #> # A tibble: 9 × 7
 #>   covariate predictor outcome      c_outcome c_predictor confounding est_chg
 #>   <chr>     <chr>     <chr>            <dbl>       <dbl>       <dbl>   <dbl>

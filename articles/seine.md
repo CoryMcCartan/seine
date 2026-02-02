@@ -482,18 +482,18 @@ ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
 #> # A tibble: 12 × 9
 #>    predictor outcome estimate std.error conf.low conf.high c_outcome c_predictor
 #>    <chr>     <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
-#>  1 vap_white pres_d…  0.225    0.0241    7.51e-2   0.375         0.5         0.2
-#>  2 vap_black pres_d…  0.584    0.0601    9.77e-2   1.07          0.5         0.2
-#>  3 vap_other pres_d…  2.92     0.744    -9.98e+0  15.8           0.5         0.2
-#>  4 vap_white pres_r…  0.435    0.0365    2.44e-1   0.626         0.5         0.2
-#>  5 vap_black pres_r… -0.0242   0.0367   -5.24e-1   0.476         0.5         0.2
-#>  6 vap_other pres_r… -4.75     0.991    -2.00e+1  10.5           0.5         0.2
-#>  7 vap_white pres_i…  0.339    0.0197    1.72e-1   0.505         0.5         0.2
-#>  8 vap_black pres_i…  0.437    0.0436   -1.06e-1   0.979         0.5         0.2
-#>  9 vap_other pres_i…  2.84     0.840    -1.30e+1  18.7           0.5         0.2
-#> 10 vap_white pres_a…  0.00145  0.000384 -3.79e-3   0.00668       0.5         0.2
-#> 11 vap_black pres_a…  0.00314  0.00111  -1.51e-2   0.0214        0.5         0.2
-#> 12 vap_other pres_a… -0.0186   0.0265   -5.69e-1   0.532         0.5         0.2
+#>  1 vap_white pres_d…  0.225    0.0241    7.33e-2   0.377         0.5         0.2
+#>  2 vap_black pres_d…  0.584    0.0601    9.13e-2   1.08          0.5         0.2
+#>  3 vap_other pres_d…  2.92     0.744    -1.02e+1  16.0           0.5         0.2
+#>  4 vap_white pres_r…  0.435    0.0365    2.42e-1   0.628         0.5         0.2
+#>  5 vap_black pres_r… -0.0242   0.0367   -5.32e-1   0.483         0.5         0.2
+#>  6 vap_other pres_r… -4.75     0.991    -2.02e+1  10.7           0.5         0.2
+#>  7 vap_white pres_i…  0.339    0.0197    1.70e-1   0.507         0.5         0.2
+#>  8 vap_black pres_i…  0.437    0.0436   -1.14e-1   0.987         0.5         0.2
+#>  9 vap_other pres_i…  2.84     0.840    -1.32e+1  18.9           0.5         0.2
+#> 10 vap_white pres_a…  0.00145  0.000384 -3.87e-3   0.00676       0.5         0.2
+#> 11 vap_black pres_a…  0.00314  0.00111  -1.54e-2   0.0217        0.5         0.2
+#> 12 vap_other pres_a… -0.0186   0.0265   -5.78e-1   0.541         0.5         0.2
 #> # ℹ 1 more variable: bias_bound <dbl>
 ```
 
@@ -509,18 +509,18 @@ ei_sens(est, c_outcome = 1, bias_bound = 0.05)
 #> # A tibble: 12 × 9
 #>    predictor outcome estimate std.error conf.low conf.high c_outcome c_predictor
 #>    <chr>     <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
-#>  1 vap_white pres_d…  0.225    0.0241     0.128     0.323          1  0.0287    
-#>  2 vap_black pres_d…  0.584    0.0601     0.417     0.752          1  0.00229   
-#>  3 vap_other pres_d…  2.92     0.744      1.41      4.43           1  0.00000239
-#>  4 vap_white pres_r…  0.435    0.0365     0.313     0.556          1  0.0214    
-#>  5 vap_black pres_r… -0.0242   0.0367    -0.146     0.0978         1  0.00170   
-#>  6 vap_other pres_r… -4.75     0.991     -6.74     -2.75           1  0.00000177
-#>  7 vap_white pres_i…  0.339    0.0197     0.250     0.427          1  0.0189    
-#>  8 vap_black pres_i…  0.437    0.0436     0.301     0.572          1  0.00149   
-#>  9 vap_other pres_i…  2.84     0.840      1.15      4.54           1  0.00000155
-#> 10 vap_white pres_a…  0.00145  0.000384  -0.0493    0.0522         1  0.940     
-#> 11 vap_black pres_a…  0.00314  0.00111   -0.0490    0.0553         1  0.547     
-#> 12 vap_other pres_a… -0.0186   0.0265    -0.121     0.0835         1  0.00126   
+#>  1 vap_white pres_d…  0.225    0.0241     0.128     0.323          1  0.0277    
+#>  2 vap_black pres_d…  0.584    0.0601     0.417     0.752          1  0.00221   
+#>  3 vap_other pres_d…  2.92     0.744      1.41      4.43           1  0.00000231
+#>  4 vap_white pres_r…  0.435    0.0365     0.313     0.556          1  0.0207    
+#>  5 vap_black pres_r… -0.0242   0.0367    -0.146     0.0978         1  0.00164   
+#>  6 vap_other pres_r… -4.75     0.991     -6.74     -2.75           1  0.00000171
+#>  7 vap_white pres_i…  0.339    0.0197     0.250     0.427          1  0.0182    
+#>  8 vap_black pres_i…  0.437    0.0436     0.301     0.572          1  0.00144   
+#>  9 vap_other pres_i…  2.84     0.840      1.15      4.54           1  0.00000150
+#> 10 vap_white pres_a…  0.00145  0.000384  -0.0493    0.0522         1  0.938     
+#> 11 vap_black pres_a…  0.00314  0.00111   -0.0490    0.0553         1  0.539     
+#> 12 vap_other pres_a… -0.0186   0.0265    -0.121     0.0835         1  0.00121   
 #> # ℹ 1 more variable: bias_bound <dbl>
 ```
 
@@ -596,18 +596,18 @@ ei_sens_rv(est, bias_bound = 1 * std.error)
 #> # A tibble: 12 × 7
 #>    predictor outcome      estimate std.error  conf.low conf.high     rv
 #>    <chr>     <chr>           <dbl>     <dbl>     <dbl>     <dbl>  <dbl>
-#>  1 vap_white pres_dem_hum  0.225    0.0241    0.178      0.273   0.0794
-#>  2 vap_black pres_dem_hum  0.584    0.0601    0.467      0.702   0.0560
-#>  3 vap_other pres_dem_hum  2.92     0.744     1.46       4.38    0.0227
-#>  4 vap_white pres_rep_nix  0.435    0.0365    0.363      0.506   0.102 
-#>  5 vap_black pres_rep_nix -0.0242   0.0367   -0.0963     0.0478  0.0299
-#>  6 vap_other pres_rep_nix -4.75     0.991    -6.69      -2.80    0.0260
-#>  7 vap_white pres_ind_wal  0.339    0.0197    0.300      0.377   0.0532
-#>  8 vap_black pres_ind_wal  0.437    0.0436    0.351      0.522   0.0331
-#>  9 vap_other pres_ind_wal  2.84     0.840     1.20       4.49    0.0207
-#> 10 vap_white pres_abs      0.00145  0.000384  0.000691   0.00220 0.0299
-#> 11 vap_black pres_abs      0.00314  0.00111   0.000956   0.00533 0.0242
-#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0335  0.0186
+#>  1 vap_white pres_dem_hum  0.225    0.0241    0.178      0.273   0.0781
+#>  2 vap_black pres_dem_hum  0.584    0.0601    0.467      0.702   0.0550
+#>  3 vap_other pres_dem_hum  2.92     0.744     1.46       4.38    0.0223
+#>  4 vap_white pres_rep_nix  0.435    0.0365    0.363      0.506   0.101 
+#>  5 vap_black pres_rep_nix -0.0242   0.0367   -0.0963     0.0478  0.0293
+#>  6 vap_other pres_rep_nix -4.75     0.991    -6.69      -2.80    0.0256
+#>  7 vap_white pres_ind_wal  0.339    0.0197    0.300      0.377   0.0523
+#>  8 vap_black pres_ind_wal  0.437    0.0436    0.351      0.522   0.0326
+#>  9 vap_other pres_ind_wal  2.84     0.840     1.20       4.49    0.0204
+#> 10 vap_white pres_abs      0.00145  0.000384  0.000691   0.00220 0.0294
+#> 11 vap_black pres_abs      0.00314  0.00111   0.000956   0.00533 0.0238
+#> 12 vap_other pres_abs     -0.0186   0.0265   -0.0706     0.0335  0.0183
 ```
 
 All of the robustness values (one for each predictor/outcome

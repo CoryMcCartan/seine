@@ -69,10 +69,11 @@ et al. (2024).</p>
 
 
 <dt id="arg-preproc">preproc<a class="anchor" aria-label="anchor" href="#arg-preproc"></a></dt>
-<dd><p>An optional function which takes in a <code>ei_spec</code> object (<code>spec</code>
-with one covariate removed) and returns a modified object that includes
-modified object. Useful to apply any preprocessing, such as a basis
-transformation, as part of the benchmarking process.</p></dd>
+<dd><p>An optional function which takes in a data frame of covariates
+and returns a transformed data frame or matrix of covariates.
+Useful to apply any preprocessing, such as a basis transformation, as part
+of the benchmarking process. Passed to <code><a href="https://rlang.r-lib.org/reference/as_function.html" class="external-link">rlang::as_function()</a></code>, and so supports
+<code>purrr</code>-style lambda functions.</p></dd>
 
 
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
@@ -108,14 +109,7 @@ transformation, as part of the benchmarking process.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      vap_other pres_ind_wal    0.125       0.289       0.471   1.72  </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># preprocess to add all 2-way interactions</span></span></span>
-<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, preproc <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="va">z_cols</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"ei_z"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">s_out</span> <span class="op">=</span> <span class="va">s</span><span class="op">[</span><span class="op">-</span><span class="va">z_cols</span><span class="op">]</span></span></span>
-<span class="r-in"><span>    <span class="va">z_new</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">.</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">s</span><span class="op">[</span><span class="va">z_cols</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="va">s_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">s_out</span>, <span class="va">z_new</span><span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">s_out</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_ind_wal</span>,</span></span>
-<span class="r-in"><span>            total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"ei_n"</span><span class="op">)</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">z_new</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, preproc <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">.</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">.x</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome      c_outcome c_predictor confounding est_chg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
