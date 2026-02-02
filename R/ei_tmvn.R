@@ -146,7 +146,7 @@ run_mold.ei_tmvn_blueprint <- function(blueprint, ...) {
     processed = NextMethod("run_mold")
 
     # update bounds
-    bounds = ei_bounds(processed$blueprint$bounds, processed$outcomes)
+    bounds = check_bounds(processed$blueprint$bounds, processed$outcomes)
     if (bounds[1] == -Inf && bounds[2] == Inf) {
         cli_abort(c("Bounds were set or inferred to be `c(-Inf, Inf)`.",
                     "i"="Use {.fn ei_ridge} for unbounded regression."),

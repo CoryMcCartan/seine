@@ -224,7 +224,7 @@ ei_forms = function(formula) {
 }
 
 # Helper to infer bounds
-ei_bounds = function(bounds, outcome, clamp=1e-3) {
+check_bounds = function(bounds, outcome, clamp=1e-3) {
     if (isFALSE(bounds)) return(c(-Inf, Inf))
     if (is.null(bounds)) {
         if (is.null(outcome)) outcome = c(-Inf, Inf)

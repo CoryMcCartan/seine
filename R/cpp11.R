@@ -27,3 +27,7 @@ R_draw_local <- function(draws, eta, L, y, X, warmup, tol) {
 r_proj_mvn <- function(eta, l, x, eps) {
   .Call(`_seine_r_proj_mvn`, eta, l, x, eps)
 }
+
+R_bounds_lp <- function(x, y, bounds) {
+  .Call(`_seine_R_bounds_lp`, x, y, bounds)
+}

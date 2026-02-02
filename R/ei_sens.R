@@ -305,7 +305,7 @@ plot.ei_sens <- function(
     }
 
     if (is.null(bounds)) {
-        bounds = ei_bounds(attr(x, "bounds_inf"), NULL)
+        bounds = check_bounds(attr(x, "bounds_inf"), NULL)
     }
     bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
 

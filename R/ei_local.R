@@ -114,7 +114,7 @@ ei_est_local = function(
     rl = est_check_regr(regr, data, n, NULL, n_y, vcov = isTRUE(regr_var))
     n_x = length(rl$preds)
 
-    bounds = ei_bounds(bounds, y, clamp = 1e-8)
+    bounds = check_bounds(bounds, y, clamp = 1e-8)
     if (is.null(sum_one) && all(bounds == c(0, 1))) {
         sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
     }

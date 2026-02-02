@@ -200,7 +200,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     attr(out, "n") = sum(subset)
     attr(out, "sens_s") = sens_s
     attr(out, "bounds_inf") = if (is.null(contrast)) {
-        ei_bounds(NULL, rl$y)
+        check_bounds(NULL, rl$y)
     } else {
         c(-Inf, Inf)
     }

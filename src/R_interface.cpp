@@ -6,6 +6,7 @@
 #include "tmvn.h"
 #include "epmgp.h"
 #include "likelihood.h"
+#include "bounds.h"
 
 using namespace arma;
 using namespace cpp11;
@@ -84,4 +85,18 @@ doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l,
 
     proj_mvn(_eta, _l, _x, eps, _lx, _l_out);
     return as_doubles_matrix(_l_out);
+}
+
+[[cpp11::register]]
+list R_bounds_lp(const doubles_matrix<>& x, const doubles_matrix<>& y, const doubles& bounds) {
+    mat _x = as_Mat(x);
+    mat _y = as_Mat(y);
+    vec _bounds = as_Col(bounds);
+    
+    auto [min_mat, max_mat] = bounds_lp(_x, _y, _bounds);
+    
+    return writable::list({
+        "min"_nm = as_doubles_matrix(min_mat),
+        "max"_nm = as_doubles_matrix(max_mat)
+    });
 }

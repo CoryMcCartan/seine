@@ -55,12 +55,20 @@ extern "C" SEXP _seine_r_proj_mvn(SEXP eta, SEXP l, SEXP x, SEXP eps) {
     return cpp11::as_sexp(r_proj_mvn(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(l), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
   END_CPP11
 }
+// R_interface.cpp
+list R_bounds_lp(const doubles_matrix<>& x, const doubles_matrix<>& y, const doubles& bounds);
+extern "C" SEXP _seine_R_bounds_lp(SEXP x, SEXP y, SEXP bounds) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(R_bounds_lp(cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(x), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(y), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(bounds)));
+  END_CPP11
+}
 
 extern "C" {
 /* .Call calls */
 extern SEXP run_testthat_tests(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_seine_R_bounds_lp",   (DL_FUNC) &_seine_R_bounds_lp,   3},
     {"_seine_R_draw_local",  (DL_FUNC) &_seine_R_draw_local,  7},
     {"_seine_R_ep_moments",  (DL_FUNC) &_seine_R_ep_moments,  5},
     {"_seine_R_ess_tmvn",    (DL_FUNC) &_seine_R_ess_tmvn,    4},
