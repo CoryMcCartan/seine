@@ -365,7 +365,7 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
         relax_D = FALSE
         repeat {
             Dmat = if (!relax_D) b_cov else b_cov_relax
-            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = \(e) NULL)
+            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = function(e) NULL)
             if (!is.null(ans)) break
             if (tol > 0.0005) {
                 if (!relax_D) {

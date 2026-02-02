@@ -229,8 +229,8 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
     ))
 
     if (p > 0) {
-        r2_xz_act = unname(sapply(summary(lm(x ~ z)), \(s) s$r.squared))
-        r2_bz_act = unname(sapply(summary(lm(b ~ z)), \(s) s$r.squared))
+        r2_xz_act = unname(sapply(summary(lm(x ~ z)), function(s) s$r.squared))
+        r2_bz_act = unname(sapply(summary(lm(b ~ z)), function(s) s$r.squared))
     } else {
         r2_xz_act = rep(0, 3)
         r2_bz_act = rep(0, 3)

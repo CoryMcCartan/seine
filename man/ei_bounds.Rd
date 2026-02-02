@@ -8,7 +8,7 @@
 \alias{ei_bounds.matrix}
 \alias{ei_bounds.default}
 \alias{as.array.ei_bounds}
-\title{Compute bounds on local ecological quantities}
+\title{Compute partial identification bounds on local ecological quantities}
 \usage{
 ei_bounds(x, ..., total, contrast = NULL, bounds = c(0, 1), global = FALSE)
 
@@ -92,9 +92,8 @@ column will produce global bounds. It has class \code{ei_bounds}.
 }
 \description{
 For each observation, computes the minimum and maximum value of each local
-estimand that is consistent with the accounting constraint \eqn{B \%*\% x = y},
-where \eqn{B} is the matrix of local estimands, \eqn{x} are the predictors,
-and \eqn{y} are the outcomes.
+estimand that is consistent with the accounting identity and the bounds
+on the outcome. Optionally aggregate the computed bounds across units.
 }
 \section{Methods (by generic)}{
 \itemize{

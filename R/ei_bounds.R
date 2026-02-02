@@ -1,9 +1,8 @@
-#' Compute bounds on local ecological quantities
+#' Compute partial identification bounds on local ecological quantities
 #'
 #' For each observation, computes the minimum and maximum value of each local
-#' estimand that is consistent with the accounting constraint \eqn{B %*% x = y},
-#' where \eqn{B} is the matrix of local estimands, \eqn{x} are the predictors,
-#' and \eqn{y} are the outcomes.
+#' estimand that is consistent with the accounting identity and the bounds
+#' on the outcome. Optionally aggregate the computed bounds across units.
 #'
 #' @inheritParams ei_ridge
 #' @inheritParams ei_est_local
