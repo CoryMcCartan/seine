@@ -12,22 +12,6 @@ R_ep_moments <- function(mu, L, addl_c, addl_shift, tol) {
   .Call(`_seine_R_ep_moments`, mu, L, addl_c, addl_shift, tol)
 }
 
-R_utn_moments <- function(mu, sigma2) {
-  .Call(`_seine_R_utn_moments`, mu, sigma2)
-}
-
-R_llik <- function(eta, L, y, X, weights, p, tol) {
-  .Call(`_seine_R_llik`, eta, L, y, X, weights, p, tol)
-}
-
-R_draw_local <- function(draws, eta, L, y, X, warmup, tol) {
-  .Call(`_seine_R_draw_local`, draws, eta, L, y, X, warmup, tol)
-}
-
-r_proj_mvn <- function(eta, l, x, eps) {
-  .Call(`_seine_r_proj_mvn`, eta, l, x, eps)
-}
-
 R_bounds_lp <- function(x, y, bounds) {
   .Call(`_seine_R_bounds_lp`, x, y, bounds)
 }

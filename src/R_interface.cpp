@@ -5,7 +5,6 @@
 #include "random.h"
 #include "tmvn.h"
 #include "epmgp.h"
-#include "likelihood.h"
 #include "bounds.h"
 
 using namespace arma;
@@ -42,59 +41,15 @@ list R_ep_moments(const doubles& mu, const doubles_matrix<>& L,
     });
 }
 
-[[cpp11::register]]
-doubles R_utn_moments(double mu, double sigma2) {
-    writable::doubles out(3);
-    auto [m0, m1, m2] = utn_moments(mu, sigma2);
-    out[0] = m0;
-    out[1] = m1;
-    out[2] = m2;
-    return out;
-}
-
-
-[[cpp11::register]]
-double R_llik(const doubles_matrix<>& eta, const doubles_matrix<>& L, const doubles& y,
-              const doubles_matrix<>& X, const doubles& weights, int p, double tol) {
-    mat _eta = as_Mat(eta);
-    mat _L = as_Mat(L);
-    vec _y = as_Col(y);
-    mat _X = as_Mat(X);
-    vec _weights = as_Col(weights);
-    return llik(_eta, _L, _y, _X, _weights, p, tol);
-}
-
-[[cpp11::register]]
-doubles R_draw_local(int draws, const doubles_matrix<>& eta, const doubles_matrix<>& L,
-                     const doubles& y, const doubles_matrix<>& X, int warmup, double tol) {
-    mat _eta = as_Mat(eta);
-    mat _L = as_Mat(L);
-    vec _y = as_Col(y);
-    mat _X = as_Mat(X);
-    return as_doubles(draw_local(draws, _eta, _L, _y, _X, warmup, tol));
-}
-
-[[cpp11::register]]
-doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l,
-                            const doubles& x, double eps) {
-    vec _eta = as_col(eta);
-    mat _l = as_mat(l);
-    vec _x = as_col(x);
-    vec _lx(_x.n_elem);
-    mat _l_out(_x.n_elem, _x.n_elem);
-
-    proj_mvn(_eta, _l, _x, eps, _lx, _l_out);
-    return as_doubles_matrix(_l_out);
-}
 
 [[cpp11::register]]
 list R_bounds_lp(const doubles_matrix<>& x, const doubles_matrix<>& y, const doubles& bounds) {
     mat _x = as_Mat(x);
     mat _y = as_Mat(y);
     vec _bounds = as_Col(bounds);
-    
+
     auto [min_mat, max_mat] = bounds_lp(_x, _y, _bounds);
-    
+
     return writable::list({
         "min"_nm = as_doubles_matrix(min_mat),
         "max"_nm = as_doubles_matrix(max_mat)
