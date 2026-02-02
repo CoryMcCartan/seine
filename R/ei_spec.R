@@ -174,7 +174,7 @@ weights.ei_spec <- function(object, normalize = TRUE, ...) {
     }
     if (isTRUE(normalize)) {
         n / mean(n)
-    } else{
+    } else {
         n
     }
 }

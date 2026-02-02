@@ -9,10 +9,11 @@ ei_bench(spec, preproc = NULL, subset = NULL)
 \arguments{
 \item{spec}{An \link{ei_spec} object.}
 
-\item{preproc}{An optional function which takes in a \code{ei_spec} object (\code{spec}
-with one covariate removed) and returns a modified object that includes
-modified object. Useful to apply any preprocessing, such as a basis
-transformation, as part of the benchmarking process.}
+\item{preproc}{An optional function which takes in a data frame of covariates
+and returns a transformed data frame or matrix of covariates.
+Useful to apply any preprocessing, such as a basis transformation, as part
+of the benchmarking process. Passed to \code{\link[rlang:as_function]{rlang::as_function()}}, and so supports
+\code{purrr}-style lambda functions.}
 
 \item{subset}{Passed on to \code{\link[=ei_est]{ei_est()}}.}
 }
@@ -30,14 +31,7 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
 ei_bench(spec)
 
 # preprocess to add all 2-way interactions
-ei_bench(spec, preproc = function(s) {
-    z_cols = match(attr(s, "ei_z"), names(s))
-    s_out = s[-z_cols]
-    z_new = model.matrix(~ .^2 - 1, data = s[z_cols])
-    s_out = cbind(s_out, z_new)
-    ei_spec(s_out, vap_white:vap_other, pres_ind_wal,
-            total = attr(s, "ei_n"), covariates = colnames(z_new))
-})
+ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).

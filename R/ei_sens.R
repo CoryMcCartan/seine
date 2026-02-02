@@ -423,10 +423,11 @@ plot.ei_sens <- function(
 #' et al. (2024).
 #'
 #' @param spec An [ei_spec] object.
-#' @param preproc An optional function which takes in a `ei_spec` object (`spec`
-#'   with one covariate removed) and returns a modified object that includes
-#'   modified object. Useful to apply any preprocessing, such as a basis
-#'   transformation, as part of the benchmarking process.
+#' @param preproc An optional function which takes in a data frame of covariates
+#'   and returns a transformed data frame or matrix of covariates.
+#'   Useful to apply any preprocessing, such as a basis transformation, as part
+#'   of the benchmarking process. Passed to [rlang::as_function()], and so supports
+#'   `purrr`-style lambda functions.
 #' @param subset Passed on to [ei_est()].
 #'
 #' @references
@@ -443,22 +444,13 @@ plot.ei_sens <- function(
 #' ei_bench(spec)
 #'
 #' # preprocess to add all 2-way interactions
-#' ei_bench(spec, preproc = function(s) {
-#'     z_cols = match(attr(s, "ei_z"), names(s))
-#'     s_out = s[-z_cols]
-#'     z_new = model.matrix(~ .^2 - 1, data = s[z_cols])
-#'     s_out = cbind(s_out, z_new)
-#'     ei_spec(s_out, vap_white:vap_other, pres_ind_wal,
-#'             total = attr(s, "ei_n"), covariates = colnames(z_new))
-#' })
+#' ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
 #' @export
 ei_bench <- function(spec, preproc = NULL, subset = NULL) {
     validate_ei_spec(spec)
 
     if (!missing(preproc)) {
-        if (!is.function(preproc)) {
-            cli_abort("{.arg preproc} must be a function.")
-        }
+        preproc = rlang::as_function(preproc)
     } else {
         preproc = function(x) x
     }
@@ -470,7 +462,24 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
         apply(regr$y - regr$fitted, 2, var)
     }
 
-    spec_proc = preproc(spec)
+    make_spec_loo = function(spec, out = character(0)) {
+        covs = setdiff(attr(spec, "ei_z"), out)
+        z = preproc(spec[, covs])
+        if (is.data.frame(z)) {
+            z = model.matrix(~ 0 + ., z)
+        }
+        spec$z_ = z
+        ei_spec(
+            spec,
+            predictors = attr(spec, "ei_x"),
+            outcome = attr(spec, "ei_y"),
+            total = attr(spec, "ei_n"),
+            covariates = "z_",
+            strip = FALSE
+        )
+    }
+
+    spec_proc = make_spec_loo(spec)
     regr0 = ei_ridge(spec_proc, vcov = FALSE)
     riesz0 = ei_riesz(spec_proc, penalty = regr0$penalty)
     est0 = ei_est(regr0, riesz0, spec_proc, subset = subs)
@@ -480,8 +489,7 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
 
     covs = attr(spec, "ei_z")
     benches = lapply(covs, function(cv) {
-        spec_loo = reconstruct_ei_spec(spec[setdiff(names(spec), cv)], spec)
-        spec_loo = preproc(spec_loo)
+        spec_loo = make_spec_loo(spec, cv)
 
         regr_loo = ei_ridge(spec_loo, vcov = FALSE)
         riesz_loo = ei_riesz(spec_loo, penalty = regr_loo$penalty)
