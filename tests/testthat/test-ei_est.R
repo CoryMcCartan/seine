@@ -84,8 +84,7 @@ test_that("Contrasts work with no predictors", {
     m = ei_ridge(spec)
     rr = ei_riesz(spec, penalty=m$penalty)
 
-    est0 = ei_est(m, rr, spec) |>
-        subset(outcome == "pres_dem_hum")
+    est0 = subset(ei_est(m, rr, spec), outcome == "pres_dem_hum")
     estc = ei_est(
         m, rr, spec,
         contrast = list(predictor = c(1, -1, 0), outcome = c(1, 0, 0, 0, 0))
