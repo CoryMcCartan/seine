@@ -27,3 +27,7 @@ R_draw_local <- function(draws, eta, L, y, X, warmup, tol) {
 r_proj_mvn <- function(eta, l, x, eps) {
   .Call(`_seine_r_proj_mvn`, eta, l, x, eps)
 }
+
+simplex_cpp <- function(a, A1, b1, A2, b2, A3, b3, maxi, n_iter, eps) {
+  .Call(`_seine_simplex_cpp`, a, A1, b1, A2, b2, A3, b3, maxi, n_iter, eps)
+}

@@ -55,20 +55,28 @@ extern "C" SEXP _seine_r_proj_mvn(SEXP eta, SEXP l, SEXP x, SEXP eps) {
     return cpp11::as_sexp(r_proj_mvn(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(eta), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(l), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
   END_CPP11
 }
+// R_interface.cpp
+list simplex_cpp(const doubles& a, SEXP A1, SEXP b1, SEXP A2, SEXP b2, SEXP A3, SEXP b3, bool maxi, int n_iter, double eps);
+extern "C" SEXP _seine_simplex_cpp(SEXP a, SEXP A1, SEXP b1, SEXP A2, SEXP b2, SEXP A3, SEXP b3, SEXP maxi, SEXP n_iter, SEXP eps) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(simplex_cpp(cpp11::as_cpp<cpp11::decay_t<const doubles&>>(a), cpp11::as_cpp<cpp11::decay_t<SEXP>>(A1), cpp11::as_cpp<cpp11::decay_t<SEXP>>(b1), cpp11::as_cpp<cpp11::decay_t<SEXP>>(A2), cpp11::as_cpp<cpp11::decay_t<SEXP>>(b2), cpp11::as_cpp<cpp11::decay_t<SEXP>>(A3), cpp11::as_cpp<cpp11::decay_t<SEXP>>(b3), cpp11::as_cpp<cpp11::decay_t<bool>>(maxi), cpp11::as_cpp<cpp11::decay_t<int>>(n_iter), cpp11::as_cpp<cpp11::decay_t<double>>(eps)));
+  END_CPP11
+}
 
 extern "C" {
 /* .Call calls */
 extern SEXP run_testthat_tests(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_seine_R_draw_local",  (DL_FUNC) &_seine_R_draw_local,  7},
-    {"_seine_R_ep_moments",  (DL_FUNC) &_seine_R_ep_moments,  5},
-    {"_seine_R_ess_tmvn",    (DL_FUNC) &_seine_R_ess_tmvn,    4},
-    {"_seine_R_llik",        (DL_FUNC) &_seine_R_llik,        7},
-    {"_seine_R_sync_rng",    (DL_FUNC) &_seine_R_sync_rng,    0},
-    {"_seine_R_utn_moments", (DL_FUNC) &_seine_R_utn_moments, 2},
-    {"_seine_r_proj_mvn",    (DL_FUNC) &_seine_r_proj_mvn,    4},
-    {"run_testthat_tests",   (DL_FUNC) &run_testthat_tests,   1},
+    {"_seine_R_draw_local",  (DL_FUNC) &_seine_R_draw_local,   7},
+    {"_seine_R_ep_moments",  (DL_FUNC) &_seine_R_ep_moments,   5},
+    {"_seine_R_ess_tmvn",    (DL_FUNC) &_seine_R_ess_tmvn,     4},
+    {"_seine_R_llik",        (DL_FUNC) &_seine_R_llik,         7},
+    {"_seine_R_sync_rng",    (DL_FUNC) &_seine_R_sync_rng,     0},
+    {"_seine_R_utn_moments", (DL_FUNC) &_seine_R_utn_moments,  2},
+    {"_seine_r_proj_mvn",    (DL_FUNC) &_seine_r_proj_mvn,     4},
+    {"_seine_simplex_cpp",   (DL_FUNC) &_seine_simplex_cpp,   10},
+    {"run_testthat_tests",   (DL_FUNC) &run_testthat_tests,    1},
     {NULL, NULL, 0}
 };
 }
