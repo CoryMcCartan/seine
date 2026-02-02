@@ -1,4 +1,4 @@
-test_that("ei_bounds_impl works with simple example", {
+test_that("ei_bounds_bridge works with simple example", {
     # Simple 2x2 case
     x = matrix(c(0.6, 0.4, 0.7, 0.3), nrow = 2, byrow = TRUE)
     y = matrix(c(0.3, 0.5), nrow = 2)
@@ -7,7 +7,7 @@ test_that("ei_bounds_impl works with simple example", {
     total = c(100, 200)
     bounds = c(0, 1)
 
-    result = ei_bounds_impl(x, y, total, NULL, bounds)
+    result = ei_bounds_bridge(x, y, total, NULL, bounds)
 
     expect_s3_class(result, "ei_bounds")
     expect_equal(nrow(result), 4)  # 2 rows × 2 predictors × 1 outcome
@@ -48,7 +48,7 @@ test_that("ei_bounds_impl respects custom bounds", {
     expect_true(all(result$max <= bounds[2], na.rm = TRUE))
 })
 
-test_that("ei_bounds_impl handles multiple outcomes", {
+test_that("ei_bounds_bridge handles multiple outcomes", {
     x = matrix(c(0.6, 0.4), nrow = 1)
     y = matrix(c(0.3, 0.5), nrow = 1)
     colnames(x) = c("x1", "x2")
@@ -56,7 +56,7 @@ test_that("ei_bounds_impl handles multiple outcomes", {
     total = 100
     bounds = c(0, 1)
 
-    result = ei_bounds_impl(x, y, total, NULL, bounds)
+    result = ei_bounds_bridge(x, y, total, NULL, bounds)
 
     # Should have 1 row × 2 predictors × 2 outcomes = 4 results
     expect_equal(nrow(result), 4)
@@ -233,4 +233,16 @@ test_that("ei_bounds works with single outcome", {
 
     expect_equal(nrow(result), 4)  # 2 rows × 2 predictors × 1 outcome
     expect_equal(unique(result$outcome), "y1")
+})
+
+test_that("global bounds work", {
+    x = matrix(c(0.6, 0.4, 0.7, 0.3), nrow = 2, byrow = TRUE)
+    y = matrix(c(0.3, 0.5), nrow = 2)
+    colnames(x) = c("x1", "x2")
+    colnames(y) = c("y1")
+    total = c(100, 200)
+
+    result = ei_bounds(x, y, total = total, bounds = c(0, 1), global = TRUE)
+
+    expect_equal(nrow(result), 2)  # 2 predictors × 1 outcome
 })

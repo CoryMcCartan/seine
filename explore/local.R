@@ -15,6 +15,13 @@ spec = ei_spec(elec_1968, c(vap_white, vap_black, vap_other), c(pres_dem_hum, pr
 m = ei_ridge(spec, bounds=F, sum_one=F)
 rr = ei_riesz(spec, penalty = m$penalty)
 
+left_join(ei_est(m, rr, spec), ei_bounds(spec, bounds=0:1, global=TRUE)) |>
+    mutate(
+        within = min <= estimate & estimate <= max,
+        se_max = (max - min) / sqrt(12),
+        se_within = std.error <= se_max
+    )
+
 (colMeans(est_check_regr(m, spec, nrow(spec), NULL, 4, T)$vcov) |>
     matrix(3, 3) * m$sigma2[1]) |>
     diag() |>
@@ -40,8 +47,8 @@ ei_est_local(m, spec, b_cov = b_cov2, bounds=c(0, 1), sum_one = TRUE) |>
 
 
 ei_est_local(m, spec, b_cov = b_cov2, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = T) |>
-    # dplyr::filter(.row == 592) |>
-    dplyr::filter(.row == 1) |>
+    dplyr::filter(.row == 592) |>
+    # dplyr::filter(.row == 1) |>
     ggplot(aes(estimate, paste0(outcome, " | ", predictor))) +
     geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size=0.25)
 

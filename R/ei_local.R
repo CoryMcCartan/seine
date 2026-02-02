@@ -60,7 +60,7 @@
 #'   corresponds to the observation index in the input. The `wt` column contains
 #'   the product of the predictor variable and total for each observation.
 #'   Taking a weighted average of the estimate against this column will produce
-#'   a global estimate. It has class `ei_est_local`, supporting several methods.
+#'   a global estimate. It has class `ei_est_local`.
 #'
 #' @inherit ei_est references
 #'
@@ -118,6 +118,7 @@ ei_est_local = function(
     if (is.null(sum_one) && all(bounds == c(0, 1))) {
         sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
     }
+    has_bounds = !identical(bounds, c(-Inf, Inf))
 
     if (missing(total)) {
         if (inherits(data, "ei_spec")) {
@@ -145,11 +146,7 @@ ei_est_local = function(
         eta_proj = eta_proj %*% contr$m
     }
 
-    sds = if (!isFALSE(conf_level)) {
-        local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
-    } else {
-        NULL
-    }
+    sds = local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
 
     ests = list(
         .row = rep(seq_len(n), length(x_nm)),
@@ -169,20 +166,25 @@ ei_est_local = function(
         class = "ei_est_local"
     )
 
+    if (has_bounds && is.null(contrast)) {
+        bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds)
+        fac = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
+        ests$std.error = pmin(ests$std.error, fac * (bb$max - bb$min))
+    }
+
     if (!isFALSE(conf_level)) {
         fac = if (isTRUE(unimodal)) 4 / 9 else 1
         chebyshev = sqrt(fac / (1 - conf_level))
         ests$conf.low = ests$estimate - chebyshev * ests$std.error
         ests$conf.high = ests$estimate + chebyshev * ests$std.error
 
-        if (is.null(contrast)) {
-            ests$conf.low[ests$conf.low < bounds[1]] = bounds[1]
-            ests$conf.high[ests$conf.high < bounds[1]] = bounds[1]
-            ests$conf.low[ests$conf.low > bounds[2]] = bounds[2]
-            ests$conf.high[ests$conf.high > bounds[2]] = bounds[2]
+        if (has_bounds && is.null(contrast)) {
+            ests$conf.low = pmax(ests$conf.low, bb$min)
+            ests$conf.low = pmin(ests$conf.low, bb$max)
+            ests$conf.high = pmax(ests$conf.high, bb$min)
+            ests$conf.high = pmin(ests$conf.high, bb$max)
         }
     }
-    ests$std.error = NULL
 
     ests
 }

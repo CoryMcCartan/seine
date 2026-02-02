@@ -89,7 +89,7 @@ A data frame with estimates. The \code{.row} column in the output
 corresponds to the observation index in the input. The \code{wt} column contains
 the product of the predictor variable and total for each observation.
 Taking a weighted average of the estimate against this column will produce
-a global estimate. It has class \code{ei_est_local}, supporting several methods.
+a global estimate. It has class \code{ei_est_local}.
 }
 \description{
 Projects predictions from a fitted regression model onto the accounting
