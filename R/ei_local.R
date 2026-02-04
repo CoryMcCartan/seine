@@ -322,13 +322,13 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
     rownames(Amat) = colnames(eta) # helps debug
     b0 = cbind(eps, -eps)
     if (sum_one) {
-        if (n_y == 1 || all(bounds == c(-Inf, Inf))) {
+        if (n_y == 1 || bounds[2] != 1) {
             cli_abort(
-                "Using{.arg sum_one} requires multiple bounded outcomes.",
+                "Using{.arg sum_one} requires multiple outcomes bounded above by 1.",
                 call = parent.frame()
             )
         }
-        rs_mat =  rep(1, n_y) %x% diag(n_x)
+        rs_mat = rep(1, n_y) %x% diag(n_x)
         Amat = cbind(rs_mat, Amat)
         b0 = cbind(1 - eta %*% rs_mat, b0)
     }

@@ -10,9 +10,25 @@
 \alias{as.array.ei_bounds}
 \title{Compute partial identification bounds on local ecological quantities}
 \usage{
-ei_bounds(x, ..., total, contrast = NULL, bounds = c(0, 1), global = FALSE)
+ei_bounds(
+  x,
+  ...,
+  total,
+  contrast = NULL,
+  bounds = c(0, 1),
+  sum_one = NULL,
+  global = FALSE
+)
 
-\method{ei_bounds}{ei_spec}(x, total, contrast = NULL, bounds = c(0, 1), global = FALSE, ...)
+\method{ei_bounds}{ei_spec}(
+  x,
+  total,
+  contrast = NULL,
+  bounds = c(0, 1),
+  sum_one = NULL,
+  global = FALSE,
+  ...
+)
 
 \method{ei_bounds}{formula}(
   formula,
@@ -20,13 +36,32 @@ ei_bounds(x, ..., total, contrast = NULL, bounds = c(0, 1), global = FALSE)
   total,
   contrast = NULL,
   bounds = c(0, 1),
+  sum_one = NULL,
   global = FALSE,
   ...
 )
 
-\method{ei_bounds}{data.frame}(x, y, total, contrast = NULL, bounds = c(0, 1), global = FALSE, ...)
+\method{ei_bounds}{data.frame}(
+  x,
+  y,
+  total,
+  contrast = NULL,
+  bounds = c(0, 1),
+  sum_one = NULL,
+  global = FALSE,
+  ...
+)
 
-\method{ei_bounds}{matrix}(x, y, total, contrast = NULL, bounds = c(0, 1), global = FALSE, ...)
+\method{ei_bounds}{matrix}(
+  x,
+  y,
+  total,
+  contrast = NULL,
+  bounds = c(0, 1),
+  sum_one = NULL,
+  global = FALSE,
+  ...
+)
 
 \method{ei_bounds}{default}(x, ...)
 
@@ -56,6 +91,11 @@ difference in differences.}
 If \code{bounds = NULL}, they will be inferred from the outcome variable:
 if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
 be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
+
+\item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one
+within each predictor group. Can only apply when \code{bounds} are enforced and
+there is more than one outcome variable. If \code{NULL}, infers \code{sum_one = TRUE}
+when the bounds are \code{c(0, 1)} and the outcome variables sum to 1.}
 
 \item{global}{If \code{TRUE}, aggregate the bounds across units to produce bounds
 on the global estimands.}
@@ -87,8 +127,8 @@ A data frame with bounds. The \code{.row} column in the output
 corresponds to the observation index in the input. The \code{min} and \code{max}
 columns contain the minimum and maximum values for each local estimand.
 The \code{wt} column contains the product of the predictor variable and total
-for each observation. Taking a weighted average of the bounds against this
-column will produce global bounds. It has class \code{ei_bounds}.
+for each observation, where applicable. Taking a weighted average of the
+bounds against this column will produce global bounds. It has class \code{ei_bounds}.
 }
 \description{
 For each observation, computes the minimum and maximum value of each local
@@ -112,6 +152,9 @@ ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 
 # Infer bounds
 ei_bounds(pres_ind_wal ~ vap_white, data = elec_1968, total = pres_total, bounds = NULL)
+
+# With contrast
+ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0), outcome = c(1, -1, 0, 0)))
 
 # manually aggregate min/max
 # easier with dplyr:

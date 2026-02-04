@@ -26,6 +26,8 @@ Imports:
     utils,
     stats
 Suggests:
+    lpSolve,
+    quadprog,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
