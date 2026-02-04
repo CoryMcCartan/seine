@@ -14,12 +14,12 @@ Source:
 
 McCartan C, Kuriwaki S (2026). *seine: Semiparametric Ecological
 Inference*. R package version 0.0.0.9000,
-<https://github.com/CoryMcCartan/seine>.
+<https://corymccartan.com/seine/>.
 
     @Manual{,
       title = {seine: Semiparametric Ecological Inference},
       author = {Cory McCartan and Shiro Kuriwaki},
       year = {2026},
       note = {R package version 0.0.0.9000},
-      url = {https://github.com/CoryMcCartan/seine},
+      url = {https://corymccartan.com/seine/},
     }

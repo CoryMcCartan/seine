@@ -102,6 +102,9 @@ Estimate global and local quantities and perform sensitivity analyses
 - [`ei_est_local()`](https://corymccartan.com/seine/reference/ei_est_local.md)
   [`as.array(`*`<ei_est_local>`*`)`](https://corymccartan.com/seine/reference/ei_est_local.md)
   : Produce local ecological estimates
+- [`ei_bounds()`](https://corymccartan.com/seine/reference/ei_bounds.md)
+  [`as.array(`*`<ei_bounds>`*`)`](https://corymccartan.com/seine/reference/ei_bounds.md)
+  : Compute partial identification bounds on local ecological quantities
 - [`ei_sens()`](https://corymccartan.com/seine/reference/ei_sens.md) :
   Conduct a sensitivity analysis for estimated ecological quantities
 - [`ei_sens_rv()`](https://corymccartan.com/seine/reference/ei_sens_rv.md)

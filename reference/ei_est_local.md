@@ -131,8 +131,7 @@ A data frame with estimates. The `.row` column in the output corresponds
 to the observation index in the input. The `wt` column contains the
 product of the predictor variable and total for each observation. Taking
 a weighted average of the estimate against this column will produce a
-global estimate. It has class `ei_est_local`, supporting several
-methods.
+global estimate. It has class `ei_est_local`.
 
 ## Details
 
@@ -172,31 +171,20 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 m = ei_ridge(spec)
 
 ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-#> # A tibble: 13,716 × 7
-#>     .row predictor outcome          wt estimate conf.low conf.high
-#>    <int> <chr>     <chr>         <dbl>    <dbl>    <dbl>     <dbl>
-#>  1     1 vap_white pres_dem_hum  5877. 4.56e- 2   0         0.124 
-#>  2     2 vap_white pres_dem_hum 16131. 8.85e- 3   0         0.0499
-#>  3     3 vap_white pres_dem_hum  4872. 3.47e-18   0         0.138 
-#>  4     4 vap_white pres_dem_hum  3566. 0          0         0.0708
-#>  5     5 vap_white pres_dem_hum  8801. 2.53e- 2   0.0204    0.0302
-#>  6     6 vap_white pres_dem_hum  1698. 6.72e- 2   0         0.274 
-#>  7     7 vap_white pres_dem_hum  4970. 1.04e-17   0         0.110 
-#>  8     8 vap_white pres_dem_hum 22844. 6.02e- 2   0.0144    0.106 
-#>  9     9 vap_white pres_dem_hum  7731. 3.47e-18   0         0.0916
-#> 10    10 vap_white pres_dem_hum  5259. 3.49e- 2   0.0153    0.0546
-#> # ℹ 13,706 more rows
+#> Error in ei_bounds_bridge(rl$x, y, total, contrast, bounds): argument "sum_one" is missing, with no default
 
 b_cov = ei_local_cov(m, spec)
 e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#> Error in ei_bounds_bridge(rl$x, y, total, contrast, bounds): argument "sum_one" is missing, with no default
 e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#> Error in ei_bounds_bridge(rl$x, y, total, contrast, bounds): argument "sum_one" is missing, with no default
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+#> Error in ei_bounds_bridge(rl$x, y, total, contrast, bounds): argument "sum_one" is missing, with no default
 # average interval width
 c(
     e_orth = mean(e_orth$conf.high - e_orth$conf.low),
     e_nbhd = mean(e_nbhd$conf.high - e_nbhd$conf.low),
     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
 )
-#>    e_orth    e_nbhd    e_rcov 
-#> 0.4151625 0.3491863 0.5026159 
+#> Error: object 'e_orth' not found
 ```
