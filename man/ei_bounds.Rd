@@ -126,7 +126,7 @@ in preparing it.}
 A data frame with bounds. The \code{.row} column in the output
 corresponds to the observation index in the input. The \code{min} and \code{max}
 columns contain the minimum and maximum values for each local estimand.
-The \code{wt} column contains the product of the predictor variable and total
+The \code{weight} column contains the product of the predictor variable and total
 for each observation, where applicable. Taking a weighted average of the
 bounds against this column will produce global bounds. It has class \code{ei_bounds}.
 }
@@ -162,14 +162,14 @@ ei_bounds(
 
 # manually aggregate min/max
 # easier with dplyr:
-# summarize(across(min:max, ~ weighted.mean(.x, wt)), .by=c(predictor, outcome))
+# summarize(across(min:max, ~ weighted.mean(.x, weight)), .by=c(predictor, outcome))
 grp_units = split(ei_bounds(spec, bounds = c(0, 1)), ~ predictor + outcome)
 do.call(rbind, lapply(grp_units, function(b) {
     tibble::tibble(
         predictor = b$predictor[1],
         outcome = b$outcome[1],
-        min = weighted.mean(b$min, b$wt),
-        max = weighted.mean(b$max, b$wt)
+        min = weighted.mean(b$min, b$weight),
+        max = weighted.mean(b$max, b$weight)
     )
 }))
 

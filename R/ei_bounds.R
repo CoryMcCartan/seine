@@ -28,7 +28,7 @@
 #' @returns A data frame with bounds. The `.row` column in the output
 #'   corresponds to the observation index in the input. The `min` and `max`
 #'   columns contain the minimum and maximum values for each local estimand.
-#'   The `wt` column contains the product of the predictor variable and total
+#'   The `weight` column contains the product of the predictor variable and total
 #'   for each observation, where applicable. Taking a weighted average of the
 #'   bounds against this column will produce global bounds. It has class `ei_bounds`.
 #'
@@ -53,14 +53,14 @@
 #'
 #' # manually aggregate min/max
 #' # easier with dplyr:
-#' # summarize(across(min:max, ~ weighted.mean(.x, wt)), .by=c(predictor, outcome))
+#' # summarize(across(min:max, ~ weighted.mean(.x, weight)), .by=c(predictor, outcome))
 #' grp_units = split(ei_bounds(spec, bounds = c(0, 1)), ~ predictor + outcome)
 #' do.call(rbind, lapply(grp_units, function(b) {
 #'     tibble::tibble(
 #'         predictor = b$predictor[1],
 #'         outcome = b$outcome[1],
-#'         min = weighted.mean(b$min, b$wt),
-#'         max = weighted.mean(b$max, b$wt)
+#'         min = weighted.mean(b$min, b$weight),
+#'         max = weighted.mean(b$max, b$weight)
 #'     )
 #' }))
 #'
@@ -206,16 +206,17 @@ ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, glo
             .row = rep(seq_len(n), length(contr$x_nm)),
             predictor = rep(contr$x_nm, each = n),
             outcome = rep(contr$y_nm, each = n),
+            weight = 1L,
             min = c(result$min),
             max = c(result$max)
         )
 
-        if (has_contrast) {
-            if (is.null(contrast$predictor)) {
-                out$wt = rep(c(x * total), 1)
-            }
+        if (!has_contrast) {
+            out$weight = rep(c(x * total), n_y)
+        } else if (is.null(contrast$predictor)) {
+            out$weight = c(x * total)
         } else {
-            out$wt = rep(c(x * total), n_y)
+            out$weight = NULL
         }
     }
 

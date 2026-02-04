@@ -57,7 +57,7 @@
 #'   width of confidence intervals by a factor of 4/9.
 #'
 #' @returns A data frame with estimates. The `.row` column in the output
-#'   corresponds to the observation index in the input. The `wt` column contains
+#'   corresponds to the observation index in the input. The `weight` column contains
 #'   the product of the predictor variable and total for each observation.
 #'   Taking a weighted average of the estimate against this column will produce
 #'   a global estimate. It has class `ei_est_local`.
@@ -152,12 +152,16 @@ ei_est_local = function(
         .row = rep(seq_len(n), length(x_nm)),
         predictor = rep(x_nm, each = n),
         outcome = rep(y_nm, each = n),
-        wt = if (is.null(contrast)) rep(c(rl$x * total), n_y) else NULL,
+        weight = 1L,
         estimate = c(eta_proj),
         std.error = c(sds)
     )
-    if (!is.null(contrast)) {
-        ests[["wt"]] = NULL
+    if (is.null(contrast)) {
+        ests$weight = rep(c(rl$x * total), n_y)
+    } else if (is.null(contrast$predictor)) {
+        ests$weight = c(rl$x * total)
+    } else {
+        ests$weight = NULL
     }
     ests = tibble::new_tibble(
         ests,
@@ -166,8 +170,8 @@ ei_est_local = function(
         class = "ei_est_local"
     )
 
-    if (has_bounds && is.null(contrast)) {
-        bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds)
+    if (has_bounds) {
+        bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
         fac = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
         ests$std.error = pmin(ests$std.error, fac * (bb$max - bb$min))
     }
@@ -178,7 +182,7 @@ ei_est_local = function(
         ests$conf.low = ests$estimate - chebyshev * ests$std.error
         ests$conf.high = ests$estimate + chebyshev * ests$std.error
 
-        if (has_bounds && is.null(contrast)) {
+        if (has_bounds) {
             ests$conf.low = pmax(ests$conf.low, bb$min)
             ests$conf.low = pmin(ests$conf.low, bb$max)
             ests$conf.high = pmax(ests$conf.high, bb$min)
