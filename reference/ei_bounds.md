@@ -227,7 +227,11 @@ ei_bounds(pres_ind_wal ~ vap_white, data = elec_1968, total = pres_total, bounds
 #> # ℹ 2,276 more rows
 
 # With contrast
-ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0), outcome = c(1, -1, 0, 0)))
+ei_bounds(
+    spec,
+    bounds = c(0, 1),
+    contrast = list(predictor = c(1, -1, 0), outcome = c(1, -1, 0, 0))
+)
 #> # A tibble: 1,143 × 5
 #>     .row predictor             outcome                        min   max
 #>    <int> <chr>                 <chr>                        <dbl> <dbl>
