@@ -152,7 +152,7 @@ ei_bounds.default <- function(x, ...) {
 
 # Implementation --------------------------------------------------------------
 
-ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one, global = FALSE) {
+ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, global = FALSE) {
     n = nrow(x)
     n_x = ncol(x)
     n_y = ncol(y)
