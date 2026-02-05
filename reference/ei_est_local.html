@@ -171,7 +171,7 @@ width of confidence intervals by a factor of 4/9.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with estimates. The <code>.row</code> column in the output
-corresponds to the observation index in the input. The <code>wt</code> column contains
+corresponds to the observation index in the input. The <code>weight</code> column contains
 the product of the predictor variable and total for each observation.
 Taking a weighted average of the estimate against this column will produce
 a global estimate. It has class <code>ei_est_local</code>.</p>
@@ -213,7 +213,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13,716 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     .row predictor outcome          wt estimate std.error conf.low conf.high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     .row predictor outcome      weight estimate std.error conf.low conf.high</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1 vap_white pres_dem_hum  <span style="text-decoration: underline;">5</span>877. 4.56<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.026<span style="text-decoration: underline;">2</span>    0         0.124 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2 vap_white pres_dem_hum <span style="text-decoration: underline;">16</span>131. 8.85<span style="color: #949494;">e</span><span style="color: #BB0000;">- 3</span>   0.013<span style="text-decoration: underline;">8</span>    0         0.049<span style="text-decoration: underline;">9</span></span>

@@ -157,8 +157,8 @@ as.array(x, ...)
 
 A data frame with bounds. The `.row` column in the output corresponds to
 the observation index in the input. The `min` and `max` columns contain
-the minimum and maximum values for each local estimand. The `wt` column
-contains the product of the predictor variable and total for each
+the minimum and maximum values for each local estimand. The `weight`
+column contains the product of the predictor variable and total for each
 observation, where applicable. Taking a weighted average of the bounds
 against this column will produce global bounds. It has class
 `ei_bounds`.
@@ -179,18 +179,18 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 
 ei_bounds(spec, bounds = c(0, 1))
 #> # A tibble: 13,716 × 6
-#>     .row predictor outcome          min    max     wt
-#>    <int> <chr>     <chr>          <dbl>  <dbl>  <dbl>
-#>  1     1 vap_white pres_dem_hum 0       0.262   5877.
-#>  2     2 vap_white pres_dem_hum 0       0.122  16131.
-#>  3     3 vap_white pres_dem_hum 0       0.397   4872.
-#>  4     4 vap_white pres_dem_hum 0       0.180   3566.
-#>  5     5 vap_white pres_dem_hum 0.0190  0.0382  8801.
-#>  6     6 vap_white pres_dem_hum 0       1       1698.
-#>  7     7 vap_white pres_dem_hum 0       0.250   4970.
-#>  8     8 vap_white pres_dem_hum 0.00707 0.183  22844.
-#>  9     9 vap_white pres_dem_hum 0       0.178   7731.
-#> 10    10 vap_white pres_dem_hum 0.00915 0.0855  5259.
+#>     .row predictor outcome      weight     min    max
+#>    <int> <chr>     <chr>         <dbl>   <dbl>  <dbl>
+#>  1     1 vap_white pres_dem_hum  5877. 0       0.262 
+#>  2     2 vap_white pres_dem_hum 16131. 0       0.122 
+#>  3     3 vap_white pres_dem_hum  4872. 0       0.397 
+#>  4     4 vap_white pres_dem_hum  3566. 0       0.180 
+#>  5     5 vap_white pres_dem_hum  8801. 0.0190  0.0382
+#>  6     6 vap_white pres_dem_hum  1698. 0       1     
+#>  7     7 vap_white pres_dem_hum  4970. 0       0.250 
+#>  8     8 vap_white pres_dem_hum 22844. 0.00707 0.183 
+#>  9     9 vap_white pres_dem_hum  7731. 0       0.178 
+#> 10    10 vap_white pres_dem_hum  5259. 0.00915 0.0855
 #> # ℹ 13,706 more rows
 ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 #> # A tibble: 12 × 4
@@ -212,18 +212,18 @@ ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 # Infer bounds
 ei_bounds(pres_ind_wal ~ vap_white, data = elec_1968, total = pres_total, bounds = NULL)
 #> # A tibble: 2,286 × 6
-#>     .row predictor outcome        min   max     wt
-#>    <int> <chr>     <chr>        <dbl> <dbl>  <dbl>
-#>  1     1 vap_white pres_ind_wal 0.620 0.934  5877.
-#>  2     2 vap_white pres_ind_wal 0.726 0.889 16131.
-#>  3     3 vap_white pres_ind_wal 0.487 1      4872.
-#>  4     4 vap_white pres_ind_wal 0.743 1      3566.
-#>  5     5 vap_white pres_ind_wal 0.721 0.741  8801.
-#>  6     6 vap_white pres_ind_wal 0     1      1698.
-#>  7     7 vap_white pres_ind_wal 0.644 1      4970.
-#>  8     8 vap_white pres_ind_wal 0.668 0.844 22844.
-#>  9     9 vap_white pres_ind_wal 0.640 1      7731.
-#> 10    10 vap_white pres_ind_wal 0.828 0.905  5259.
+#>     .row predictor outcome      weight   min   max
+#>    <int> <chr>     <chr>         <dbl> <dbl> <dbl>
+#>  1     1 vap_white pres_ind_wal  5877. 0.620 0.934
+#>  2     2 vap_white pres_ind_wal 16131. 0.726 0.889
+#>  3     3 vap_white pres_ind_wal  4872. 0.487 1    
+#>  4     4 vap_white pres_ind_wal  3566. 0.743 1    
+#>  5     5 vap_white pres_ind_wal  8801. 0.721 0.741
+#>  6     6 vap_white pres_ind_wal  1698. 0     1    
+#>  7     7 vap_white pres_ind_wal  4970. 0.644 1    
+#>  8     8 vap_white pres_ind_wal 22844. 0.668 0.844
+#>  9     9 vap_white pres_ind_wal  7731. 0.640 1    
+#> 10    10 vap_white pres_ind_wal  5259. 0.828 0.905
 #> # ℹ 2,276 more rows
 
 # With contrast
@@ -249,14 +249,14 @@ ei_bounds(
 
 # manually aggregate min/max
 # easier with dplyr:
-# summarize(across(min:max, ~ weighted.mean(.x, wt)), .by=c(predictor, outcome))
+# summarize(across(min:max, ~ weighted.mean(.x, weight)), .by=c(predictor, outcome))
 grp_units = split(ei_bounds(spec, bounds = c(0, 1)), ~ predictor + outcome)
 do.call(rbind, lapply(grp_units, function(b) {
     tibble::tibble(
         predictor = b$predictor[1],
         outcome = b$outcome[1],
-        min = weighted.mean(b$min, b$wt),
-        max = weighted.mean(b$max, b$wt)
+        min = weighted.mean(b$min, b$weight),
+        max = weighted.mean(b$max, b$weight)
     )
 }))
 #> # A tibble: 12 × 4

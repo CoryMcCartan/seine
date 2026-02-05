@@ -128,7 +128,7 @@ as.array(x, ...)
 ## Value
 
 A data frame with estimates. The `.row` column in the output corresponds
-to the observation index in the input. The `wt` column contains the
+to the observation index in the input. The `weight` column contains the
 product of the predictor variable and total for each observation. Taking
 a weighted average of the estimate against this column will produce a
 global estimate. It has class `ei_est_local`.
@@ -172,7 +172,7 @@ m = ei_ridge(spec)
 
 ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
 #> # A tibble: 13,716 × 8
-#>     .row predictor outcome          wt estimate std.error conf.low conf.high
+#>     .row predictor outcome      weight estimate std.error conf.low conf.high
 #>    <int> <chr>     <chr>         <dbl>    <dbl>     <dbl>    <dbl>     <dbl>
 #>  1     1 vap_white pres_dem_hum  5877. 4.56e- 2   0.0262    0         0.124 
 #>  2     2 vap_white pres_dem_hum 16131. 8.85e- 3   0.0138    0         0.0499
