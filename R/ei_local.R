@@ -172,8 +172,8 @@ ei_est_local = function(
 
     if (has_bounds) {
         bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
-        fac = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
-        ests$std.error = pmin(ests$std.error, fac * (bb$max - bb$min))
+        fac_se = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
+        ests$std.error = pmin(ests$std.error, fac_se * (bb$max - bb$min))
     }
 
     if (!isFALSE(conf_level)) {

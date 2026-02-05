@@ -12,7 +12,7 @@ test_that("ei_bounds_bridge works with simple example", {
     expect_s3_class(result, "ei_bounds")
     expect_equal(nrow(result), 4)  # 2 rows × 2 predictors × 1 outcome
     expect_equal(ncol(result), 6)
-    expect_true(all(c(".row", "predictor", "outcome", "wt", "min", "max") %in% names(result)))
+    expect_true(all(c(".row", "predictor", "outcome", "weight", "min", "max") %in% names(result)))
 
     expect_true(all(result$min >= bounds[1], na.rm = TRUE))
     expect_true(all(result$max <= bounds[2], na.rm = TRUE))
@@ -21,7 +21,7 @@ test_that("ei_bounds_bridge works with simple example", {
 
     expected_wt = c(x[1, 1] * total[1], x[2, 1] * total[2],
                     x[1, 2] * total[1], x[2, 2] * total[2])
-    expect_equal(as.numeric(result$wt), as.numeric(expected_wt))
+    expect_equal(as.numeric(result$weight), as.numeric(expected_wt))
 
     # Test calling R_bounds_lp directly (old C++ API with 3 arguments)
     x_test <- matrix(c(0.8, 0.2), nrow = 1)
@@ -140,7 +140,7 @@ test_that("ei_bounds.ei_spec interface works", {
     expect_true(all(result$min <= result$max, na.rm = TRUE))
 
     # Check that weights are positive
-    expect_true(all(result$wt >= 0))
+    expect_true(all(result$weight >= 0))
 })
 
 test_that("ei_bounds respects tight bounds", {
