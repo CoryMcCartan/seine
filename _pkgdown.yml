@@ -25,6 +25,7 @@ reference:
   contents:
   - ei_est
   - ei_est_local
+  - ei_bounds
   - ei_sens
   - ei_sens_rv
   - ei_bench

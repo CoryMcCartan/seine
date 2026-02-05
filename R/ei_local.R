@@ -57,10 +57,10 @@
 #'   width of confidence intervals by a factor of 4/9.
 #'
 #' @returns A data frame with estimates. The `.row` column in the output
-#'   corresponds to the observation index in the input. The `wt` column contains
+#'   corresponds to the observation index in the input. The `weight` column contains
 #'   the product of the predictor variable and total for each observation.
 #'   Taking a weighted average of the estimate against this column will produce
-#'   a global estimate. It has class `ei_est_local`, supporting several methods.
+#'   a global estimate. It has class `ei_est_local`.
 #'
 #' @inherit ei_est references
 #'
@@ -114,10 +114,11 @@ ei_est_local = function(
     rl = est_check_regr(regr, data, n, NULL, n_y, vcov = isTRUE(regr_var))
     n_x = length(rl$preds)
 
-    bounds = ei_bounds(bounds, y, clamp = 1e-8)
+    bounds = check_bounds(bounds, y, clamp = 1e-8)
     if (is.null(sum_one) && all(bounds == c(0, 1))) {
         sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
     }
+    has_bounds = !identical(bounds, c(-Inf, Inf))
 
     if (missing(total)) {
         if (inherits(data, "ei_spec")) {
@@ -145,22 +146,22 @@ ei_est_local = function(
         eta_proj = eta_proj %*% contr$m
     }
 
-    sds = if (!isFALSE(conf_level)) {
-        local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
-    } else {
-        NULL
-    }
+    sds = local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
 
     ests = list(
         .row = rep(seq_len(n), length(x_nm)),
         predictor = rep(x_nm, each = n),
         outcome = rep(y_nm, each = n),
-        wt = if (is.null(contrast)) rep(c(rl$x * total), n_y) else NULL,
+        weight = 1L,
         estimate = c(eta_proj),
         std.error = c(sds)
     )
-    if (!is.null(contrast)) {
-        ests[["wt"]] = NULL
+    if (is.null(contrast)) {
+        ests$weight = rep(c(rl$x * total), n_y)
+    } else if (is.null(contrast$predictor)) {
+        ests$weight = c(rl$x * total)
+    } else {
+        ests$weight = NULL
     }
     ests = tibble::new_tibble(
         ests,
@@ -169,20 +170,25 @@ ei_est_local = function(
         class = "ei_est_local"
     )
 
+    if (has_bounds) {
+        bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
+        fac_se = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
+        ests$std.error = pmin(ests$std.error, fac_se * (bb$max - bb$min))
+    }
+
     if (!isFALSE(conf_level)) {
         fac = if (isTRUE(unimodal)) 4 / 9 else 1
         chebyshev = sqrt(fac / (1 - conf_level))
         ests$conf.low = ests$estimate - chebyshev * ests$std.error
         ests$conf.high = ests$estimate + chebyshev * ests$std.error
 
-        if (is.null(contrast)) {
-            ests$conf.low[ests$conf.low < bounds[1]] = bounds[1]
-            ests$conf.high[ests$conf.high < bounds[1]] = bounds[1]
-            ests$conf.low[ests$conf.low > bounds[2]] = bounds[2]
-            ests$conf.high[ests$conf.high > bounds[2]] = bounds[2]
+        if (has_bounds) {
+            ests$conf.low = pmax(ests$conf.low, bb$min)
+            ests$conf.low = pmin(ests$conf.low, bb$max)
+            ests$conf.high = pmax(ests$conf.high, bb$min)
+            ests$conf.high = pmin(ests$conf.high, bb$max)
         }
     }
-    ests$std.error = NULL
 
     ests
 }
@@ -289,9 +295,9 @@ check_proc_b_cov <- function(b_cov, sigma2, n_x) {
             ), call = parent.frame())
         }
     } else if (is.null(b_cov)) {
-        b_cov = diag(sigma2) %x% diag(n_x)
+        b_cov = diag(sigma2, nrow = n_y) %x% diag(n_x)
     } else if (length(b_cov) == 1 && b_cov == 1) {
-        b_cov = diag(sigma2) %x% (1 + diag(n_x) * 1e-8)
+        b_cov = diag(sigma2, nrow = n_y) %x% (1 + diag(n_x) * 1e-8)
     } else {
         cli_abort("Invalid {.arg b_cov} format. Consult documentation.", call = parent.frame())
     }
@@ -320,13 +326,13 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
     rownames(Amat) = colnames(eta) # helps debug
     b0 = cbind(eps, -eps)
     if (sum_one) {
-        if (n_y == 1 || all(bounds == c(-Inf, Inf))) {
+        if (n_y == 1 || bounds[2] != 1) {
             cli_abort(
-                "Using{.arg sum_one} requires multiple bounded outcomes.",
+                "Using{.arg sum_one} requires multiple outcomes bounded above by 1.",
                 call = parent.frame()
             )
         }
-        rs_mat =  rep(1, n_y) %x% diag(n_x)
+        rs_mat = rep(1, n_y) %x% diag(n_x)
         Amat = cbind(rs_mat, Amat)
         b0 = cbind(1 - eta %*% rs_mat, b0)
     }
@@ -363,7 +369,7 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
         relax_D = FALSE
         repeat {
             Dmat = if (!relax_D) b_cov else b_cov_relax
-            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = \(e) NULL)
+            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = function(e) NULL)
             if (!is.null(ans)) break
             if (tol > 0.0005) {
                 if (!relax_D) {
@@ -399,10 +405,11 @@ local_sds = function(x, b_cov, regb_cov, sigma2, contr_m, is_contr = FALSE) {
     n_x = ncol(x)
     n_y = nrow(b_cov) / n_x
     sds = matrix(nrow = n, ncol = ncol(contr_m))
+    Dsig = diag(sigma2, nrow = n_y)
     for (i in seq_len(n)) {
         H = diag(n_y) %x% local_basis(x[i, ])
         R_i = if (!is.null(regb_cov)) {
-            chol(crossprod(b_cov) + (diag(sigma2) %x% matrix(regb_cov[i, ], n_x, n_x)))
+            chol(crossprod(b_cov) + (Dsig %x% matrix(regb_cov[i, ], n_x, n_x)))
         } else {
             b_cov
         }

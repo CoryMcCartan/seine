@@ -244,7 +244,7 @@ run_mold.ei_ridge_blueprint <- function(blueprint, ...) {
     processed = NextMethod("run_mold")
 
     # update bounds
-    bounds = ei_bounds(processed$blueprint$bounds, processed$outcomes)
+    bounds = check_bounds(processed$blueprint$bounds, processed$outcomes)
     processed$blueprint = hardhat::update_blueprint(
         processed$blueprint,
         bounds = bounds

@@ -5,8 +5,8 @@
 #include "random.h"
 #include "tmvn.h"
 #include "epmgp.h"
-#include "likelihood.h"
 #include "simplex.h"
+#include "bounds.h"
 
 using namespace arma;
 using namespace cpp11;
@@ -42,69 +42,39 @@ list R_ep_moments(const doubles& mu, const doubles_matrix<>& L,
     });
 }
 
-[[cpp11::register]]
-doubles R_utn_moments(double mu, double sigma2) {
-    writable::doubles out(3);
-    auto [m0, m1, m2] = utn_moments(mu, sigma2);
-    out[0] = m0;
-    out[1] = m1;
-    out[2] = m2;
-    return out;
-}
-
 
 [[cpp11::register]]
-double R_llik(const doubles_matrix<>& eta, const doubles_matrix<>& L, const doubles& y,
-              const doubles_matrix<>& X, const doubles& weights, int p, double tol) {
-    mat _eta = as_Mat(eta);
-    mat _L = as_Mat(L);
-    vec _y = as_Col(y);
-    mat _X = as_Mat(X);
-    vec _weights = as_Col(weights);
-    return llik(_eta, _L, _y, _X, _weights, p, tol);
-}
+list R_bounds_lp(const doubles_matrix<>& x, const doubles_matrix<>& y, const doubles& bounds) {
+    mat _x = as_Mat(x);
+    mat _y = as_Mat(y);
+    vec _bounds = as_Col(bounds);
 
-[[cpp11::register]]
-doubles R_draw_local(int draws, const doubles_matrix<>& eta, const doubles_matrix<>& L,
-                     const doubles& y, const doubles_matrix<>& X, int warmup, double tol) {
-    mat _eta = as_Mat(eta);
-    mat _L = as_Mat(L);
-    vec _y = as_Col(y);
-    mat _X = as_Mat(X);
-    return as_doubles(draw_local(draws, _eta, _L, _y, _X, warmup, tol));
-}
+    auto [min_mat, max_mat] = bounds_lp(_x, _y, _bounds);
 
-[[cpp11::register]]
-doubles_matrix<> r_proj_mvn(const doubles& eta, const doubles_matrix<>& l,
-                            const doubles& x, double eps) {
-    vec _eta = as_col(eta);
-    mat _l = as_mat(l);
-    vec _x = as_col(x);
-    vec _lx(_x.n_elem);
-    mat _l_out(_x.n_elem, _x.n_elem);
-
-    proj_mvn(_eta, _l, _x, eps, _lx, _l_out);
-    return as_doubles_matrix(_l_out);
+    return writable::list({
+        "min"_nm = as_doubles_matrix(min_mat),
+        "max"_nm = as_doubles_matrix(max_mat)
+    });
 }
 
 // Simplex solver
 [[cpp11::register]]
-list simplex_cpp(const doubles& a, 
+list simplex_cpp(const doubles& a,
                  SEXP A1, SEXP b1,
                  SEXP A2, SEXP b2,
                  SEXP A3, SEXP b3,
                  bool maxi = false,
                  int n_iter = -1,
                  double eps = 1e-10) {
-    
+
     vec obj_coef = as_Col(a);
     int n = obj_coef.n_elem;
-    
+
     // Convert NULL inputs to empty matrices/vectors
     mat _A1, _A2, _A3;
     vec _b1, _b2, _b3;
     int m1 = 0, m2 = 0, m3 = 0;
-    
+
     if (!Rf_isNull(A1)) {
         _A1 = as_Mat(as_cpp<doubles_matrix<>>(A1));
         m1 = _A1.n_rows;
@@ -120,47 +90,47 @@ list simplex_cpp(const doubles& a,
         m3 = _A3.n_rows;
         _b3 = as_Col(as_cpp<doubles>(b3));
     }
-    
+
     int m = m1 + m2 + m3;
     if (n_iter == -1) {
         n_iter = n + 2 * m;
     }
-    
+
     // Call C++ simplex
     simplex::SimplexResult result = simplex::simplex(
         obj_coef, _A1, _b1, _A2, _b2, _A3, _b3, maxi, n_iter, eps
     );
-    
+
     // Build return list matching R structure
     writable::list out;
-    
+
     // Extract solution (first n elements only)
     vec solution = result.soln.subvec(0, n - 1);
     out.push_back({"soln"_nm = as_doubles(solution)});
     out.push_back({"solved"_nm = result.solved});
     out.push_back({"value"_nm = result.value});
     out.push_back({"maxi"_nm = maxi});
-    
+
     // Add slack variables if m1 > 0
     if (m1 > 0) {
         vec slack = result.soln.subvec(n, n + m1 - 1);
         out.push_back({"slack"_nm = as_doubles(slack)});
     }
-    
+
     // Add surplus variables if m2 > 0
     if (m2 > 0) {
         vec surplus = result.soln.subvec(n + m1, n + m1 + m2 - 1);
         out.push_back({"surplus"_nm = as_doubles(surplus)});
     }
-    
+
     // Add artificial variables if in stage 1
     if (result.solved == -1) {
         vec artificial = result.soln.subvec(n + m1 + m2, result.soln.n_elem - 1);
         out.push_back({"artificial"_nm = as_doubles(artificial)});
     }
-    
+
     // Add objective coefficients
     out.push_back({"obj"_nm = as_doubles(obj_coef)});
-    
+
     return out;
 }

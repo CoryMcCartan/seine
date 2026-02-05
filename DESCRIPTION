@@ -8,11 +8,11 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-5687-2647"))
     )
 Description: Efficient and user-friendly routines for modern ecological
-    inference. Implements the methods described in McCartan & Kuriwaki (2025)
-    <arxiv:2507.XXXXX>, which generalize ecological regression as introduced by
+    inference. Implements the methods described in McCartan & Kuriwaki (2025+)
+    <arxiv:2509.20194>, which generalize ecological regression as introduced by
     Goodman (1953) <doi:10.2307/2088121>. Includes routines for preprocessing,
     synthetic data generation, double/debiased machine learning (DML)
-    estimation, and sensitivity analysis.
+    estimation, partial identification bounds, and sensitivity analysis.
 Depends:
     R (>= 3.5.0)
 Imports:
@@ -26,6 +26,7 @@ Imports:
     utils,
     stats
 Suggests:
+    lpSolve,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
@@ -41,7 +42,7 @@ RoxygenNote: 7.3.3
 LazyData: true
 SystemRequirements: C++17
 Config/testthat/edition: 3
-URL: https://github.com/CoryMcCartan/seine, https://corymccartan.com/seine/
+URL: https://corymccartan.com/seine/, https://github.com/CoryMcCartan/seine
 BugReports: https://github.com/CoryMcCartan/seine/issues
 VignetteBuilder: knitr
 Config/build/compilation-database: true

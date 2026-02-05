@@ -132,7 +132,7 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         cli_abort("{.fn ridge_bounds} requires at least one finite bound.")
     }
 
-    fit_err = \(e) {
+    fit_err = function(e) {
         cli_abort(c(
             "Constrained ridge regression failed with inconsistent constraints.",
             ">" = "Try setting {.arg sum_one=FALSE} or relaxing the bounds."
@@ -175,7 +175,7 @@ ridge_bounds <- function(xz, z, y, weights, bounds, sum_one=FALSE, penalty=0) {
         # relax to inequality constraint if sum-to-one fails
         eq_constr = n * n_x
         repeat {
-            fit = tryCatch(do_fit(eq_constr), error = \(e) NULL)
+            fit = tryCatch(do_fit(eq_constr), error = function(e) NULL)
             if (!is.null(fit)) break
             if (eq_constr > 0) {
                 eq_constr = max(eq_constr - n, 0) # reduce by one group

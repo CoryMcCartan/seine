@@ -8,7 +8,7 @@ test_that("Sampling TMVN far from bounds works", {
     L = chol_pivot(Sigma)
     z = R_ess_tmvn(warmup + N, c(0.5, 0.5), 0.1*L, init=c(0.1, 0.1))[keep, ]
     expect_gt(ks.test(z[, 1], z[, 2])$p.value, ALPHA)
-    expect_gt(shapiro.test(z[1:5000, 1])$p.value, ALPHA*0.1)
+    expect_gt(ks.test(z[, 1], function(x) pnorm(x, 0.5, sqrt(0.0002)))$p.value, ALPHA)
 })
 
 test_that("Sampling TMVN far outside bounds is approximately uniform", {
