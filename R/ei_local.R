@@ -295,9 +295,9 @@ check_proc_b_cov <- function(b_cov, sigma2, n_x) {
             ), call = parent.frame())
         }
     } else if (is.null(b_cov)) {
-        b_cov = diag(sigma2) %x% diag(n_x)
+        b_cov = diag(sigma2, nrow = n_y) %x% diag(n_x)
     } else if (length(b_cov) == 1 && b_cov == 1) {
-        b_cov = diag(sigma2) %x% (1 + diag(n_x) * 1e-8)
+        b_cov = diag(sigma2, nrow = n_y) %x% (1 + diag(n_x) * 1e-8)
     } else {
         cli_abort("Invalid {.arg b_cov} format. Consult documentation.", call = parent.frame())
     }
@@ -405,10 +405,11 @@ local_sds = function(x, b_cov, regb_cov, sigma2, contr_m, is_contr = FALSE) {
     n_x = ncol(x)
     n_y = nrow(b_cov) / n_x
     sds = matrix(nrow = n, ncol = ncol(contr_m))
+    Dsig = diag(sigma2, nrow = n_y)
     for (i in seq_len(n)) {
         H = diag(n_y) %x% local_basis(x[i, ])
         R_i = if (!is.null(regb_cov)) {
-            chol(crossprod(b_cov) + (diag(sigma2) %x% matrix(regb_cov[i, ], n_x, n_x)))
+            chol(crossprod(b_cov) + (Dsig %x% matrix(regb_cov[i, ], n_x, n_x)))
         } else {
             b_cov
         }
