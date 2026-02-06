@@ -15,3 +15,7 @@ R_ep_moments <- function(mu, L, addl_c, addl_shift, tol) {
 R_bounds_lp <- function(x, y, bounds) {
   .Call(`_seine_R_bounds_lp`, x, y, bounds)
 }
+
+R_bounds_lp_contrast <- function(x, y, contr_m, ub, scale, shift, sum_one, has_ub) {
+  .Call(`_seine_R_bounds_lp_contrast`, x, y, contr_m, ub, scale, shift, sum_one, has_ub)
+}

@@ -232,86 +232,36 @@ ei_bounds_impl <- function(x, y, bounds, contr_m, has_contrast = FALSE, sum_one 
     }
 
     if (has_contrast) {
-        rlang::check_installed("lpSolve", reason = "to compute bounds with contrasts")
         bounds_lp_contrast(x, y, contr_m, bounds, sum_one)
     } else {
         R_bounds_lp(x, y, as.double(bounds))
     }
 }
 
-# Solve bounds LP using lpSolve for contrast case (optimized)
+# Solve bounds LP using full simplex solver for contrast case
 bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
     n = nrow(x)
     n_x = ncol(x)
     n_y = ncol(y)
     n_c = ncol(contr_m)
-    n_vars = n_y * n_x
 
-    res_min = matrix(nrow = n, ncol = n_c)
-    res_max = matrix(nrow = n, ncol = n_c)
-
-    # Variables: B[k,j] for k=1..n_y, j=1..n_x (total n_y*n_x variables, row-major order)
-    A = matrix(0, nrow = n_vars, ncol = n_y)
-    rhs = rep(0, n_y)
-    dir_vec = rep("==", n_y)
-    if (sum_one) {
-        if (n_y == 1 || bounds[2] != 1) {
-            cli_abort(
-                "Using{.arg sum_one} requires multiple outcomes bounded above by 1.",
-                call = parent.frame()
-            )
-        }
-        A = cbind(A, rep(1, n_y) %x% diag(n_x))
-        rhs = c(rhs, rep(1, n_x))
-        dir_vec = c(dir_vec, rep(">=", n_x))
-    }
-    if (!is.infinite(bounds[1])) {
-        A = cbind(A, diag(n_vars))
-        rhs = c(rhs, rep(bounds[1], n_vars))
-        dir_vec = c(dir_vec, rep(">=", n_vars))
-    }
-    if (!is.infinite(bounds[2])) {
-        A = cbind(A, diag(n_vars))
-        rhs = c(rhs, rep(bounds[2], n_vars))
-        dir_vec = c(dir_vec, rep("<=", n_vars))
+    has_lb = is.finite(bounds[1])
+    has_ub = is.finite(bounds[2])
+    if (has_lb) {
+        shift = bounds[1]
+        scale = 1
+    } else if (!has_lb && has_ub) {
+        shift = bounds[2]
+        scale = -1
+        has_ub = FALSE
+    } else {
+        cli_abort("At least one bound must be finite.")
     }
 
-    # For each observation
-    for (j in seq_len(n_c)) {
-        contr = contr_m[, j]
-        res_min[, j] = sum(pmax(contr, 0) * bounds[1] + pmin(contr, 0) * bounds[2])
-        res_max[, j] = sum(pmax(contr, 0) * bounds[2] + pmin(contr, 0) * bounds[1])
+    y = scale * (y - shift)
+    ub = bounds[2] - shift
 
-        for (i in seq_len(n)) {
-            A[, seq_len(n_y)] = diag(n_y) %x% x[i, ]
-            rhs[seq_len(n_y)] = y[i, ]
-
-            sol = lpSolve::lp(
-                direction = "min",
-                objective.in = contr,
-                const.mat = A,
-                const.dir = dir_vec,
-                const.rhs = rhs,
-                transpose.constraints = FALSE
-            )
-            if (sol$status == 0) {
-                res_min[i, j] =  sol$objval
-            }
-            sol = lpSolve::lp(
-                direction = "max",
-                objective.in = contr,
-                const.mat = A,
-                const.dir = dir_vec,
-                const.rhs = rhs,
-                transpose.constraints = FALSE
-            )
-            if (sol$status == 0) {
-                res_max[i, j] = sol$objval
-            }
-        }
-    }
-
-    list(min = res_min, max = res_max)
+    R_bounds_lp_contrast(x, y, contr_m, ub, scale, shift, sum_one, has_ub)
 }
 
 
