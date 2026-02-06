@@ -7,9 +7,9 @@ using namespace arma;
 
 /**
  * Two-Phase Simplex Method Implementation
- * 
+ *
  * Solves: minimize c'x subject to Ax = b, x >= 0
- * 
+ *
  * Phase 1: Find initial feasible basis using artificial variables
  * Phase 2: Optimize objective from feasible basis
  */
@@ -32,12 +32,12 @@ static int find_entering_variable(const rowvec& reduced_costs, double tol) {
  * Find leaving variable using minimum ratio test with Bland's rule for ties
  * Returns -1 if unbounded
  */
-static int find_leaving_variable(const mat& tableau, int entering_col, 
+static int find_leaving_variable(const mat& tableau, int entering_col,
                                   const uvec& basis, double tol) {
     int m = tableau.n_rows - 1; // Exclude objective row
     int leaving_row = -1;
     double min_ratio = std::numeric_limits<double>::infinity();
-    
+
     for (int i = 0; i < m; ++i) {
         double pivot_elem = tableau(i, entering_col);
         if (pivot_elem > tol) {
@@ -53,7 +53,7 @@ static int find_leaving_variable(const mat& tableau, int entering_col,
             }
         }
     }
-    
+
     return leaving_row;
 }
 
@@ -63,7 +63,7 @@ static int find_leaving_variable(const mat& tableau, int entering_col,
 static void pivot(mat& tableau, int pivot_row, int pivot_col) {
     double pivot_elem = tableau(pivot_row, pivot_col);
     tableau.row(pivot_row) /= pivot_elem;
-    
+
     int m = tableau.n_rows;
     for (int i = 0; i < m; ++i) {
         if (i != pivot_row) {
@@ -75,78 +75,78 @@ static void pivot(mat& tableau, int pivot_row, int pivot_col) {
 
 /**
  * Phase 1: Find initial feasible basis using artificial variables
- * 
+ *
  * Solves: minimize sum(artificial variables)
  * Returns: basis indices and whether feasible solution exists
  */
-static bool phase1_simplex(const mat& A, const vec& b, uvec& basis, 
+static bool phase1_simplex(const mat& A, const vec& b, uvec& basis,
                            mat& tableau, double tol, int max_iter = 10000) {
     uword m = A.n_rows;  // Number of constraints
     uword n = A.n_cols;  // Number of original variables
-    
+
     // Build Phase 1 tableau: [A | I | b]
     // Variables: [original vars | artificial vars | RHS]
     // Objective: minimize sum of artificial variables
     tableau = mat(m + 1, n + m + 1, fill::zeros);
-    
+
     // Constraint rows
     tableau(span(0, m-1), span(0, n-1)) = A;
     tableau(span(0, m-1), span(n, n+m-1)) = eye<mat>(m, m);
     tableau(span(0, m-1), n + m) = b;
-    
+
     // Objective row: minimize sum of artificial variables
     // After adding constraints, reduced costs for artificial vars
     tableau(m, span(n, n+m-1)).fill(1.0);
-    
+
     // Initial basis: artificial variables
     basis = uvec(m);
     for (uword i = 0; i < m; ++i) {
         basis(i) = n + i;
     }
-    
+
     // Update objective row by subtracting constraint rows
     for (uword i = 0; i < m; ++i) {
         tableau.row(m) -= tableau.row(i);
     }
-    
+
     // Run simplex on Phase 1 problem
     int iter = 0;
     while (iter < max_iter) {
         // Get reduced costs (objective row, excluding RHS)
         rowvec reduced_costs = tableau(m, span(0, n + m - 1));
-        
+
         // Find entering variable
         int entering = find_entering_variable(reduced_costs, tol);
         if (entering == -1) {
             // Optimal solution found for Phase 1
             break;
         }
-        
+
         // Find leaving variable
         int leaving = find_leaving_variable(tableau, entering, basis, tol);
         if (leaving == -1) {
             // Unbounded (shouldn't happen in Phase 1 with artificial vars)
             return false;
         }
-        
+
         // Pivot
         pivot(tableau, leaving, entering);
         basis(leaving) = entering;
-        
+
         ++iter;
     }
-    
+
     if (iter >= max_iter) {
         return false;
     }
-    
+
     // Check if feasible: objective value should be ~0
     double phase1_obj = -tableau(m, n + m);
     if (phase1_obj > tol) {
         // Infeasible
         return false;
     }
-    
+
     // Remove artificial variables from basis if present
     for (uword i = 0; i < m; ++i) {
         if (basis(i) >= n) {
@@ -160,52 +160,52 @@ static bool phase1_simplex(const mat& A, const vec& b, uvec& basis,
             }
         }
     }
-    
+
     return true;
 }
 
 /**
  * Phase 2: Optimize objective function from feasible basis
  */
-static LPResult phase2_simplex(const vec& c, const mat& tableau_p1, const uvec& basis_p1, 
+static LPResult phase2_simplex(const vec& c, const mat& tableau_p1, const uvec& basis_p1,
                                 uword n_orig, double tol, int max_iter = 10000) {
     LPResult result;
     uword m = basis_p1.n_elem;
-    
+
     // Remove artificial variable columns from tableau
     // Keep only: original variables (0..n_orig-1) and RHS (last column)
     uword rhs_col = tableau_p1.n_cols - 1;
     mat tableau(m + 1, n_orig + 1);
     tableau(span(0, m-1), span(0, n_orig-1)) = tableau_p1(span(0, m-1), span(0, n_orig-1));
     tableau(span(0, m-1), n_orig) = tableau_p1(span(0, m-1), rhs_col);
-    
+
     // Copy basis (but artificial vars should have been pivoted out already)
     uvec basis = basis_p1;
-    
+
     // Build Phase 2 objective row
     tableau.row(m).zeros();
     tableau(m, span(0, n_orig - 1)) = c.t();
-    
+
     // Update reduced costs for current basis
     for (uword i = 0; i < m; ++i) {
         if (basis(i) < n_orig) {
             tableau.row(m) -= c(basis(i)) * tableau.row(i);
         }
     }
-    
+
     // Run simplex for Phase 2
     int iter = 0;
     while (iter < max_iter) {
         // Get reduced costs
         rowvec reduced_costs = tableau(m, span(0, n_orig - 1));
-        
+
         // Find entering variable
         int entering = find_entering_variable(reduced_costs, tol);
         if (entering == -1) {
             // Optimal solution found
             result.status = LPStatus::OPTIMAL;
             result.objval = -tableau(m, n_orig);
-            
+
             // Extract solution
             result.solution = vec(n_orig, fill::zeros);
             for (uword i = 0; i < m; ++i) {
@@ -215,7 +215,7 @@ static LPResult phase2_simplex(const vec& c, const mat& tableau_p1, const uvec& 
             }
             return result;
         }
-        
+
         // Find leaving variable
         int leaving = find_leaving_variable(tableau, entering, basis, tol);
         if (leaving == -1) {
@@ -223,14 +223,14 @@ static LPResult phase2_simplex(const vec& c, const mat& tableau_p1, const uvec& 
             result.status = LPStatus::UNBOUNDED;
             return result;
         }
-        
+
         // Pivot
         pivot(tableau, leaving, entering);
         basis(leaving) = entering;
-        
+
         ++iter;
     }
-    
+
     // Max iterations reached
     result.status = LPStatus::ERROR;
     return result;
@@ -241,16 +241,16 @@ static LPResult phase2_simplex(const vec& c, const mat& tableau_p1, const uvec& 
  */
 LPResult solve_lp_simplex(const vec& c, const mat& A, const vec& b, double tol) {
     LPResult result;
-    
+
     // Validate inputs
     if (A.n_rows != b.n_elem || A.n_cols != c.n_elem) {
         result.status = LPStatus::ERROR;
         return result;
     }
-    
+
     uword m = A.n_rows;
     uword n = A.n_cols;
-    
+
     // Check for negative RHS and flip constraints if needed
     mat A_work = A;
     vec b_work = b;
@@ -260,24 +260,24 @@ LPResult solve_lp_simplex(const vec& c, const mat& A, const vec& b, double tol) 
             b_work(i) = -b_work(i);
         }
     }
-    
+
     uvec basis;
     mat tableau;
-    
+
     // Phase 1: Find feasible basis
     if (!phase1_simplex(A_work, b_work, basis, tableau, tol)) {
         result.status = LPStatus::INFEASIBLE;
         return result;
     }
-    
+
     // Phase 2: Optimize
     result = phase2_simplex(c, tableau, basis, n, tol);
-    
+
     return result;
 }
 
 /**
- * Compute bounds on contrasts using custom LP solver
+ * Compute bounds on contrasts using custom LP solver (optimized version)
  */
 std::tuple<mat, mat> bounds_lp_contrast_cpp(
     const mat& x,
@@ -294,30 +294,21 @@ std::tuple<mat, mat> bounds_lp_contrast_cpp(
     uword n_y = y.n_cols;    // Number of outcomes
     uword n_c = contr_m.n_cols; // Number of contrasts
     uword n_vars = n_y * n_x;   // Number of variables (entries of B)
-    
+
     mat res_min(n, n_c);
     mat res_max(n, n_c);
-    
-    // Build constraint matrix structure (same for all observations and contrasts)
-    // Constraints:
-    // 1. B %*% x[i,] = y[i,] (n_y equality constraints)
-    // 2. If sum_one: sum(B[,k]) = scale*(1-shift) for k=1..n_x (n_x constraints)
-    // 3. If has_ub: B[j] <= ub (n_vars inequality -> converted to equality with slack)
-    
+
+    // Build constraint matrix structure (reused across observations)
     uword n_eq = n_y + (sum_one ? n_x : 0);
     uword n_ineq = has_ub ? n_vars : 0;
     uword n_constraints = n_eq + n_ineq;
     uword n_total_vars = n_vars + n_ineq; // Original + slack variables
-    
+
     mat A(n_constraints, n_total_vars, fill::zeros);
     vec b(n_constraints);
-    
-    // Build static parts of constraint matrix
-    
-    // Part 2: sum_one constraints (if applicable)
+
+    // Part 2: sum_one constraints (static across observations)
     if (sum_one) {
-        // Each column of B sums to scale*(1-shift)
-        // Variables are in row-major order: B[0,0], B[0,1], ..., B[0,n_x-1], B[1,0], ...
         for (uword k = 0; k < n_x; ++k) {
             for (uword j = 0; j < n_y; ++j) {
                 A(n_y + k, j * n_x + k) = 1.0;
@@ -325,47 +316,44 @@ std::tuple<mat, mat> bounds_lp_contrast_cpp(
             b(n_y + k) = scale * (1.0 - shift);
         }
     }
-    
-    // Part 3: Upper bound constraints (if applicable)
+
+    // Part 3: Upper bound constraints (static across observations)
     if (has_ub) {
-        // B[idx] + slack[idx] = ub for idx=0..n_vars-1
         for (uword idx = 0; idx < n_vars; ++idx) {
             A(n_eq + idx, idx) = 1.0;           // Original variable
             A(n_eq + idx, n_vars + idx) = 1.0;  // Slack variable
             b(n_eq + idx) = ub;
         }
     }
-    
+
     // Solve LP for each observation and contrast
     for (uword j = 0; j < n_c; ++j) {
         vec contr = contr_m.col(j);
         double obj_offset = sum(contr) * shift;
-        
-        // Build objective for original variables
+
+        // Build objective for original variables (reused across observations)
         vec c(n_total_vars, fill::zeros);
         c(span(0, n_vars - 1)) = contr;
-        
+
         for (uword i = 0; i < n; ++i) {
-            // Part 1: Observation-specific constraints B %*% x[i,] = y[i,]
-            // B is n_y x n_x in row-major order
-            // B %*% x means: sum_k B[j,k] * x[k] = y[j] for each row j
+            // Part 1: Update observation-specific constraints B %*% x[i,] = y[i,]
             for (uword row = 0; row < n_y; ++row) {
                 for (uword col = 0; col < n_x; ++col) {
                     A(row, row * n_x + col) = x(i, col);
                 }
                 b(row) = y(i, row);
             }
-            
-            // Solve for minimum
+
+            // Solve for minimum and maximum using two-phase simplex
             LPResult sol_min = solve_lp_simplex(c, A, b);
+            LPResult sol_max = solve_lp_simplex(-c, A, b);
+
             if (sol_min.status == LPStatus::OPTIMAL) {
                 res_min(i, j) = sol_min.objval + obj_offset;
             } else {
                 res_min(i, j) = datum::nan;
             }
-            
-            // Solve for maximum (negate objective)
-            LPResult sol_max = solve_lp_simplex(-c, A, b);
+
             if (sol_max.status == LPStatus::OPTIMAL) {
                 res_max(i, j) = -sol_max.objval + obj_offset;
             } else {
@@ -373,10 +361,10 @@ std::tuple<mat, mat> bounds_lp_contrast_cpp(
             }
         }
     }
-    
+
     // Apply inverse transformation
     res_min = res_min * scale + shift;
     res_max = res_max * scale + shift;
-    
+
     return std::make_tuple(res_min, res_max);
 }
