@@ -6,6 +6,7 @@
 #include "tmvn.h"
 #include "epmgp.h"
 #include "bounds.h"
+#include "lp.h"
 
 using namespace arma;
 using namespace cpp11;
@@ -49,6 +50,23 @@ list R_bounds_lp(const doubles_matrix<>& x, const doubles_matrix<>& y, const dou
     vec _bounds = as_Col(bounds);
 
     auto [min_mat, max_mat] = bounds_lp(_x, _y, _bounds);
+
+    return writable::list({
+        "min"_nm = as_doubles_matrix(min_mat),
+        "max"_nm = as_doubles_matrix(max_mat)
+    });
+}
+
+[[cpp11::register]]
+list R_bounds_lp_contrast(const doubles_matrix<>& x, const doubles_matrix<>& y, 
+                          const doubles_matrix<>& contr_m, double ub, 
+                          double scale, double shift, bool sum_one, bool has_ub) {
+    mat _x = as_Mat(x);
+    mat _y = as_Mat(y);
+    mat _contr_m = as_Mat(contr_m);
+
+    auto [min_mat, max_mat] = bounds_lp_contrast_cpp(_x, _y, _contr_m, ub, 
+                                                       scale, shift, sum_one, has_ub);
 
     return writable::list({
         "min"_nm = as_doubles_matrix(min_mat),
