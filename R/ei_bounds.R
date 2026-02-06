@@ -247,6 +247,22 @@ bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
     n_c = ncol(contr_m)
     n_vars = n_y * n_x
 
+    has_lb = is.finite(bounds[1])
+    has_ub = is.finite(bounds[2])
+    if (has_lb) {
+        shift = bounds[1]
+        scale = 1
+    } else if (!has_lb && has_ub) {
+        shift = bounds[2]
+        scale = -1
+        has_ub = FALSE
+    } else {
+        cli_abort("At least one bound must be finite.")
+    }
+
+    y = scale * (y - shift)
+    ub = bounds[2] - shift
+
     res_min = matrix(nrow = n, ncol = n_c)
     res_max = matrix(nrow = n, ncol = n_c)
 
@@ -261,26 +277,20 @@ bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
                 call = parent.frame()
             )
         }
-        A = cbind(A, rep(1, n_y) %x% diag(n_x))
-        rhs = c(rhs, rep(1, n_x))
-        dir_vec = c(dir_vec, rep(">=", n_x))
+        A = cbind(A, rep(scale, n_y) %x% diag(n_x))
+        rhs = c(rhs, rep(scale * (1 - shift), n_x))
+        dir_vec = c(dir_vec, rep("==", n_x))
     }
-    if (!is.infinite(bounds[1])) {
+    if (has_ub) {
         A = cbind(A, diag(n_vars))
-        rhs = c(rhs, rep(bounds[1], n_vars))
-        dir_vec = c(dir_vec, rep(">=", n_vars))
-    }
-    if (!is.infinite(bounds[2])) {
-        A = cbind(A, diag(n_vars))
-        rhs = c(rhs, rep(bounds[2], n_vars))
+        rhs = c(rhs, rep(ub, n_vars))
         dir_vec = c(dir_vec, rep("<=", n_vars))
     }
 
     # For each observation
     for (j in seq_len(n_c)) {
         contr = contr_m[, j]
-        res_min[, j] = sum(pmax(contr, 0) * bounds[1] + pmin(contr, 0) * bounds[2])
-        res_max[, j] = sum(pmax(contr, 0) * bounds[2] + pmin(contr, 0) * bounds[1])
+        obj_offset = sum(contr) * shift
 
         for (i in seq_len(n)) {
             A[, seq_len(n_y)] = diag(n_y) %x% x[i, ]
@@ -295,7 +305,7 @@ bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
                 transpose.constraints = FALSE
             )
             if (sol$status == 0) {
-                res_min[i, j] =  sol$objval
+                res_min[i, j] =  sol$objval + obj_offset
             }
             sol = lpSolve::lp(
                 direction = "max",
@@ -306,12 +316,12 @@ bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
                 transpose.constraints = FALSE
             )
             if (sol$status == 0) {
-                res_max[i, j] = sol$objval
+                res_max[i, j] = sol$objval + obj_offset
             }
         }
     }
 
-    list(min = res_min, max = res_max)
+    list(min = res_min * scale + shift, max = res_max * scale + shift)
 }
 
 

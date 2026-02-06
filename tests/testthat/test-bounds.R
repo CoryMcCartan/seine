@@ -275,6 +275,27 @@ test_that("contrast matching exact linear combination yields tight bounds", {
     expect_equal(result$max, 0.8, tolerance = 1e-10)
 })
 
+test_that("bounds can be shifted", {
+    x = matrix(c(0.4, 0.6), nrow = 1)
+    y = matrix(c(0.8), nrow = 1)
+    colnames(x) = c("x1", "x2")
+    colnames(y) = c("y1")
+    total = 100
+    contrast = list(predictor = c(1, -1))
+
+    res0 = ei_bounds(x, y, total = total, bounds = c(0, 1), contrast = contrast)
+    res1 = ei_bounds(x, y - 0.5, total = total, bounds = c(-0.5, 0.5), contrast = contrast)
+    res1$min = res1$min + 0.5
+    res1$max = res1$max + 0.5
+    expect_equal(res0, res1)
+
+    res0 = ei_bounds(x, y, total = total, bounds = c(-Inf, 1), contrast = contrast)
+    res1 = ei_bounds(x, y - 0.5, total = total, bounds = c(-Inf, 0.5), contrast = contrast)
+    res1$min = res1$min + 0.5
+    res1$max = res1$max + 0.5
+    expect_equal(res0, res1)
+})
+
 test_that("contrast with sum_one constraint yields tight bounds for c(1,1,1)", {
     # With 3 outcomes and a contrast of c(1, 1, 1), if we have a sum_one
     # constraint (entries sum to 1 across outcomes within predictors),
