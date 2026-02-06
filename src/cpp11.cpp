@@ -34,17 +34,25 @@ extern "C" SEXP _seine_R_bounds_lp(SEXP x, SEXP y, SEXP bounds) {
     return cpp11::as_sexp(R_bounds_lp(cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(x), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(y), cpp11::as_cpp<cpp11::decay_t<const doubles&>>(bounds)));
   END_CPP11
 }
+// R_interface.cpp
+list R_bounds_lp_contrast(const doubles_matrix<>& x, const doubles_matrix<>& y, const doubles_matrix<>& contr_m, double ub, double scale, double shift, bool sum_one, bool has_ub);
+extern "C" SEXP _seine_R_bounds_lp_contrast(SEXP x, SEXP y, SEXP contr_m, SEXP ub, SEXP scale, SEXP shift, SEXP sum_one, SEXP has_ub) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(R_bounds_lp_contrast(cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(x), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(y), cpp11::as_cpp<cpp11::decay_t<const doubles_matrix<>&>>(contr_m), cpp11::as_cpp<cpp11::decay_t<double>>(ub), cpp11::as_cpp<cpp11::decay_t<double>>(scale), cpp11::as_cpp<cpp11::decay_t<double>>(shift), cpp11::as_cpp<cpp11::decay_t<bool>>(sum_one), cpp11::as_cpp<cpp11::decay_t<bool>>(has_ub)));
+  END_CPP11
+}
 
 extern "C" {
 /* .Call calls */
 extern SEXP run_testthat_tests(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_seine_R_bounds_lp",  (DL_FUNC) &_seine_R_bounds_lp,  3},
-    {"_seine_R_ep_moments", (DL_FUNC) &_seine_R_ep_moments, 5},
-    {"_seine_R_ess_tmvn",   (DL_FUNC) &_seine_R_ess_tmvn,   4},
-    {"_seine_R_sync_rng",   (DL_FUNC) &_seine_R_sync_rng,   0},
-    {"run_testthat_tests",  (DL_FUNC) &run_testthat_tests,  1},
+    {"_seine_R_bounds_lp",          (DL_FUNC) &_seine_R_bounds_lp,          3},
+    {"_seine_R_bounds_lp_contrast", (DL_FUNC) &_seine_R_bounds_lp_contrast, 8},
+    {"_seine_R_ep_moments",         (DL_FUNC) &_seine_R_ep_moments,         5},
+    {"_seine_R_ess_tmvn",           (DL_FUNC) &_seine_R_ess_tmvn,           4},
+    {"_seine_R_sync_rng",           (DL_FUNC) &_seine_R_sync_rng,           0},
+    {"run_testthat_tests",          (DL_FUNC) &run_testthat_tests,          1},
     {NULL, NULL, 0}
 };
 }

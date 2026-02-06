@@ -232,8 +232,7 @@ ei_bounds_impl <- function(x, y, bounds, contr_m, has_contrast = FALSE, sum_one 
     }
 
     if (has_contrast) {
-        rlang::check_installed("lpSolve", reason = "to compute bounds with contrasts")
-        bounds_lp_contrast(x, y, contr_m, bounds, sum_one)
+        bounds_lp_contrast_cpp(x, y, contr_m, bounds, sum_one)
     } else {
         R_bounds_lp(x, y, as.double(bounds))
     }
@@ -322,6 +321,32 @@ bounds_lp_contrast <- function(x, y, contr_m, bounds, sum_one) {
     }
 
     list(min = res_min * scale + shift, max = res_max * scale + shift)
+}
+
+# C++ version of bounds_lp_contrast using custom simplex solver
+bounds_lp_contrast_cpp <- function(x, y, contr_m, bounds, sum_one) {
+    n = nrow(x)
+    n_x = ncol(x)
+    n_y = ncol(y)
+    n_c = ncol(contr_m)
+
+    has_lb = is.finite(bounds[1])
+    has_ub = is.finite(bounds[2])
+    if (has_lb) {
+        shift = bounds[1]
+        scale = 1
+    } else if (!has_lb && has_ub) {
+        shift = bounds[2]
+        scale = -1
+        has_ub = FALSE
+    } else {
+        cli_abort("At least one bound must be finite.")
+    }
+
+    y = scale * (y - shift)
+    ub = bounds[2] - shift
+
+    R_bounds_lp_contrast(x, y, contr_m, ub, scale, shift, sum_one, has_ub)
 }
 
 
