@@ -493,6 +493,13 @@ ei_bench <- function(spec, subset = NULL, contrast = NULL) {
     }
 
     covs = attr(spec, "ei_z")
+    pb = cli::cli_progress_bar(
+        format = paste0(
+            "{cli::pb_spin} ETA:{cli::pb_eta}  Benchmarking {.field {cv}} ",
+            "[{cli::pb_current}/{cli::pb_total}]"
+        ),
+        total = length(covs)
+    )
     benches = lapply(covs, function(cv) {
         spec_loo = make_spec_loo(spec, cv)
 
@@ -520,6 +527,8 @@ ei_bench <- function(spec, subset = NULL, contrast = NULL) {
         n_y = length(c_outcome)
         confounding = est_chg / rep(sd_diff, each = n_x) / rep(nu_diff, n_y)
         confounding = pmax(pmin(confounding, 1), -1)
+
+        cli::cli_progress_update(id = pb)
 
         est_loo$covariate = cv
         est_loo = est_loo[c("covariate", "predictor", "outcome")]

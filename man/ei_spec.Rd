@@ -88,7 +88,7 @@ if (requireNamespace("bases", quietly = TRUE)) {
         outcome = pres_dem_hum:pres_abs,
         total = pres_total,
         covariates = c(pop_city:pop_rural, farm:educ_coll, starts_with("inc_")),
-        preproc = ~ bases::b_tpsob(.x, p = 200)
+        preproc = ~ bases::b_bart(.x, trees = 500)
     )
 }
 
