@@ -22,7 +22,16 @@
 #'   example, the column containing the total number of voters. Required by
 #'   default.
 #' @param covariates <[`tidy-select`][tidyselect::select_helpers]> Covariates.
-#' @param strip Whether to strip common prefixes from column names within each group.
+#' @param preproc An optional function which takes in a data frame of covariates
+#'   and returns a modeling-ready numeric matrix of covariates.
+#'   Useful to apply any preprocessing, such as a basis transformation, as part
+#'   of the estimation process. Passed to [rlang::as_function()], and so supports
+#'   `purrr`-style lambda functions. This function is called once when forming
+#'   the `ei_spec` object so that the same processing is applied during all
+#'   estimation steps. The function may also be re-used by other functions, like
+#'   [ei_bench()] and [ei_test_car()]. The default is a call to `model.matrix()`
+#'   with the formula `~ 0 + .`, i.e., all covariates and no predictors.
+#' #' @param strip Whether to strip common prefixes from column names within each group.
 #'   For example, columns named `vap_white`, `vap_black`, and `vap_hisp` would be
 #'   renamed `white`, `black` and `other` in the model and output.
 #'
@@ -33,8 +42,20 @@
 #' data(elec_1968)
 #' ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #'
+#' # basis expansion
+#' if (requireNamespace("bases", quietly = TRUE)) {
+#'     spec = ei_spec(
+#'         data = elec_1968,
+#'         predictors = vap_white:vap_other,
+#'         outcome = pres_dem_hum:pres_abs,
+#'         total = pres_total,
+#'         covariates = c(pop_city:pop_rural, farm:educ_coll, starts_with("inc_")),
+#'         preproc = ~ bases::b_tpsob(.x, p = 200)
+#'     )
+#' }
+#'
 #' @export
-ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=FALSE) {
+ei_spec = function(data, predictors, outcome, total, covariates=NULL, preproc=NULL, strip=FALSE) {
     predictors = try_fetch(
         eval_select(enquo(predictors), data, allow_empty=FALSE),
         error = function(cnd) cli_abort("Predictor specification failed.", parent=cnd)
@@ -49,6 +70,11 @@ ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=FALS
     )
     total = check_make_weights(!!enquo(total), data)
 
+    preproc = if (!is.null(preproc)) {
+        rlang::as_function(preproc)
+    } else {
+        default_preproc
+    }
 
     if (isTRUE(strip)) {
         names(predictors) = str_strip_prefix(names(predictors))
@@ -62,13 +88,42 @@ ei_spec = function(data, predictors, outcome, total, covariates=NULL, strip=FALS
         x = names(predictors),
         y = names(outcome),
         z = names(covariates),
+        preproc = preproc,
         n = total
     )
 }
 
 # Internal constructor
-new_ei_spec = function(data, x, y, z, n, ...) {
-    new_tibble(data, ei_x = x, ei_y = y, ei_z = z, ei_n = n, class="ei_spec")
+new_ei_spec = function(data, x, y, z, n, preproc, ...) {
+    new_tibble(
+        data,
+        ei_x = x,
+        ei_y = y,
+        ei_z = z,
+        ei_n = n,
+        ei_z_proc = run_preproc(data, preproc, z),
+        ei_preproc = preproc,
+        class = "ei_spec"
+    )
+}
+
+run_preproc = function(spec, preproc = attr(spec, "ei_preproc"), z_col = attr(spec, "ei_z")) {
+    z = spec[, z_col, drop=FALSE]
+    pz = as.matrix(preproc(z))
+    if (is.null(colnames(pz)) && ncol(pz) > 0) {
+        colnames(pz) = paste0("z", seq_len(ncol(pz)))
+    }
+    pz
+}
+has_preproc = function(spec) {
+    !identical(attr(spec, "ei_preproc"), default_preproc)
+}
+default_preproc = function(z) {
+    if (ncol(z) == 0) {
+        as.matrix(z)
+    } else {
+        model.matrix(~ 0 + ., z)
+    }
 }
 
 # Internal validator
@@ -87,6 +142,12 @@ validate_ei_spec = function(x) {
     }
     if (is.null(attr(x, "ei_n"))) {
         cli_abort("No total specified in {.cls ei_spec} object.", call=parent.frame())
+    }
+    if (is.null(attr(x, "ei_preproc")) || !is.function(attr(x, "ei_preproc"))) {
+        cli_abort("No preprocessing function found in {.cls ei_spec} object.", call=parent.frame())
+    }
+    if (is.null(attr(x, "ei_z_proc")) || !is.matrix(attr(x, "ei_z_proc"))) {
+        cli_abort("No processed covariates found in {.cls ei_spec} object.", call=parent.frame())
     }
 
     if (!all(attr(x, "ei_x") %in% names(x))) {
@@ -137,9 +198,21 @@ reconstruct_ei_spec = function(data, old) {
         if (is.null(attr(data, "ei_n"))) {
             attr(data, "ei_n") = attr(old, "ei_n")
         }
+        if (is.null(attr(data, "preproc"))) {
+            attr(data, "preproc") = attr(old, "preproc")
+        }
+        if (is.null(attr(data, "ei_z_proc"))) {
+            proc_fn = attr(data, "preproc")
+            attr(data, "ei_z_proc") = run_preproc(data)
+        }
     }
 
-    attr(data, "ei_z") = intersect(attr(data, "ei_z"), names(data))
+    names_act = names(data)
+    names_exp = attr(data, "ei_z")
+    if (!setequal(names_act, names_exp)) {
+        attr(data, "ei_z") = intersect(names_act, names_exp)
+        attr(data, "ei_z_proc") = run_preproc(data)
+    }
 
     if (!inherits(data, "ei_spec")) {
         class(data) = c("ei_spec", class(data))
@@ -154,10 +227,15 @@ print.ei_spec = function(x, ..., n=5) {
     cat_line("EI Specification")
     covs = attr(x, "ei_z")
     covs_lbl = if (length(covs) == 0) "none" else "{.var {covs}}"
+    pp_lbl = if (has_preproc(x)) {
+        " ({ncol(attr(x, 'ei_z_proc'))} after preprocessing):"
+    } else {
+        ": "
+    }
     cli::cat_bullet(c(
         format_inline("Predictors: {.var {attr(x, 'ei_x')}}"),
         format_inline("Outcome: {.var {attr(x, 'ei_y')}}"),
-        format_inline(paste0("Covariates: ", covs_lbl))
+        format_inline(paste0("Covariates", pp_lbl, covs_lbl))
     ))
     NextMethod(n=n)
 }
@@ -254,7 +332,7 @@ check_bounds = function(bounds, outcome, clamp=1e-3) {
 }
 
 # Shared helper for checking weights/total argument
-check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
+check_make_weights = function(x, data = NULL, n = nrow(data), arg = "total", required = TRUE) {
     if (rlang::quo_is_missing(enquo(x))) {
         if (isTRUE(required)) {
             cli_abort(c(
@@ -267,10 +345,6 @@ check_make_weights = function(x, data, n, arg = "total", required = TRUE) {
         }
     }
     x = eval_tidy(enquo(x), data)
-
-    if (!is.null(data)) {
-        n = nrow(data)
-    }
 
     if (isFALSE(x)) {
         x = rep(1, n)

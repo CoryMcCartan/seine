@@ -440,20 +440,22 @@ plot.ei_sens <- function(
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
 #'                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
-#'
 #' ei_bench(spec)
 #'
-#' # preprocess to add all 2-way interactions
-#' ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
+#' # with preprocessed covariates
+#' spec = ei_spec(
+#'     data = elec_1968,
+#'     predictors = vap_white:vap_other,
+#'     outcome = pres_ind_wal,
+#'     total = pres_total,
+#'     covariates = c(educ_elem, pop_urban, farm),
+#'     preproc = ~ model.matrix(~ .^2 - 1, data = .x)
+#' )
+#' ei_bench(spec)
+#' ei_bench(spec, subset = pop_urban > 0.5)
 #' @export
-ei_bench <- function(spec, preproc = NULL, subset = NULL) {
+ei_bench <- function(spec, subset = NULL) {
     validate_ei_spec(spec)
-
-    if (!missing(preproc)) {
-        preproc = rlang::as_function(preproc)
-    } else {
-        preproc = function(x) x
-    }
 
     n_x = length(attr(spec, "ei_x"))
     n_y = length(attr(spec, "ei_y"))
@@ -463,20 +465,9 @@ ei_bench <- function(spec, preproc = NULL, subset = NULL) {
     }
 
     make_spec_loo = function(spec, out = character(0)) {
-        covs = setdiff(attr(spec, "ei_z"), out)
-        z = preproc(spec[, covs])
-        if (is.data.frame(z)) {
-            z = model.matrix(~ 0 + ., z)
-        }
-        spec$z_ = z
-        ei_spec(
-            spec,
-            predictors = attr(spec, "ei_x"),
-            outcome = attr(spec, "ei_y"),
-            total = attr(spec, "ei_n"),
-            covariates = "z_",
-            strip = FALSE
-        )
+        attr(spec, "ei_z") = setdiff(attr(spec, "ei_z"), out)
+        attr(spec, "ei_z_proc") = run_preproc(spec)
+        spec
     }
 
     spec_proc = make_spec_loo(spec)

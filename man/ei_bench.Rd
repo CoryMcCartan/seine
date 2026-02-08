@@ -4,18 +4,18 @@
 \alias{ei_bench}
 \title{Benchmark sensitivity parameters from observed covariates}
 \usage{
-ei_bench(spec, preproc = NULL, subset = NULL)
+ei_bench(spec, subset = NULL)
 }
 \arguments{
 \item{spec}{An \link{ei_spec} object.}
+
+\item{subset}{Passed on to \code{\link[=ei_est]{ei_est()}}.}
 
 \item{preproc}{An optional function which takes in a data frame of covariates
 and returns a transformed data frame or matrix of covariates.
 Useful to apply any preprocessing, such as a basis transformation, as part
 of the benchmarking process. Passed to \code{\link[rlang:as_function]{rlang::as_function()}}, and so supports
 \code{purrr}-style lambda functions.}
-
-\item{subset}{Passed on to \code{\link[=ei_est]{ei_est()}}.}
 }
 \description{
 Produces a table of benchmark values for \code{c_outcome} and \code{c_predictor} in
@@ -27,11 +27,19 @@ data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
-
 ei_bench(spec)
 
-# preprocess to add all 2-way interactions
-ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
+# with preprocessed covariates
+spec = ei_spec(
+    data = elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_ind_wal,
+    total = pres_total,
+    covariates = c(educ_elem, pop_urban, farm),
+    preproc = ~ model.matrix(~ .^2 - 1, data = .x)
+)
+ei_bench(spec)
+ei_bench(spec, subset = pop_urban > 0.5)
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).

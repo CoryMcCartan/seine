@@ -26,6 +26,7 @@ Imports:
     utils,
     stats
 Suggests:
+    bases,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),

@@ -35,7 +35,7 @@
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
 #' @param conf_level A numeric specifying the level for confidence intervals.
-#'   If `FALSE` (the default), no confidence intervals are calculated. Standard
+#'   If `FALSE`, no confidence intervals are calculated. Standard
 #'   errors are always returned.
 #' @param use_student If `TRUE`, use construct confidence intervals from a
 #'   Student-_t_ distribution, which may improve coverage properties in
@@ -80,7 +80,7 @@
 #' nobs(est)
 #' @export
 ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
-                  contrast=NULL, outcome=NULL, conf_level=FALSE, use_student=TRUE) {
+                  contrast=NULL, outcome=NULL, conf_level=0.95, use_student=TRUE) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }

@@ -13,7 +13,7 @@ ei_est_local(
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
-  conf_level = FALSE,
+  conf_level = 0.95,
   regr_var = TRUE,
   unimodal = TRUE
 )
@@ -68,7 +68,7 @@ outcome variable. If \code{NULL}, infers \code{sum_one = TRUE} when the bounds
 are \code{c(0, 1)} the outcome variables sum to 1.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
-If \code{FALSE} (the default), no confidence intervals are calculated.
+If \code{FALSE}, no confidence intervals are calculated.
 For \code{regr} arguments from \code{\link[=ei_wrap_model]{ei_wrap_model()}}, confidence intervals will not
 incorporate uncertainty in the prediction itself, just the residual. This
 will trigger a warning periodically.}
@@ -77,8 +77,8 @@ will trigger a warning periodically.}
 when calculating confidence intervals. Only applies when \code{regr} is fitted
 with \code{\link[=ei_ridge]{ei_ridge()}}, and requires that function be called with \code{vcov = TRUE}.}
 
-\item{unimodal}{If \code{TRUE}, assume a unimodal residual distribution. Improves
-width of confidence intervals by a factor of 4/9.}
+\item{unimodal}{If \code{TRUE}, assume a unimodal residual distribution. Reduces
+width of confidence intervals by a factor of 2/3.}
 
 \item{x}{An object of class \code{ei_est_local}}
 
@@ -124,12 +124,12 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 
 m = ei_ridge(spec)
 
-ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.99)
 
 b_cov = ei_local_cov(m, spec)
-e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
-e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
+e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 # average interval width
 c(
     e_orth = mean(e_orth$conf.high - e_orth$conf.low),

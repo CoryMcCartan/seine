@@ -167,15 +167,9 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NU
     spec = x
     validate_ei_spec(spec)
 
-    form = as.formula(paste0(
-        paste0(attr(spec, "ei_y"), collapse=" + "), " ~ ",
-        paste0(c(attr(spec, "ei_x"), attr(spec, "ei_z")), collapse=" + ")
-    ))
-
-    bp = hardhat::new_default_formula_blueprint(
+     bp = hardhat::new_default_xy_blueprint(
         intercept = FALSE,
         composition = "matrix",
-        indicators = "one_hot",
         ei_x = attr(spec, "ei_x"),
         ei_wgt = check_make_weights(!!enquo(weights), spec, arg="weights", required=FALSE),
         bounds = bounds,
@@ -184,8 +178,10 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NU
         scale = scale,
         subclass = "ei_ridge_blueprint"
     )
+    x = cbind(spec[, attr(spec, "ei_x"), drop=FALSE], attr(spec, "ei_z_proc"))
+    y = spec[, attr(spec, "ei_y"), drop=FALSE]
 
-    processed <- hardhat::mold(form, spec, blueprint=bp)
+    processed <- hardhat::mold(x, y, blueprint=bp)
     ei_ridge_bridge(processed, vcov, ...)
 }
 
@@ -206,7 +202,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, p
         intercept = FALSE,
         composition = "matrix",
         ei_x = colnames(x),
-        ei_wgt = check_make_weights(!!enquo(weights), arg="weights", required=FALSE),
+        ei_wgt = check_make_weights(!!enquo(weights), n=nrow(x), arg="weights", required=FALSE),
         bounds = bounds,
         sum_one = sum_one,
         penalty = penalty,
@@ -461,6 +457,15 @@ predict.ei_ridge <- function(object, new_data, type="numeric", ...) {
     out = predict_ei_ridge_bridge(type, object, processed)
     hardhat::validate_prediction_size(out, new_data)
     out
+}
+
+#' @export
+forge.ei_spec <- function(new_data, blueprint, ..., outcomes = FALSE) {
+    new_data = cbind(
+        new_data[, blueprint$ei_x, drop=FALSE],
+        attr(new_data, "ei_z_proc")
+    )
+    NextMethod()
 }
 
 

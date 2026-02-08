@@ -15,7 +15,7 @@ ei_est(
   subset = NULL,
   contrast = NULL,
   outcome = NULL,
-  conf_level = FALSE,
+  conf_level = 0.95,
   use_student = TRUE
 )
 
@@ -63,7 +63,7 @@ matrix of outcome variables. Only required if both \code{riesz} is provided
 alone (without \code{regr}) and \code{data} is not an \link{ei_spec} object.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
-If \code{FALSE} (the default), no confidence intervals are calculated. Standard
+If \code{FALSE}, no confidence intervals are calculated. Standard
 errors are always returned.}
 
 \item{use_student}{If \code{TRUE}, use construct confidence intervals from a

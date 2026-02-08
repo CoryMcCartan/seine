@@ -5,7 +5,15 @@
 \alias{weights.ei_spec}
 \title{Specify an ecological inference problem}
 \usage{
-ei_spec(data, predictors, outcome, total, covariates = NULL, strip = FALSE)
+ei_spec(
+  data,
+  predictors,
+  outcome,
+  total,
+  covariates = NULL,
+  preproc = NULL,
+  strip = FALSE
+)
 
 \method{weights}{ei_spec}(object, normalize = TRUE, ...)
 }
@@ -29,7 +37,16 @@ default.}
 
 \item{covariates}{<\code{\link[tidyselect:language]{tidy-select}}> Covariates.}
 
-\item{strip}{Whether to strip common prefixes from column names within each group.
+\item{preproc}{An optional function which takes in a data frame of covariates
+and returns a modeling-ready numeric matrix of covariates.
+Useful to apply any preprocessing, such as a basis transformation, as part
+of the estimation process. Passed to \code{\link[rlang:as_function]{rlang::as_function()}}, and so supports
+\code{purrr}-style lambda functions. This function is called once when forming
+the \code{ei_spec} object so that the same processing is applied during all
+estimation steps. The function may also be re-used by other functions, like
+\code{\link[=ei_bench]{ei_bench()}} and \code{\link[=ei_test_car]{ei_test_car()}}. The default is a call to \code{model.matrix()}
+with the formula \code{~ 0 + .}, i.e., all covariates and no predictors.
+#' @param strip Whether to strip common prefixes from column names within each group.
 For example, columns named \code{vap_white}, \code{vap_black}, and \code{vap_hisp} would be
 renamed \code{white}, \code{black} and \code{other} in the model and output.}
 
@@ -61,5 +78,17 @@ by functions that use \code{ei_spec} objects.
 \examples{
 data(elec_1968)
 ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
+
+# basis expansion
+if (requireNamespace("bases", quietly = TRUE)) {
+    spec = ei_spec(
+        data = elec_1968,
+        predictors = vap_white:vap_other,
+        outcome = pres_dem_hum:pres_abs,
+        total = pres_total,
+        covariates = c(pop_city:pop_rural, farm:educ_coll, starts_with("inc_")),
+        preproc = ~ bases::b_tpsob(.x, p = 200)
+    )
+}
 
 }

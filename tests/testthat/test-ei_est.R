@@ -2,8 +2,8 @@ test_that("Estimation methods agree when there is no penalization", {
     spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
                    total = pres_total,
                    covariates = c(pop_urban, farm, educ_elem, educ_coll, inc_00_03k))
-    m = ei_ridge(spec, penalty=0)#, weights=elec_1968$pres_total)
-    rr = ei_riesz(spec, penalty=m$penalty)#, weights=elec_1968$pres_total)
+    m = ei_ridge(spec, penalty=0)
+    rr = ei_riesz(spec, penalty=m$penalty)
 
     est_p = ei_est(m, data=spec)
     est_w = ei_est(rr, data=spec)
