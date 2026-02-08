@@ -278,3 +278,84 @@ test_that("ei_bench handles multiple outcomes", {
     expect_true(n_outcomes > 1)
 })
 
+
+test_that("ei_bench leave-one-out logic produces different values per covariate", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec)
+
+    covs = unique(bench$covariate)
+    expect_equal(length(covs), 2)
+
+    bench_urban = bench[bench$covariate == "pop_urban", ]
+    bench_farm = bench[bench$covariate == "farm", ]
+    expect_false(all(bench_urban$c_outcome == bench_farm$c_outcome))
+})
+
+test_that("ei_bench works with predictor contrast", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+
+    expect_s3_class(bench, "ei_bench")
+    expect_true(nrow(bench) > 0)
+    expect_equal(length(unique(bench$predictor)), 1)
+    expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
+    expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
+})
+
+test_that("ei_bench works with outcome contrast", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec, contrast = list(outcome = c(1, -1, 0, 0)))
+
+    expect_s3_class(bench, "ei_bench")
+    expect_true(nrow(bench) > 0)
+    expect_equal(length(unique(bench$outcome)), 1)
+    expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
+    expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
+})
+
+test_that("ei_bench works with predictor-outcome contrast", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0), outcome = c(1, -1, 0, 0)))
+
+    expect_s3_class(bench, "ei_bench")
+    expect_true(nrow(bench) > 0)
+    expect_equal(length(unique(bench$predictor)), 1)
+    expect_equal(length(unique(bench$outcome)), 1)
+    expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
+    expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
+})
+
+test_that("ei_bench with contrast has correct dimensions", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+
+    n_covariates = 2
+    n_contrasts = 1
+    n_outcomes = 1
+    expected_rows = n_covariates * n_contrasts * n_outcomes
+
+    expect_equal(nrow(bench), expected_rows)
+})
+
+test_that("ei_bench with contrast values remain valid", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total, covariates = c(pop_urban, farm))
+
+    bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+
+    expect_true(all(!is.na(bench$c_outcome)))
+    expect_true(all(!is.na(bench$c_predictor)))
+    expect_true(all(!is.na(bench$confounding)))
+    expect_true(all(is.finite(bench$c_outcome)))
+    expect_true(all(is.finite(bench$c_predictor)))
+})

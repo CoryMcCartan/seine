@@ -423,12 +423,7 @@ plot.ei_sens <- function(
 #' et al. (2024).
 #'
 #' @param spec An [ei_spec] object.
-#' @param preproc An optional function which takes in a data frame of covariates
-#'   and returns a transformed data frame or matrix of covariates.
-#'   Useful to apply any preprocessing, such as a basis transformation, as part
-#'   of the benchmarking process. Passed to [rlang::as_function()], and so supports
-#'   `purrr`-style lambda functions.
-#' @param subset Passed on to [ei_est()].
+#' @inheritParams ei_est
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
@@ -453,15 +448,24 @@ plot.ei_sens <- function(
 #' )
 #' ei_bench(spec)
 #' ei_bench(spec, subset = pop_urban > 0.5)
+#'
+#' # with contrasts
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_rep_nix:pres_ind_wal,
+#'                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
+#' ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+#' ei_bench(spec, contrast = list(outcome = c(1, -1)))
 #' @export
-ei_bench <- function(spec, subset = NULL) {
+ei_bench <- function(spec, subset = NULL, contrast = NULL) {
     validate_ei_spec(spec)
 
-    n_x = length(attr(spec, "ei_x"))
-    n_y = length(attr(spec, "ei_y"))
+    contr = check_contrast(contrast, attr(spec, "ei_x"), attr(spec, "ei_y"))
     subs = eval_tidy(enquo(subset), spec)
     var_resid = function(regr) {
-        apply(regr$y - regr$fitted, 2, var)
+        if (!is.null(contrast$outcome)) {
+            apply(((regr$y - regr$fitted) %*% contrast$outcome)^2, 2, var)
+        } else {
+            apply(regr$y - regr$fitted, 2, var)
+        }
     }
 
     make_spec_loo = function(spec, out = character(0)) {
@@ -473,10 +477,20 @@ ei_bench <- function(spec, subset = NULL) {
     spec_proc = make_spec_loo(spec)
     regr0 = ei_ridge(spec_proc, vcov = FALSE)
     riesz0 = ei_riesz(spec_proc, penalty = regr0$penalty)
-    est0 = ei_est(regr0, riesz0, spec_proc, subset = subs)
-    vy = apply(regr0$y, 2, var)
+    est0 = ei_est(regr0, riesz0, spec_proc, subset = subs, contrast = contrast)
+
+    vy = if (!is.null(contrast$outcome)) {
+        apply(regr0$y %*% contrast$outcome, 2, var)
+    } else {
+        apply(regr0$y, 2, var)
+    }
     var_resid0 = var_resid(regr0)
     r2_out0 = 1 - var_resid0 / vy
+    nu2_0 = if (!is.null(contrast$predictor)) {
+        colMeans((riesz0$weights %*% contrast$predictor)^2)
+    } else {
+        riesz0$nu2
+    }
 
     covs = attr(spec, "ei_z")
     benches = lapply(covs, function(cv) {
@@ -484,16 +498,26 @@ ei_bench <- function(spec, subset = NULL) {
 
         regr_loo = ei_ridge(spec_loo, vcov = FALSE)
         riesz_loo = ei_riesz(spec_loo, penalty = regr_loo$penalty)
-        est_loo = ei_est(regr_loo, riesz_loo, spec_loo, subset = subs)
+        est_loo = ei_est(regr_loo, riesz_loo, spec_loo, subset = subs, contrast = contrast)
+
         var_resid_loo = var_resid(regr_loo)
         r2_out_loo = 1 - var_resid_loo / vy
-        r2_riesz = riesz_loo$nu2 / riesz0$nu2
 
-        c_outcome = pmin((r2_out0 - r2_out_loo) / r2_out0, 1)
-        c_predictor = pmin((1 - r2_riesz) / r2_riesz, 1)
+        nu2_loo = if (!is.null(contrast$predictor)) {
+            colMeans((riesz_loo$weights %*% contrast$predictor)^2)
+        } else {
+            riesz_loo$nu2
+        }
+        r2_riesz = nu2_loo / nu2_0
+
+        c_outcome = pmax(pmin((r2_out0 - r2_out_loo) / r2_out0, 1), 0)
+        c_predictor = pmax(pmin((1 - r2_riesz) / r2_riesz, 1), 0)
         est_chg = est_loo$estimate - est0$estimate
         sd_diff = sqrt(pmax(var_resid_loo - var_resid0, 0))
-        nu_diff = sqrt(pmax(riesz0$nu2 - riesz_loo$nu2, 0))
+        nu_diff = sqrt(pmax(nu2_0 - nu2_loo, 0))
+
+        n_x = length(c_predictor)
+        n_y = length(c_outcome)
         confounding = est_chg / rep(sd_diff, each = n_x) / rep(nu_diff, n_y)
         confounding = pmax(pmin(confounding, 1), -1)
 

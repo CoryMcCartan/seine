@@ -4,18 +4,24 @@
 \alias{ei_bench}
 \title{Benchmark sensitivity parameters from observed covariates}
 \usage{
-ei_bench(spec, subset = NULL)
+ei_bench(spec, subset = NULL, contrast = NULL)
 }
 \arguments{
 \item{spec}{An \link{ei_spec} object.}
 
-\item{subset}{Passed on to \code{\link[=ei_est]{ei_est()}}.}
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
-\item{preproc}{An optional function which takes in a data frame of covariates
-and returns a transformed data frame or matrix of covariates.
-Useful to apply any preprocessing, such as a basis transformation, as part
-of the benchmarking process. Passed to \code{\link[rlang:as_function]{rlang::as_function()}}, and so supports
-\code{purrr}-style lambda functions.}
+\item{contrast}{If provided, a list containing entries \code{predictor} and
+\code{outcome}, each containing a contrast vector.  If only one of \code{predictor}
+or \code{outcome} is provided, the contrast will be calculated for all levels of
+the other variable.  For example \code{list(predictor = c(1, -1, 0))} will
+calculate the difference in each outcome between the first and second
+predictor groups; \code{list(outcome = c(1, -1))} will calculate the difference
+between the two outcomes for each predictor group; and
+\code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
+difference in differences.}
 }
 \description{
 Produces a table of benchmark values for \code{c_outcome} and \code{c_predictor} in
@@ -40,6 +46,12 @@ spec = ei_spec(
 )
 ei_bench(spec)
 ei_bench(spec, subset = pop_urban > 0.5)
+
+# with contrasts
+spec = ei_spec(elec_1968, vap_white:vap_other, pres_rep_nix:pres_ind_wal,
+               total = pres_total, covariates = c(educ_elem, pop_urban, farm))
+ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+ei_bench(spec, contrast = list(outcome = c(1, -1)))
 }
 \references{
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).

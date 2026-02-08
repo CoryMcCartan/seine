@@ -4,7 +4,7 @@
 \alias{ei_test_car}
 \title{Test the coarsening at random (CAR) assumption}
 \usage{
-ei_test_car(spec, preproc = NULL, preproc_reduced = preproc)
+ei_test_car(spec)
 }
 \arguments{
 \item{spec}{An \code{ei_spec} object created with \code{\link[=ei_spec]{ei_spec()}}.}
