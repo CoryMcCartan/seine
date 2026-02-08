@@ -459,7 +459,7 @@ predict.ei_ridge <- function(object, new_data, type="numeric", ...) {
     out
 }
 
-#' @export
+#' @exportS3Method hardhat::forge
 forge.ei_spec <- function(new_data, blueprint, ..., outcomes = FALSE) {
     new_data = cbind(
         new_data[, blueprint$ei_x, drop=FALSE],

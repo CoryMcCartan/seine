@@ -45,8 +45,9 @@ of the estimation process. Passed to \code{\link[rlang:as_function]{rlang::as_fu
 the \code{ei_spec} object so that the same processing is applied during all
 estimation steps. The function may also be re-used by other functions, like
 \code{\link[=ei_bench]{ei_bench()}} and \code{\link[=ei_test_car]{ei_test_car()}}. The default is a call to \code{model.matrix()}
-with the formula \code{~ 0 + .}, i.e., all covariates and no predictors.
-#' @param strip Whether to strip common prefixes from column names within each group.
+with the formula \code{~ 0 + .}, i.e., all covariates and no predictors.}
+
+\item{strip}{Whether to strip common prefixes from column names within each group.
 For example, columns named \code{vap_white}, \code{vap_black}, and \code{vap_hisp} would be
 renamed \code{white}, \code{black} and \code{other} in the model and output.}
 

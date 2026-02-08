@@ -31,7 +31,7 @@
 #'   estimation steps. The function may also be re-used by other functions, like
 #'   [ei_bench()] and [ei_test_car()]. The default is a call to `model.matrix()`
 #'   with the formula `~ 0 + .`, i.e., all covariates and no predictors.
-#' #' @param strip Whether to strip common prefixes from column names within each group.
+#' @param strip Whether to strip common prefixes from column names within each group.
 #'   For example, columns named `vap_white`, `vap_black`, and `vap_hisp` would be
 #'   renamed `white`, `black` and `other` in the model and output.
 #'
