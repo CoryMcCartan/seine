@@ -5,7 +5,7 @@ test_that("local estimates satisfy constraints", {
 
     m = ei_ridge(spec)
 
-    ests <- ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95)
+    ests <- ei_est_local(m, spec, b_cov=0, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95)
     expect_true(all(ests$estimate > -1e-12))
     expect_true(all(ests$conf.low > -1e-12))
     expect_true(all(ests$conf.high > -1e-12))
@@ -15,7 +15,7 @@ test_that("local estimates satisfy constraints", {
 
     ea = as.array(ests)
     expect_identical(dim(ea), c(nrow(spec), 3L, 4L))
-    expect_lt(mean(abs(rowSums(ea, dims = 2) - 1)), 5e-16)
+    expect_lt(mean(abs(rowSums(ea, dims = 2) - 1)), 1e-13)
 })
 
 
@@ -43,8 +43,8 @@ test_that("local confidence intervals are wider with regression variance", {
 
     m = ei_ridge(spec, vcov = TRUE)
 
-    e1 = ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = FALSE)
-    e2 = ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
+    e1 = ei_est_local(m, spec, b_cov=0, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = FALSE)
+    e2 = ei_est_local(m, spec, b_cov=0, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
     w1 = e1$conf.high - e1$conf.low
     w2 = e2$conf.high - e2$conf.low
     expect_true(all(w2 >= w1))
@@ -57,11 +57,12 @@ test_that("local confidence intervals are very narrow with neighborhood model", 
 
     m = ei_ridge(spec, vcov = TRUE)
 
-    e1 = ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = FALSE)
-    e2 = ei_est_local(m, spec, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
+    e1 = ei_est_local(m, spec, b_cov=0, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
+    e2 = ei_est_local(m, spec, b_cov=1, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
     w1 = e1$conf.high - e1$conf.low
     w2 = e2$conf.high - e2$conf.low
-    expect_true(all(w2 >= w1))
+    expect_gt(mean(w2 < w1), 0.5)
+
 })
 
 
@@ -75,6 +76,7 @@ test_that("local confidence intervals work with contrasts", {
     ests = ei_est_local(
         m,
         spec,
+        b_cov = 0,
         contrast = list(predictor = c(1, -1, 0), outcome = c(1, -1, 0, 0)),
         bounds = c(0, 1),
         sum_one = TRUE,

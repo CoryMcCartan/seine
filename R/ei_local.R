@@ -26,11 +26,16 @@
 #'   example, the column containing the total number of voters. Required if
 #'   `data` is not an [ei_spec()] object.
 #' @param b_cov A covariance matrix to use in projecting the
-#'   local estimates onto the accounting constraint, such as one estimated with
-#'   [ei_local_cov()]. Defaults to the identity matrix scaled by the residual
-#'   variance of `regr`, corresponding to orthogonal projection.
-#'   Set `b_cov=1` to use a degenerate covariance matrix corresponding to a
-#'   (local) neighborhood model. When there are multiple outcome variables and
+#'   local estimates `b` onto the accounting constraint, such as one estimated with
+#'   [ei_local_cov()].
+#'   When `b_cov` is a single number, it is used to specify the pairwise
+#'   correlation between the local estimates across predictors, with the
+#'   same correlation structure as the regression residuals assumed for `b`
+#'   within each predictor.
+#'   For example, set `b_cov=0` to assume no correlation in `b` across predictors,
+#'   or set `b_cov=1` to assume perfect correlation in `b` across predictors,
+#'   corresponding to a (local) neighborhood model.
+#'   When there are multiple outcome variables and
 #'   `b_cov` is a matrix with entries for each predictor, it will be applied
 #'   identically to each outcome. Alternatively, a matrix with entries for each
 #'   predictor-outcome combination may be provided, with entries in the order
@@ -72,10 +77,10 @@
 #'
 #' m = ei_ridge(spec)
 #'
-#' ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.99)
+#' ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.99)
 #'
 #' b_cov = ei_local_cov(m, spec)
-#' e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+#' e_orth = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE)
 #' e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
 #' e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 #' # average interval width
@@ -89,7 +94,7 @@ ei_est_local = function(
     regr,
     data,
     total,
-    b_cov = NULL,
+    b_cov,
     contrast = NULL,
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
@@ -130,7 +135,13 @@ ei_est_local = function(
         total = eval_tidy(enquo(total), data)
     }
 
-    b_cov = check_proc_b_cov(b_cov, regr$sigma2, n_x)
+    if (missing(b_cov)) {
+        cli_abort(c(
+            "{.arg b_cov} is required.",
+            ">" = "Read about how to specify {.arg b_cov} in the documentation for {.help ei_est_local}"
+        ), call = parent.frame())
+    }
+    b_cov = check_proc_b_cov(b_cov, y - rl$yhat, n_x)
 
     contr = check_contrast(contrast, colnames(rl$x), colnames(y))
     x_nm = contr$x_nm
@@ -281,8 +292,8 @@ ei_local_cov <- function(regr, data) {
 }
 
 # Process b_cov
-check_proc_b_cov <- function(b_cov, sigma2, n_x) {
-    n_y = length(sigma2)
+check_proc_b_cov <- function(b_cov, resid, n_x) {
+    n_y = ncol(resid)
     if (is.matrix(b_cov)) {
         if (all(dim(b_cov) == n_x * n_y)) {
             # ok
@@ -294,10 +305,9 @@ check_proc_b_cov <- function(b_cov, sigma2, n_x) {
                 ">" = "Expected either {n_x}x{n_x} or {n_x * n_y}x{n_x * n_y}."
             ), call = parent.frame())
         }
-    } else if (is.null(b_cov)) {
-        b_cov = diag(sigma2, nrow = n_y) %x% diag(n_x)
-    } else if (length(b_cov) == 1 && b_cov == 1) {
-        b_cov = diag(sigma2, nrow = n_y) %x% (1 + diag(n_x) * 1e-8)
+    } else if (length(b_cov) == 1 && is.numeric(b_cov) && b_cov >= -1/(n_x - 1) && b_cov <= 1) {
+        cov_y = cov(resid) * (1 + diag(n_y) * 1e-8)
+        b_cov = cov_y %x% (b_cov + (1 + 1e-8 - b_cov) * diag(n_x))
     } else {
         cli_abort("Invalid {.arg b_cov} format. Consult documentation.", call = parent.frame())
     }

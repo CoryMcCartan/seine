@@ -178,6 +178,10 @@ is run to select the \code{penalty} automatically in this case, if it is not
 provided. Estimation is still efficient, though somewhat slower than in the
 unbounded case. The covariance matrix of the estimates is not available when
 bounds are applied.
+Note that supplying \code{bounds} does not guarantee those bounds will be respected
+by \code{\link[=ei_est]{ei_est()}}, and in general it is not necessarily recommended to use \code{bounds}
+in \code{\link[=ei_ridge]{ei_ridge()}} any time the outcomes are bounded. Bounds can be enforced
+on local estimates in \code{\link[=ei_est_local]{ei_est_local()}}.
 }
 \section{Weights}{
 

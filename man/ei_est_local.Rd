@@ -9,7 +9,7 @@ ei_est_local(
   regr,
   data,
   total,
-  b_cov = NULL,
+  b_cov,
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
@@ -33,11 +33,16 @@ example, the column containing the total number of voters. Required if
 \code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object.}
 
 \item{b_cov}{A covariance matrix to use in projecting the
-local estimates onto the accounting constraint, such as one estimated with
-\code{\link[=ei_local_cov]{ei_local_cov()}}. Defaults to the identity matrix scaled by the residual
-variance of \code{regr}, corresponding to orthogonal projection.
-Set \code{b_cov=1} to use a degenerate covariance matrix corresponding to a
-(local) neighborhood model. When there are multiple outcome variables and
+local estimates \code{b} onto the accounting constraint, such as one estimated with
+\code{\link[=ei_local_cov]{ei_local_cov()}}.
+When \code{b_cov} is a single number, it is used to specify the pairwise
+correlation between the local estimates across predictors, with the
+same correlation structure as the regression residuals assumed for \code{b}
+within each predictor.
+For example, set \code{b_cov=0} to assume no correlation in \code{b} across predictors,
+or set \code{b_cov=1} to assume perfect correlation in \code{b} across predictors,
+corresponding to a (local) neighborhood model.
+When there are multiple outcome variables and
 \code{b_cov} is a matrix with entries for each predictor, it will be applied
 identically to each outcome. Alternatively, a matrix with entries for each
 predictor-outcome combination may be provided, with entries in the order
@@ -124,10 +129,10 @@ spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
 
 m = ei_ridge(spec)
 
-ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.99)
+ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.99)
 
 b_cov = ei_local_cov(m, spec)
-e_orth = ei_est_local(m, spec, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE)
 e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 # average interval width
