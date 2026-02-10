@@ -242,6 +242,8 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
         ei_y = "y",
         ei_z = colnames(z),
         ei_n = rep(1, n),
+        ei_preproc = default_preproc,
+        ei_z_proc = run_preproc(d, default_preproc, colnames(z)),
         b = b,
         b_loc = b_loc,
         b_cov = b_cov,

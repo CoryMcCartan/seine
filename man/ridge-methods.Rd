@@ -44,7 +44,10 @@ Models fitted with \code{\link[=ei_ridge]{ei_ridge()}} support various generic m
 
 \item \code{residuals(ei_ridge)}: Extract residuals.
 
-\item \code{vcov(ei_ridge)}: Extract covariance of coefficient estimates.
+\item \code{vcov(ei_ridge)}: Extract unscaled covariance of coefficient estimates.
+Covariance estimate is not currently heteroskedasticity-robust.
+Multiply by \code{sigma2} from the fitted model to get the covariance matrix for
+a particular outcome variable.
 
 \item \code{summary(ei_ridge)}: Summarize the model's fitted values and \eqn{R^2}.
 

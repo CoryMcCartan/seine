@@ -4,13 +4,34 @@
 \alias{ei_test_car}
 \title{Test the coarsening at random (CAR) assumption}
 \usage{
-ei_test_car(spec)
+ei_test_car(spec, weights, iter = 1000, use_chisq = FALSE)
 }
 \arguments{
-\item{spec}{An \code{ei_spec} object created with \code{\link[=ei_spec]{ei_spec()}}.}
+\item{spec}{An \code{ei_spec} object created with \code{\link[=ei_spec]{ei_spec()}}. The object
+should use the \code{preproc} argument to specify a rich basis expansion of the
+covariates and predictors.}
+
+\item{weights}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector of unit
+weights for estimation. These may be the same or different from the total
+number of observations in each aggregate unit (see the \code{total} argument to
+\code{\link[=ei_spec]{ei_spec()}}). See the discussion below under 'Weights' for choosing this
+parameter. The default, uniform weights, makes a slightly
+stronger-than-necessary assumption about the relationship between the
+unit totals and the unknown data.}
+
+\item{iter}{The number of permutations to use when estimating the null
+distribution. Ignored when \code{use_chisq = TRUE}.}
+
+\item{use_chisq}{If \code{TRUE}, use the asymptotic chi-squared distribution for
+the Wald test statistic instead of conducting a permutation test. Only
+appropriate for larger sample sizes (Helwig 2022 recommends at least 200
+when a single predictor is used).}
 }
 \value{
-A 1-row tibble with columns describing the test results. The
+A tibble with one row per outcome variable and columns describing
+the test results. The \code{p.value} column contains the p-values for the test.
+P-values are not adjusted by default; pass them to \code{\link[stats:p.adjust]{stats::p.adjust()}} if
+desired.
 }
 \description{
 The CAR assumption, which is required for accurate estimates with \code{\link[=ei_est]{ei_est()}},
@@ -23,9 +44,43 @@ rich basis transformation of the covariates and predictors; a missing
 \code{preproc} will lead to a warning.
 }
 \details{
+The test is a Kennedy-Cade (1996) style permutation test on a Wald statistic
+for the coefficients not included in the "reduced" model that would be fit
+by \code{\link[=ei_ridge]{ei_ridge()}}.
 The test is carried out by fitting a regression on a fully basis-expanded
-combination of covariates and predictors, and calculating the F statistic
-compared to the "reduced" model that would be fit by \code{\link[=ei_ridge]{ei_ridge()}}. To
-account for penalization, the null distribution is estimated by permuting
-the residuals from the reduced model.
+combination of covariates and predictors, and calculating a Wald statistic
+for the
+}
+\examples{
+data(elec_1968)
+
+# basis expansion: poly() with degree=2 not recommended in practice
+preproc = if (requireNamespace("bases", quietly = TRUE)) {
+    ~ bases::b_bart(.x, trees = 100)
+} else {
+    ~ poly(as.matrix(.x), degree=2, simple=TRUE)
+}
+
+spec = ei_spec(
+    data = elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(pop_city:pop_rural, farm:educ_coll, starts_with("inc_")),
+    preproc = preproc
+)
+
+ei_test_car(spec, iter=19) # use a larger number in practice
+
+}
+\references{
+Helwig, N. E. (2022). Robust Permutation Tests for Penalized Splines. \emph{Stats},
+5(3), 916-933.
+
+Kennedy, P. E., & Cade, B. S. (1996). Randomization tests for multiple regression.
+\emph{Communications in Statistics-Simulation and Computation}, 25(4), 923-936.
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
 }

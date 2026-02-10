@@ -485,7 +485,10 @@ residuals.ei_ridge <- function(object, ...) {
     object$y - object$fitted
 }
 
-#' @describeIn ridge-methods Extract covariance of coefficient estimates.
+#' @describeIn ridge-methods Extract unscaled covariance of coefficient estimates.
+#'   Covariance estimate is not currently heteroskedasticity-robust.
+#'   Multiply by `sigma2` from the fitted model to get the covariance matrix for
+#'   a particular outcome variable.
 #' @export
 vcov.ei_ridge <- function(object, ...) {
     object$vcov_u

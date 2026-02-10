@@ -5,62 +5,45 @@ library(tidyverse)
 n = 1000
 n_perm = 100
 
-run_test <- function(n = 1000, n_x = 3, p = 2, n_perm = 1000) {
-    spec0 = ei_synthetic(n, p, n_x = n_x, b_cov = 0.0004 * (1 + diag(n_x)))
-    spec = ei_spec(spec0, starts_with("x"), starts_with("y"), total = attr(spec0, "ei_n"))
-    # attr(spec, "b") |> hist(breaks=50)
-
-    y = as.matrix(spec0[, attr(spec0, "ei_y")])
-    X = as.matrix(spec0[, attr(spec0, "ei_x")])
-    Z = as.matrix(spec0[, attr(spec0, "ei_z")])
-    XZ0 = row_kronecker(X, Z, 1e5)
-    XZ = bases::b_tpsob(spec0[, c(attr(spec, "ei_x"), attr(spec, "ei_z"))], p = 200)
-    # ZZ = bases::b_tpsob(spec[, c(attr(spec, "ei_z"))], p = 200)
-
-    udv0 = svd(XZ0)
-    udv = svd(cbind(XZ0, XZ))
-
-    fit0 = ridge_auto(udv0, y, rep(1, n), vcov = FALSE)
-    pen = fit0$penalty
-    fit = ridge_svd(udv, y, rep(1, n), vcov = FALSE, penalty = pen)
-    # fit = ridge_auto(udv, y, rep(1, n), vcov = FALSE)
-    # pen = fit$penalty
-    # fit0 = ridge_svd(udv0, y, rep(1, n), vcov = FALSE, penalty = pen)
-    c(cor(fit0$fitted, y)^2)
-    c(cor(fit$fitted, y)^2)
-
-    rss_full = colSums((y - fit$fitted)^2)
-    rss_red = colSums((y - fit0$fitted)^2)
-    F_stat = ((rss_red - rss_full) / (fit$df - fit0$df)) / (rss_full / (n - fit$df))
-
-    perm = replicate(
-        n_perm,
-        {
-            yp = fit0$fitted + (y - fit0$fitted)[sample(n), , drop = FALSE]
-            fit = ridge_svd(udv, yp, rep(1, n), vcov = FALSE, penalty = pen)
-            # fit0 = ridge_svd(udv0, yp, rep(1, n), vcov = FALSE, penalty = pen)
-            rss_full = colSums((yp - fit$fitted)^2)
-            # rss_red = colSums((yp - fit0$fitted)^2)
-            F_stat = ((rss_red - rss_full) / (fit$df - fit0$df)) / (rss_full / (n - fit$df))
-        },
-        simplify = FALSE
-    ) |>
-        do.call(cbind, args = _)
-
-    tibble::tibble_row(
-        F = F_stat,
-        p = (rowSums(perm >= F_stat) + 1) / (n_perm + 1),
-        p_param = pf(F_stat, fit$df - fit0$df, n - fit$df, lower.tail = FALSE)
+run_test <- function(n = 1000, n_x = 3, p = 2, r2 = 0.5, iter = 1000) {
+    spec0 = ei_synthetic(
+        n,
+        p,
+        n_x = n_x,
+        z = c(1, rep(0, p - 1)),
+        r2_xz = r2,
+        r2_bz = r2,
+        b_cov = 0.0004 * (1 + diag(n_x))
     )
+    spec = ei_spec(
+        spec0,
+        predictors = starts_with("x"),
+        outcome = starts_with("y"),
+        total = attr(spec0, "ei_n"),
+        covariates = starts_with("z"),
+        # covariates = "z1",
+        preproc = function(z) {
+            if (ncol(z) == 0) {
+                matrix(nrow=nrow(z), ncol=0)
+            } else {
+                bases::b_tpsob(z, p = 50)
+            }
+        }
+    )
+
+    ei_test_car(spec, iter = iter, use_chisq = F)
 }
 
-res = map(1:400, ~ run_test(n = 2000, n_perm = 50), .progress = TRUE) |>
+res = map(1:400, ~ run_test(n = 500, iter = 100), .progress = TRUE) |>
     bind_rows()
 
-hist(res$p)
-mean(res$p <= 0.05)
-hist(res$F, breaks=50)
-hist(res$p_param, breaks=50)
+hist(res$df, breaks=50)
+hist(res$p.value, breaks=50)
+hist(res$p.value[res$df > 0], breaks=50)
+mean(res$p.value <= 0.05)
+hist(res$W, breaks=50)
+hist(pchisq(res$W, res$df, lower.tail=F), breaks=50)
+plot(pchisq(res$W, res$df, lower.tail=F), res$p.value)
 
 
 # try on wallace

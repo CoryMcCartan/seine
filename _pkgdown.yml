@@ -30,6 +30,7 @@ reference:
   - ei_sens_rv
   - ei_bench
   - plot.ei_sens
+  - ei_test_car
 - title: Ecological modeling
   desc: Fit regression and weighting models to aggregate data to use in inference
   contents:
