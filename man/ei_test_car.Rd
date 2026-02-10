@@ -4,7 +4,14 @@
 \alias{ei_test_car}
 \title{Test the coarsening at random (CAR) assumption}
 \usage{
-ei_test_car(spec, weights, iter = 1000, use_chisq = FALSE)
+ei_test_car(
+  spec,
+  weights,
+  iter = 1000,
+  undersmooth = 1.5,
+  use_chisq = nrow(spec) >= 2000,
+  use_hc = FALSE
+)
 }
 \arguments{
 \item{spec}{An \code{ei_spec} object created with \code{\link[=ei_spec]{ei_spec()}}. The object
@@ -20,12 +27,22 @@ stronger-than-necessary assumption about the relationship between the
 unit totals and the unknown data.}
 
 \item{iter}{The number of permutations to use when estimating the null
-distribution. Ignored when \code{use_chisq = TRUE}.}
+distribution, including the original identity permutation.
+Ignored when \code{use_chisq = TRUE}.}
+
+\item{undersmooth}{A value to divide the estimated ridge penalty by when
+partialling out the partially linear component of the model. A larger
+value will smooth the partially linear component less, which may improve
+Type I error control in finite samples at the cost of power.}
 
 \item{use_chisq}{If \code{TRUE}, use the asymptotic chi-squared distribution for
 the Wald test statistic instead of conducting a permutation test. Only
 appropriate for larger sample sizes (Helwig 2022 recommends at least 200
 when a single predictor is used).}
+
+\item{use_hc}{If \code{TRUE}, use a heteroskedasticity-consistent covariance estimate.
+More computationally intensive, but may make a difference in small samples
+or when there is substantial heteroskedasticity.}
 }
 \value{
 A tibble with one row per outcome variable and columns describing
@@ -46,10 +63,9 @@ rich basis transformation of the covariates and predictors; a missing
 \details{
 The test is a Kennedy-Cade (1996) style permutation test on a Wald statistic
 for the coefficients not included in the "reduced" model that would be fit
-by \code{\link[=ei_ridge]{ei_ridge()}}.
-The test is carried out by fitting a regression on a fully basis-expanded
-combination of covariates and predictors, and calculating a Wald statistic
-for the
+by \code{\link[=ei_ridge]{ei_ridge()}}. The test statistic is asymptotically chi-squared under the
+null and may be anti-conservative in small samples, especially when the
+dimensionality of the basis expansion is large.
 }
 \examples{
 data(elec_1968)
@@ -70,7 +86,7 @@ spec = ei_spec(
     preproc = preproc
 )
 
-ei_test_car(spec, iter=19) # use a larger number in practice
+ei_test_car(spec, iter=20) # use a larger number in practice
 
 }
 \references{
