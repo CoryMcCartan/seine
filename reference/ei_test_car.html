@@ -72,7 +72,14 @@ rich basis transformation of the covariates and predictors; a missing
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_test_car</span><span class="op">(</span><span class="va">spec</span>, <span class="va">weights</span>, iter <span class="op">=</span> <span class="fl">1000</span>, use_chisq <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_test_car</span><span class="op">(</span></span>
+<span>  <span class="va">spec</span>,</span>
+<span>  <span class="va">weights</span>,</span>
+<span>  iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  undersmooth <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  use_chisq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">2000</span>,</span>
+<span>  use_hc <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -97,7 +104,15 @@ unit totals and the unknown data.</p></dd>
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
 <dd><p>The number of permutations to use when estimating the null
-distribution. Ignored when <code>use_chisq = TRUE</code>.</p></dd>
+distribution, including the original identity permutation.
+Ignored when <code>use_chisq = TRUE</code>.</p></dd>
+
+
+<dt id="arg-undersmooth">undersmooth<a class="anchor" aria-label="anchor" href="#arg-undersmooth"></a></dt>
+<dd><p>A value to divide the estimated ridge penalty by when
+partialling out the partially linear component of the model. A larger
+value will smooth the partially linear component less, which may improve
+Type I error control in finite samples at the cost of power.</p></dd>
 
 
 <dt id="arg-use-chisq">use_chisq<a class="anchor" aria-label="anchor" href="#arg-use-chisq"></a></dt>
@@ -105,6 +120,12 @@ distribution. Ignored when <code>use_chisq = TRUE</code>.</p></dd>
 the Wald test statistic instead of conducting a permutation test. Only
 appropriate for larger sample sizes (Helwig 2022 recommends at least 200
 when a single predictor is used).</p></dd>
+
+
+<dt id="arg-use-hc">use_hc<a class="anchor" aria-label="anchor" href="#arg-use-hc"></a></dt>
+<dd><p>If <code>TRUE</code>, use a heteroskedasticity-consistent covariance estimate.
+More computationally intensive, but may make a difference in small samples
+or when there is substantial heteroskedasticity.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -118,10 +139,9 @@ desired.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The test is a Kennedy-Cade (1996) style permutation test on a Wald statistic
 for the coefficients not included in the "reduced" model that would be fit
-by <code><a href="ei_ridge.html">ei_ridge()</a></code>.
-The test is carried out by fitting a regression on a fully basis-expanded
-combination of covariates and predictors, and calculating a Wald statistic
-for the</p>
+by <code><a href="ei_ridge.html">ei_ridge()</a></code>. The test statistic is asymptotically chi-squared under the
+null and may be anti-conservative in small samples, especially when the
+dimensionality of the basis expansion is large.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -154,14 +174,14 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span>    preproc <span class="op">=</span> <span class="va">preproc</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">ei_test_car</span><span class="op">(</span><span class="va">spec</span>, iter<span class="op">=</span><span class="fl">19</span><span class="op">)</span> <span class="co"># use a larger number in practice</span></span></span>
+<span class="r-in"><span><span class="fu">ei_test_car</span><span class="op">(</span><span class="va">spec</span>, iter<span class="op">=</span><span class="fl">20</span><span class="op">)</span> <span class="co"># use a larger number in practice</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   outcome          W    df p.value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pres_dem_hum  300.   105    0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> pres_rep_nix  257.   105    0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> pres_ind_wal  357.   105    0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pres_abs      206.   105    0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pres_dem_hum  296.   105    0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> pres_rep_nix  254.   105    0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> pres_ind_wal  353.   105    0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pres_abs      210.   105    0.05</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

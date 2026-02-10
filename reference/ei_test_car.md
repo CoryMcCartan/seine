@@ -13,7 +13,14 @@ predictors; a missing `preproc` will lead to a warning.
 ## Usage
 
 ``` r
-ei_test_car(spec, weights, iter = 1000, use_chisq = FALSE)
+ei_test_car(
+  spec,
+  weights,
+  iter = 1000,
+  undersmooth = 1.5,
+  use_chisq = nrow(spec) >= 2000,
+  use_hc = FALSE
+)
 ```
 
 ## Arguments
@@ -40,7 +47,15 @@ ei_test_car(spec, weights, iter = 1000, use_chisq = FALSE)
 - iter:
 
   The number of permutations to use when estimating the null
-  distribution. Ignored when `use_chisq = TRUE`.
+  distribution, including the original identity permutation. Ignored
+  when `use_chisq = TRUE`.
+
+- undersmooth:
+
+  A value to divide the estimated ridge penalty by when partialling out
+  the partially linear component of the model. A larger value will
+  smooth the partially linear component less, which may improve Type I
+  error control in finite samples at the cost of power.
 
 - use_chisq:
 
@@ -48,6 +63,12 @@ ei_test_car(spec, weights, iter = 1000, use_chisq = FALSE)
   test statistic instead of conducting a permutation test. Only
   appropriate for larger sample sizes (Helwig 2022 recommends at least
   200 when a single predictor is used).
+
+- use_hc:
+
+  If `TRUE`, use a heteroskedasticity-consistent covariance estimate.
+  More computationally intensive, but may make a difference in small
+  samples or when there is substantial heteroskedasticity.
 
 ## Value
 
@@ -62,9 +83,9 @@ The test is a Kennedy-Cade (1996) style permutation test on a Wald
 statistic for the coefficients not included in the "reduced" model that
 would be fit by
 [`ei_ridge()`](https://corymccartan.com/seine/reference/ei_ridge.md).
-The test is carried out by fitting a regression on a fully
-basis-expanded combination of covariates and predictors, and calculating
-a Wald statistic for the
+The test statistic is asymptotically chi-squared under the null and may
+be anti-conservative in small samples, especially when the
+dimensionality of the basis expansion is large.
 
 ## References
 
@@ -100,12 +121,12 @@ spec = ei_spec(
     preproc = preproc
 )
 
-ei_test_car(spec, iter=19) # use a larger number in practice
+ei_test_car(spec, iter=20) # use a larger number in practice
 #> # A tibble: 4 × 4
 #>   outcome          W    df p.value
 #>   <chr>        <dbl> <int>   <dbl>
-#> 1 pres_dem_hum  300.   105    0.05
-#> 2 pres_rep_nix  257.   105    0.05
-#> 3 pres_ind_wal  357.   105    0.05
-#> 4 pres_abs      206.   105    0.05
+#> 1 pres_dem_hum  296.   105    0.05
+#> 2 pres_rep_nix  254.   105    0.05
+#> 3 pres_ind_wal  353.   105    0.05
+#> 4 pres_abs      210.   105    0.05
 ```
