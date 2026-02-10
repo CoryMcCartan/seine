@@ -64,11 +64,11 @@ estimates may be truncated to variable bounds.</p>
 <span>  <span class="va">regr</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">total</span>,</span>
-<span>  b_cov <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">b_cov</span>,</span>
 <span>  contrast <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bounds <span class="op">=</span> <span class="va">regr</span><span class="op">$</span><span class="va">blueprint</span><span class="op">$</span><span class="va">bounds</span>,</span>
 <span>  sum_one <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  conf_level <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  conf_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  regr_var <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  unimodal <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -100,11 +100,16 @@ example, the column containing the total number of voters. Required if
 
 <dt id="arg-b-cov">b_cov<a class="anchor" aria-label="anchor" href="#arg-b-cov"></a></dt>
 <dd><p>A covariance matrix to use in projecting the
-local estimates onto the accounting constraint, such as one estimated with
-<code><a href="ei_local_cov.html">ei_local_cov()</a></code>. Defaults to the identity matrix scaled by the residual
-variance of <code>regr</code>, corresponding to orthogonal projection.
-Set <code>b_cov=1</code> to use a degenerate covariance matrix corresponding to a
-(local) neighborhood model. When there are multiple outcome variables and
+local estimates <code>b</code> onto the accounting constraint, such as one estimated with
+<code><a href="ei_local_cov.html">ei_local_cov()</a></code>.
+When <code>b_cov</code> is a single number, it is used to specify the pairwise
+correlation between the local estimates across predictors, with the
+same correlation structure as the regression residuals assumed for <code>b</code>
+within each predictor.
+For example, set <code>b_cov=0</code> to assume no correlation in <code>b</code> across predictors,
+or set <code>b_cov=1</code> to assume perfect correlation in <code>b</code> across predictors,
+corresponding to a (local) neighborhood model.
+When there are multiple outcome variables and
 <code>b_cov</code> is a matrix with entries for each predictor, it will be applied
 identically to each outcome. Alternatively, a matrix with entries for each
 predictor-outcome combination may be provided, with entries in the order
@@ -143,7 +148,7 @@ are <code>c(0, 1)</code> the outcome variables sum to 1.</p></dd>
 
 <dt id="arg-conf-level">conf_level<a class="anchor" aria-label="anchor" href="#arg-conf-level"></a></dt>
 <dd><p>A numeric specifying the level for confidence intervals.
-If <code>FALSE</code> (the default), no confidence intervals are calculated.
+If <code>FALSE</code>, no confidence intervals are calculated.
 For <code>regr</code> arguments from <code><a href="ei_wrap_model.html">ei_wrap_model()</a></code>, confidence intervals will not
 incorporate uncertainty in the prediction itself, just the residual. This
 will trigger a warning periodically.</p></dd>
@@ -156,8 +161,8 @@ with <code><a href="ei_ridge.html">ei_ridge()</a></code>, and requires that func
 
 
 <dt id="arg-unimodal">unimodal<a class="anchor" aria-label="anchor" href="#arg-unimodal"></a></dt>
-<dd><p>If <code>TRUE</code>, assume a unimodal residual distribution. Improves
-width of confidence intervals by a factor of 4/9.</p></dd>
+<dd><p>If <code>TRUE</code>, assume a unimodal residual distribution. Reduces
+width of confidence intervals by a factor of 2/3.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
@@ -211,26 +216,26 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13,716 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     .row predictor outcome      weight estimate std.error conf.low conf.high</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1 vap_white pres_dem_hum  <span style="text-decoration: underline;">5</span>877. 4.56<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.026<span style="text-decoration: underline;">2</span>    0         0.124 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2 vap_white pres_dem_hum <span style="text-decoration: underline;">16</span>131. 8.85<span style="color: #949494;">e</span><span style="color: #BB0000;">- 3</span>   0.013<span style="text-decoration: underline;">8</span>    0         0.049<span style="text-decoration: underline;">9</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     3 vap_white pres_dem_hum  <span style="text-decoration: underline;">4</span>872. 1.73<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>   0.046<span style="text-decoration: underline;">2</span>    0         0.138 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4 vap_white pres_dem_hum  <span style="text-decoration: underline;">3</span>566. 8.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-19</span>   0.023<span style="text-decoration: underline;">8</span>    0         0.070<span style="text-decoration: underline;">8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     5 vap_white pres_dem_hum  <span style="text-decoration: underline;">8</span>801. 2.53<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.001<span style="text-decoration: underline;">64</span>   0.020<span style="text-decoration: underline;">4</span>    0.030<span style="text-decoration: underline;">2</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6 vap_white pres_dem_hum  <span style="text-decoration: underline;">1</span>698. 6.72<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.069<span style="text-decoration: underline;">3</span>    0         0.274 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7 vap_white pres_dem_hum  <span style="text-decoration: underline;">4</span>970. 6.94<span style="color: #949494;">e</span><span style="color: #BB0000;">-18</span>   0.036<span style="text-decoration: underline;">9</span>    0         0.110 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8 vap_white pres_dem_hum <span style="text-decoration: underline;">22</span>844. 6.02<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.015<span style="text-decoration: underline;">4</span>    0.014<span style="text-decoration: underline;">4</span>    0.106 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9 vap_white pres_dem_hum  <span style="text-decoration: underline;">7</span>731. 0   <span style="color: #949494;"> </span>      0.030<span style="text-decoration: underline;">7</span>    0         0.091<span style="text-decoration: underline;">6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    10 vap_white pres_dem_hum  <span style="text-decoration: underline;">5</span>259. 3.49<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.006<span style="text-decoration: underline;">59</span>   0.015<span style="text-decoration: underline;">3</span>    0.054<span style="text-decoration: underline;">6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1 vap_white pres_dem_hum  <span style="text-decoration: underline;">5</span>877.   0.050<span style="text-decoration: underline;">7</span>   0.026<span style="text-decoration: underline;">0</span>   0          0.224 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2 vap_white pres_dem_hum <span style="text-decoration: underline;">16</span>131.   0.014<span style="text-decoration: underline;">6</span>   0.013<span style="text-decoration: underline;">7</span>   0          0.106 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     3 vap_white pres_dem_hum  <span style="text-decoration: underline;">4</span>872.   0.010<span style="text-decoration: underline;">5</span>   0.045<span style="text-decoration: underline;">4</span>   0          0.313 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4 vap_white pres_dem_hum  <span style="text-decoration: underline;">3</span>566.   0        0.023<span style="text-decoration: underline;">6</span>   0          0.157 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     5 vap_white pres_dem_hum  <span style="text-decoration: underline;">8</span>801.   0.026<span style="text-decoration: underline;">3</span>   0.001<span style="text-decoration: underline;">61</span>  0.019<span style="text-decoration: underline;">0</span>     0.037<span style="text-decoration: underline;">1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6 vap_white pres_dem_hum  <span style="text-decoration: underline;">1</span>698.   0.110    0.068<span style="text-decoration: underline;">1</span>   0          0.564 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7 vap_white pres_dem_hum  <span style="text-decoration: underline;">4</span>970.   0        0.036<span style="text-decoration: underline;">4</span>   0          0.243 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8 vap_white pres_dem_hum <span style="text-decoration: underline;">22</span>844.   0.059<span style="text-decoration: underline;">1</span>   0.015<span style="text-decoration: underline;">2</span>   0.007<span style="text-decoration: underline;">07</span>    0.161 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9 vap_white pres_dem_hum  <span style="text-decoration: underline;">7</span>731.   0        0.030<span style="text-decoration: underline;">4</span>   0          0.178 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    10 vap_white pres_dem_hum  <span style="text-decoration: underline;">5</span>259.   0.040<span style="text-decoration: underline;">9</span>   0.006<span style="text-decoration: underline;">51</span>  0.009<span style="text-decoration: underline;">15</span>    0.084<span style="text-decoration: underline;">3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13,706 more rows</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">b_cov</span> <span class="op">=</span> <span class="fu"><a href="ei_local_cov.html">ei_local_cov</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">e_orth</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">1</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">e_rcov</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="va">b_cov</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">e_orth</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">1</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">e_rcov</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="va">b_cov</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># average interval width</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    e_orth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_orth</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_orth</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span>,</span></span>
@@ -238,7 +243,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span>    e_rcov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    e_orth    e_nbhd    e_rcov </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3760214 0.3175577 0.4427580 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3626324 0.3123206 0.4427580 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -101,30 +101,32 @@ rr = ei_riesz(spec, penalty = m$penalty)
 est = ei_est(m, rr, spec)
 
 ei_sens(est, c_outcome=0.2)
-#> # A tibble: 303 × 7
-#>    predictor outcome      estimate std.error c_outcome c_predictor bias_bound
-#>    <chr>     <chr>           <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#>  1 vap_white pres_ind_wal    0.387    0.0246       0.2      0         0      
-#>  2 vap_black pres_ind_wal    0.490    0.0505       0.2      0         0      
-#>  3 vap_other pres_ind_wal   -1.19     0.528        0.2      0         0      
-#>  4 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0001    0.00111
-#>  5 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0001    0.00395
-#>  6 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0001    0.0915 
-#>  7 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0004    0.00223
-#>  8 vap_black pres_ind_wal    0.490    0.0505       0.2      0.0004    0.00790
-#>  9 vap_other pres_ind_wal   -1.19     0.528        0.2      0.0004    0.183  
-#> 10 vap_white pres_ind_wal    0.387    0.0246       0.2      0.0009    0.00335
+#> # A tibble: 303 × 9
+#>    predictor outcome estimate std.error conf.low conf.high c_outcome c_predictor
+#>    <chr>     <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
+#>  1 vap_white pres_i…    0.387    0.0246    0.339    0.435        0.2      0     
+#>  2 vap_black pres_i…    0.490    0.0505    0.391    0.589        0.2      0     
+#>  3 vap_other pres_i…   -1.19     0.528    -2.22    -0.151        0.2      0     
+#>  4 vap_white pres_i…    0.387    0.0246    0.338    0.437        0.2      0.0001
+#>  5 vap_black pres_i…    0.490    0.0505    0.387    0.593        0.2      0.0001
+#>  6 vap_other pres_i…   -1.19     0.528    -2.31    -0.0591       0.2      0.0001
+#>  7 vap_white pres_i…    0.387    0.0246    0.337    0.438        0.2      0.0004
+#>  8 vap_black pres_i…    0.490    0.0505    0.383    0.597        0.2      0.0004
+#>  9 vap_other pres_i…   -1.19     0.528    -2.40     0.0324       0.2      0.0004
+#> 10 vap_white pres_i…    0.387    0.0246    0.336    0.439        0.2      0.0009
 #> # ℹ 293 more rows
+#> # ℹ 1 more variable: bias_bound <dbl>
 
 # How much variation would the regression residual need to explain of
 # Riesz representer to cause bias of 0.4?
 ei_sens(est, c_outcome=1, bias_bound=0.4)
-#> # A tibble: 3 × 7
-#>   predictor outcome      estimate std.error c_outcome c_predictor bias_bound
-#>   <chr>     <chr>           <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white pres_ind_wal    0.387    0.0246         1    0.720           0.4
-#> 2 vap_black pres_ind_wal    0.490    0.0505         1    0.170           0.4
-#> 3 vap_other pres_ind_wal   -1.19     0.528          1    0.000382        0.4
+#> # A tibble: 3 × 9
+#>   predictor outcome  estimate std.error conf.low conf.high c_outcome c_predictor
+#>   <chr>     <chr>       <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
+#> 1 vap_white pres_in…    0.387    0.0246 -0.0609      0.835         1    0.720   
+#> 2 vap_black pres_in…    0.490    0.0505 -0.00946     0.989         1    0.170   
+#> 3 vap_other pres_in…   -1.19     0.528  -2.62        0.249         1    0.000382
+#> # ℹ 1 more variable: bias_bound <dbl>
 
 # Update confidence intervals and extract as matrix
 est = ei_est(m, rr, spec, conf_level=0.95)
@@ -139,8 +141,9 @@ as.matrix(sens, "conf.high")
 # Works for contrasts as well
 est = ei_est(m, rr, spec, contrast = list(predictor=c(1, -1, 0)))
 ei_sens(est, c_outcome=0.5, c_predictor=0.5)
-#> # A tibble: 1 × 7
-#>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
-#>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white - vap_b… pres_i…   -0.102    0.0457       0.5         0.5      0.743
+#> # A tibble: 1 × 9
+#>   predictor  outcome estimate std.error conf.low conf.high c_outcome c_predictor
+#>   <chr>      <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
+#> 1 vap_white… pres_i…   -0.102    0.0457   -0.935     0.730       0.5         0.5
+#> # ℹ 1 more variable: bias_bound <dbl>
 ```

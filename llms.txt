@@ -113,6 +113,8 @@ Estimate global and local quantities and perform sensitivity analyses
   Benchmark sensitivity parameters from observed covariates
 - [`plot(`*`<ei_sens>`*`)`](https://corymccartan.com/seine/reference/plot.ei_sens.md)
   : Bias contour plot for ecological inference estimates
+- [`ei_test_car()`](https://corymccartan.com/seine/reference/ei_test_car.md)
+  : Test the coarsening at random (CAR) assumption
 
 ## Ecological modeling
 

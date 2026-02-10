@@ -241,7 +241,11 @@ programming, as there is no closed-form solution. The unbounded regression
 is run to select the <code>penalty</code> automatically in this case, if it is not
 provided. Estimation is still efficient, though somewhat slower than in the
 unbounded case. The covariance matrix of the estimates is not available when
-bounds are applied.</p>
+bounds are applied.
+Note that supplying <code>bounds</code> does not guarantee those bounds will be respected
+by <code><a href="ei_est.html">ei_est()</a></code>, and in general it is not necessarily recommended to use <code>bounds</code>
+in <code>ei_ridge()</code> any time the outcomes are bounded. Bounds can be enforced
+on local estimates in <code><a href="ei_est_local.html">ei_est_local()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="weights">Weights<a class="anchor" aria-label="anchor" href="#weights"></a></h2>

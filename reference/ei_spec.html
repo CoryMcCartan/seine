@@ -57,7 +57,15 @@ or <code><a href="ei_riesz.html">ei_riesz()</a></code>, or plotted with <code><a
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_spec</span><span class="op">(</span><span class="va">data</span>, <span class="va">predictors</span>, <span class="va">outcome</span>, <span class="va">total</span>, covariates <span class="op">=</span> <span class="cn">NULL</span>, strip <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_spec</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">predictors</span>,</span>
+<span>  <span class="va">outcome</span>,</span>
+<span>  <span class="va">total</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  preproc <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  strip <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_spec'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/weights.html" class="external-link">weights</a></span><span class="op">(</span><span class="va">object</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -94,6 +102,18 @@ default.</p></dd>
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>&lt;<code><a href="https://tidyselect.r-lib.org/reference/language.html" class="external-link">tidy-select</a></code>&gt; Covariates.</p></dd>
+
+
+<dt id="arg-preproc">preproc<a class="anchor" aria-label="anchor" href="#arg-preproc"></a></dt>
+<dd><p>An optional function which takes in a data frame of covariates
+and returns a modeling-ready numeric matrix of covariates.
+Useful to apply any preprocessing, such as a basis transformation, as part
+of the estimation process. Passed to <code><a href="https://rlang.r-lib.org/reference/as_function.html" class="external-link">rlang::as_function()</a></code>, and so supports
+<code>purrr</code>-style lambda functions. This function is called once when forming
+the <code>ei_spec</code> object so that the same processing is applied during all
+estimation steps. The function may also be re-used by other functions, like
+<code><a href="ei_bench.html">ei_bench()</a></code> and <code><a href="ei_test_car.html">ei_test_car()</a></code>. The default is a call to <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix()</a></code>
+with the formula <code>~ 0 + .</code>, i.e., all covariates and no predictors.</p></dd>
 
 
 <dt id="arg-strip">strip<a class="anchor" aria-label="anchor" href="#arg-strip"></a></dt>
@@ -148,6 +168,18 @@ by functions that use <code>ei_spec</code> objects.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     0.783    0.216   0.001<span style="text-decoration: underline;">06</span>        0.141        0.057<span style="text-decoration: underline;">1</span>        0.799  0.002<span style="text-decoration: underline;">90</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>     0.981    0.018<span style="text-decoration: underline;">1</span>  0.000<span style="text-decoration: underline;">757</span>       0.037<span style="text-decoration: underline;">5</span>       0.222         0.727  0.013<span style="text-decoration: underline;">4</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,138 more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># basis expansion</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bases"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">spec</span> <span class="op">=</span> <span class="fu">ei_spec</span><span class="op">(</span></span></span>
+<span class="r-in"><span>        data <span class="op">=</span> <span class="va">elec_1968</span>,</span></span>
+<span class="r-in"><span>        predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span></span>
+<span class="r-in"><span>        outcome <span class="op">=</span> <span class="va">pres_dem_hum</span><span class="op">:</span><span class="va">pres_abs</span>,</span></span>
+<span class="r-in"><span>        total <span class="op">=</span> <span class="va">pres_total</span>,</span></span>
+<span class="r-in"><span>        covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">pop_city</span><span class="op">:</span><span class="va">pop_rural</span>, <span class="va">farm</span><span class="op">:</span><span class="va">educ_coll</span>, <span class="fu">starts_with</span><span class="op">(</span><span class="st">"inc_"</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>        preproc <span class="op">=</span> <span class="op">~</span> <span class="fu">bases</span><span class="fu">::</span><span class="fu"><a href="http://corymccartan.com/bases/reference/b_bart.html" class="external-link">b_bart</a></span><span class="op">(</span><span class="va">.x</span>, trees <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

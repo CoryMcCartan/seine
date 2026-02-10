@@ -59,7 +59,10 @@ weights(object, normalize = TRUE, ...)
 
 - `residuals(ei_ridge)`: Extract residuals.
 
-- `vcov(ei_ridge)`: Extract covariance of coefficient estimates.
+- `vcov(ei_ridge)`: Extract unscaled covariance of coefficient
+  estimates. Covariance estimate is not currently
+  heteroskedasticity-robust. Multiply by `sigma2` from the fitted model
+  to get the covariance matrix for a particular outcome variable.
 
 - `summary(ei_ridge)`: Summarize the model's fitted values and \\R^2\\.
 

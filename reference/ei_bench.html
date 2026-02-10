@@ -57,7 +57,7 @@ et al. (2024).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, preproc <span class="op">=</span> <span class="cn">NULL</span>, subset <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, subset <span class="op">=</span> <span class="cn">NULL</span>, contrast <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,16 +68,22 @@ et al. (2024).</p>
 <dd><p>An <a href="ei_spec.html">ei_spec</a> object.</p></dd>
 
 
-<dt id="arg-preproc">preproc<a class="anchor" aria-label="anchor" href="#arg-preproc"></a></dt>
-<dd><p>An optional function which takes in a data frame of covariates
-and returns a transformed data frame or matrix of covariates.
-Useful to apply any preprocessing, such as a basis transformation, as part
-of the benchmarking process. Passed to <code><a href="https://rlang.r-lib.org/reference/as_function.html" class="external-link">rlang::as_function()</a></code>, and so supports
-<code>purrr</code>-style lambda functions.</p></dd>
-
-
 <dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
-<dd><p>Passed on to <code><a href="ei_est.html">ei_est()</a></code>.</p></dd>
+<dd><p>&lt;<code><a href="https://rlang.r-lib.org/reference/args_data_masking.html" class="external-link">data-masking</a></code>&gt; An optional
+indexing vector describing the subset of units over which to calculate
+estimates.</p></dd>
+
+
+<dt id="arg-contrast">contrast<a class="anchor" aria-label="anchor" href="#arg-contrast"></a></dt>
+<dd><p>If provided, a list containing entries <code>predictor</code> and
+<code>outcome</code>, each containing a contrast vector.  If only one of <code>predictor</code>
+or <code>outcome</code> is provided, the contrast will be calculated for all levels of
+the other variable.  For example <code>list(predictor = c(1, -1, 0))</code> will
+calculate the difference in each outcome between the first and second
+predictor groups; <code>list(outcome = c(1, -1))</code> will calculate the difference
+between the two outcomes for each predictor group; and
+<code>list(predictor = c(1, -1, 0), outcome = c(1, -1))</code> will calculate the
+difference in differences.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -93,7 +99,6 @@ of the benchmarking process. Passed to <code><a href="https://rlang.r-lib.org/re
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_ind_wal</span>,</span></span>
 <span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">educ_elem</span>, <span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome      c_outcome c_predictor confounding est_chg</span>
@@ -108,8 +113,16 @@ of the benchmarking process. Passed to <code><a href="https://rlang.r-lib.org/re
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> farm      vap_black pres_ind_wal    0.125       0.102       0.420   0.037<span style="text-decoration: underline;">7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      vap_other pres_ind_wal    0.125       0.289       0.471   1.72  </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># preprocess to add all 2-way interactions</span></span></span>
-<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, preproc <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">.</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">.x</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># with preprocessed covariates</span></span></span>
+<span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    data <span class="op">=</span> <span class="va">elec_1968</span>,</span></span>
+<span class="r-in"><span>    predictors <span class="op">=</span> <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>,</span></span>
+<span class="r-in"><span>    outcome <span class="op">=</span> <span class="va">pres_ind_wal</span>,</span></span>
+<span class="r-in"><span>    total <span class="op">=</span> <span class="va">pres_total</span>,</span></span>
+<span class="r-in"><span>    covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">educ_elem</span>, <span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    preproc <span class="op">=</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">.</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">.x</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome      c_outcome c_predictor confounding est_chg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -118,10 +131,50 @@ of the benchmarking process. Passed to <code><a href="https://rlang.r-lib.org/re
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> educ_elem vap_other pres_ind_wal    0.193        0.113     -<span style="color: #BB0000;">0.549</span>  -<span style="color: #BB0000;">1.22</span>  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pop_urban vap_white pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.143     -<span style="color: #BB0000;">0.586</span>  -<span style="color: #BB0000;">0.015</span><span style="color: #BB0000; text-decoration: underline;">2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> pop_urban vap_black pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.210      0.526   0.068<span style="text-decoration: underline;">1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban vap_other pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>      -<span style="color: #BB0000;">0.345</span>     -<span style="color: #BB0000;">1</span>      -<span style="color: #BB0000;">0.359</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban vap_other pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0         -<span style="color: #BB0000;">1</span>      -<span style="color: #BB0000;">0.359</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> farm      vap_white pres_ind_wal    0.254        0.700     -<span style="color: #BB0000;">0.294</span>  -<span style="color: #BB0000;">0.023</span><span style="color: #BB0000; text-decoration: underline;">7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> farm      vap_black pres_ind_wal    0.254        0.617      0.486   0.160 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      vap_other pres_ind_wal    0.254        1          0.162   1.08  </span>
+<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, subset <span class="op">=</span> <span class="va">pop_urban</span> <span class="op">&gt;</span> <span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome      c_outcome c_predictor confounding  est_chg</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> educ_elem vap_white pres_ind_wal    0.193        0.797      0.181   0.013<span style="text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> educ_elem vap_black pres_ind_wal    0.193        1         -<span style="color: #BB0000;">0.128</span>  -<span style="color: #BB0000;">0.048</span><span style="color: #BB0000; text-decoration: underline;">6</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> educ_elem vap_other pres_ind_wal    0.193        0.113     -<span style="color: #BB0000;">0.213</span>  -<span style="color: #BB0000;">0.472</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pop_urban vap_white pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.143      1       0.049<span style="text-decoration: underline;">3</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> pop_urban vap_black pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0.210     -<span style="color: #BB0000;">1</span>      -<span style="color: #BB0000;">0.159</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban vap_other pres_ind_wal    0.086<span style="text-decoration: underline;">0</span>       0         -<span style="color: #BB0000;">1</span>      -<span style="color: #BB0000;">0.982</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> farm      vap_white pres_ind_wal    0.254        0.700      0.028<span style="text-decoration: underline;">9</span>  0.002<span style="text-decoration: underline;">33</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> farm      vap_black pres_ind_wal    0.254        0.617      0.081<span style="text-decoration: underline;">3</span>  0.026<span style="text-decoration: underline;">8</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      vap_other pres_ind_wal    0.254        1          0.082<span style="text-decoration: underline;">3</span>  0.545  </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># with contrasts</span></span></span>
+<span class="r-in"><span><span class="va">spec</span> <span class="op">=</span> <span class="fu"><a href="ei_spec.html">ei_spec</a></span><span class="op">(</span><span class="va">elec_1968</span>, <span class="va">vap_white</span><span class="op">:</span><span class="va">vap_other</span>, <span class="va">pres_rep_nix</span><span class="op">:</span><span class="va">pres_ind_wal</span>,</span></span>
+<span class="r-in"><span>               total <span class="op">=</span> <span class="va">pres_total</span>, covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">educ_elem</span>, <span class="va">pop_urban</span>, <span class="va">farm</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor         outcome c_outcome c_predictor confounding  est_chg</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> educ_elem vap_white - vap_… pres_r…   0.033<span style="text-decoration: underline;">7</span>        1          -<span style="color: #BB0000;">0.548</span> -<span style="color: #BB0000;">0.074</span><span style="color: #BB0000; text-decoration: underline;">8</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> educ_elem vap_white - vap_… pres_i…   0.085<span style="text-decoration: underline;">2</span>        1           0.855  0.175  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> pop_urban vap_white - vap_… pres_r…   0.005<span style="text-decoration: underline;">43</span>       0.112       0.134  0.003<span style="text-decoration: underline;">27</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pop_urban vap_white - vap_… pres_i…   0.067<span style="text-decoration: underline;">2</span>        0.112      -<span style="color: #BB0000;">0.956</span> -<span style="color: #BB0000;">0.077</span><span style="color: #BB0000; text-decoration: underline;">3</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> farm      vap_white - vap_… pres_r…   0.025<span style="text-decoration: underline;">5</span>        0.141       0.217  0.012<span style="text-decoration: underline;">7</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> farm      vap_white - vap_… pres_i…   0.123         0.141      -<span style="color: #BB0000;">0.478</span> -<span style="color: #BB0000;">0.058</span><span style="color: #BB0000; text-decoration: underline;">0</span> </span>
+<span class="r-in"><span><span class="fu">ei_bench</span><span class="op">(</span><span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>outcome <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 9 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   covariate predictor outcome          c_outcome c_predictor confounding est_chg</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> educ_elem vap_white pres_rep_nix - …   0            0.601       -<span style="color: #BB0000;">1</span>     -<span style="color: #BB0000;">0.045</span><span style="color: #BB0000; text-decoration: underline;">5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> educ_elem vap_black pres_rep_nix - …   0            1            1      0.204 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> educ_elem vap_other pres_rep_nix - …   0            1           -<span style="color: #BB0000;">1</span>     -<span style="color: #BB0000;">0.125</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> pop_urban vap_white pres_rep_nix - …   0.001<span style="text-decoration: underline;">88</span>      0.145        1      0.019<span style="text-decoration: underline;">7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> pop_urban vap_black pres_rep_nix - …   0.001<span style="text-decoration: underline;">88</span>      0.104       -<span style="color: #BB0000;">1</span>     -<span style="color: #BB0000;">0.060</span><span style="color: #BB0000; text-decoration: underline;">9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> pop_urban vap_other pres_rep_nix - …   0.001<span style="text-decoration: underline;">88</span>      0.036<span style="text-decoration: underline;">5</span>      -<span style="color: #BB0000;">0.822</span> -<span style="color: #BB0000;">0.544</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> farm      vap_white pres_rep_nix - …   0.007<span style="text-decoration: underline;">22</span>      0.260        0.749  0.023<span style="text-decoration: underline;">8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> farm      vap_black pres_rep_nix - …   0.007<span style="text-decoration: underline;">22</span>      0.102       -<span style="color: #BB0000;">0.577</span> -<span style="color: #BB0000;">0.046</span><span style="color: #BB0000; text-decoration: underline;">8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">9</span> farm      vap_other pres_rep_nix - …   0.007<span style="text-decoration: underline;">22</span>      0.226       -<span style="color: #BB0000;">0.691</span> -<span style="color: #BB0000;">2.05</span>  </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

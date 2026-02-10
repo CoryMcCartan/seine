@@ -8,7 +8,7 @@ for each covariate, following the methodology of Chernozhukov et al.
 ## Usage
 
 ``` r
-ei_bench(spec, preproc = NULL, subset = NULL)
+ei_bench(spec, subset = NULL, contrast = NULL)
 ```
 
 ## Arguments
@@ -18,19 +18,23 @@ ei_bench(spec, preproc = NULL, subset = NULL)
   An [ei_spec](https://corymccartan.com/seine/reference/ei_spec.md)
   object.
 
-- preproc:
-
-  An optional function which takes in a data frame of covariates and
-  returns a transformed data frame or matrix of covariates. Useful to
-  apply any preprocessing, such as a basis transformation, as part of
-  the benchmarking process. Passed to
-  [`rlang::as_function()`](https://rlang.r-lib.org/reference/as_function.html),
-  and so supports `purrr`-style lambda functions.
-
 - subset:
 
-  Passed on to
-  [`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md).
+  \<[`data-masking`](https://rlang.r-lib.org/reference/args_data_masking.html)\>
+  An optional indexing vector describing the subset of units over which
+  to calculate estimates.
+
+- contrast:
+
+  If provided, a list containing entries `predictor` and `outcome`, each
+  containing a contrast vector. If only one of `predictor` or `outcome`
+  is provided, the contrast will be calculated for all levels of the
+  other variable. For example `list(predictor = c(1, -1, 0))` will
+  calculate the difference in each outcome between the first and second
+  predictor groups; `list(outcome = c(1, -1))` will calculate the
+  difference between the two outcomes for each predictor group; and
+  `list(predictor = c(1, -1, 0), outcome = c(1, -1))` will calculate the
+  difference in differences.
 
 ## References
 
@@ -45,7 +49,6 @@ data(elec_1968)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
-
 ei_bench(spec)
 #> # A tibble: 9 × 7
 #>   covariate predictor outcome      c_outcome c_predictor confounding est_chg
@@ -60,8 +63,16 @@ ei_bench(spec)
 #> 8 farm      vap_black pres_ind_wal    0.125       0.102       0.420   0.0377
 #> 9 farm      vap_other pres_ind_wal    0.125       0.289       0.471   1.72  
 
-# preprocess to add all 2-way interactions
-ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
+# with preprocessed covariates
+spec = ei_spec(
+    data = elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_ind_wal,
+    total = pres_total,
+    covariates = c(educ_elem, pop_urban, farm),
+    preproc = ~ model.matrix(~ .^2 - 1, data = .x)
+)
+ei_bench(spec)
 #> # A tibble: 9 × 7
 #>   covariate predictor outcome      c_outcome c_predictor confounding est_chg
 #>   <chr>     <chr>     <chr>            <dbl>       <dbl>       <dbl>   <dbl>
@@ -70,8 +81,48 @@ ei_bench(spec, preproc = ~ model.matrix(~ .^2 - 1, data = .x))
 #> 3 educ_elem vap_other pres_ind_wal    0.193        0.113     -0.549  -1.22  
 #> 4 pop_urban vap_white pres_ind_wal    0.0860       0.143     -0.586  -0.0152
 #> 5 pop_urban vap_black pres_ind_wal    0.0860       0.210      0.526   0.0681
-#> 6 pop_urban vap_other pres_ind_wal    0.0860      -0.345     -1      -0.359 
+#> 6 pop_urban vap_other pres_ind_wal    0.0860       0         -1      -0.359 
 #> 7 farm      vap_white pres_ind_wal    0.254        0.700     -0.294  -0.0237
 #> 8 farm      vap_black pres_ind_wal    0.254        0.617      0.486   0.160 
 #> 9 farm      vap_other pres_ind_wal    0.254        1          0.162   1.08  
+ei_bench(spec, subset = pop_urban > 0.5)
+#> # A tibble: 9 × 7
+#>   covariate predictor outcome      c_outcome c_predictor confounding  est_chg
+#>   <chr>     <chr>     <chr>            <dbl>       <dbl>       <dbl>    <dbl>
+#> 1 educ_elem vap_white pres_ind_wal    0.193        0.797      0.181   0.0132 
+#> 2 educ_elem vap_black pres_ind_wal    0.193        1         -0.128  -0.0486 
+#> 3 educ_elem vap_other pres_ind_wal    0.193        0.113     -0.213  -0.472  
+#> 4 pop_urban vap_white pres_ind_wal    0.0860       0.143      1       0.0493 
+#> 5 pop_urban vap_black pres_ind_wal    0.0860       0.210     -1      -0.159  
+#> 6 pop_urban vap_other pres_ind_wal    0.0860       0         -1      -0.982  
+#> 7 farm      vap_white pres_ind_wal    0.254        0.700      0.0289  0.00233
+#> 8 farm      vap_black pres_ind_wal    0.254        0.617      0.0813  0.0268 
+#> 9 farm      vap_other pres_ind_wal    0.254        1          0.0823  0.545  
+
+# with contrasts
+spec = ei_spec(elec_1968, vap_white:vap_other, pres_rep_nix:pres_ind_wal,
+               total = pres_total, covariates = c(educ_elem, pop_urban, farm))
+ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+#> # A tibble: 6 × 7
+#>   covariate predictor         outcome c_outcome c_predictor confounding  est_chg
+#>   <chr>     <chr>             <chr>       <dbl>       <dbl>       <dbl>    <dbl>
+#> 1 educ_elem vap_white - vap_… pres_r…   0.0337        1          -0.548 -0.0748 
+#> 2 educ_elem vap_white - vap_… pres_i…   0.0852        1           0.855  0.175  
+#> 3 pop_urban vap_white - vap_… pres_r…   0.00543       0.112       0.134  0.00327
+#> 4 pop_urban vap_white - vap_… pres_i…   0.0672        0.112      -0.956 -0.0773 
+#> 5 farm      vap_white - vap_… pres_r…   0.0255        0.141       0.217  0.0127 
+#> 6 farm      vap_white - vap_… pres_i…   0.123         0.141      -0.478 -0.0580 
+ei_bench(spec, contrast = list(outcome = c(1, -1)))
+#> # A tibble: 9 × 7
+#>   covariate predictor outcome          c_outcome c_predictor confounding est_chg
+#>   <chr>     <chr>     <chr>                <dbl>       <dbl>       <dbl>   <dbl>
+#> 1 educ_elem vap_white pres_rep_nix - …   0            0.601       -1     -0.0455
+#> 2 educ_elem vap_black pres_rep_nix - …   0            1            1      0.204 
+#> 3 educ_elem vap_other pres_rep_nix - …   0            1           -1     -0.125 
+#> 4 pop_urban vap_white pres_rep_nix - …   0.00188      0.145        1      0.0197
+#> 5 pop_urban vap_black pres_rep_nix - …   0.00188      0.104       -1     -0.0609
+#> 6 pop_urban vap_other pres_rep_nix - …   0.00188      0.0365      -0.822 -0.544 
+#> 7 farm      vap_white pres_rep_nix - …   0.00722      0.260        0.749  0.0238
+#> 8 farm      vap_black pres_rep_nix - …   0.00722      0.102       -0.577 -0.0468
+#> 9 farm      vap_other pres_rep_nix - …   0.00722      0.226       -0.691 -2.05  
 ```

@@ -16,7 +16,7 @@ ei_est(
   subset = NULL,
   contrast = NULL,
   outcome = NULL,
-  conf_level = FALSE,
+  conf_level = 0.95,
   use_student = TRUE
 )
 
@@ -92,9 +92,9 @@ nobs(object, ...)
 
 - conf_level:
 
-  A numeric specifying the level for confidence intervals. If `FALSE`
-  (the default), no confidence intervals are calculated. Standard errors
-  are always returned.
+  A numeric specifying the level for confidence intervals. If `FALSE`,
+  no confidence intervals are calculated. Standard errors are always
+  returned.
 
 - use_student:
 
@@ -165,21 +165,21 @@ ei_est(regr = m, data = spec, conf_level = 0.95) # Plug-in estimate
 #> 11 vap_black pres_abs      0.00109  0.000227  0.000641   0.00153
 #> 12 vap_other pres_abs      0.00118  0.000470  0.000260   0.00210
 ei_est(riesz = rr, data = spec) # Weighted (Riesz) estimate
-#> # A tibble: 12 × 4
-#>    predictor outcome      estimate std.error
-#>    <chr>     <chr>           <dbl>     <dbl>
-#>  1 vap_white pres_dem_hum  0.230    0.0224  
-#>  2 vap_black pres_dem_hum  0.588    0.0948  
-#>  3 vap_other pres_dem_hum  1.55     1.98    
-#>  4 vap_white pres_rep_nix  0.382    0.0237  
-#>  5 vap_black pres_rep_nix -0.0775   0.0695  
-#>  6 vap_other pres_rep_nix  0.494    1.49    
-#>  7 vap_white pres_ind_wal  0.387    0.0286  
-#>  8 vap_black pres_ind_wal  0.488    0.115   
-#>  9 vap_other pres_ind_wal -1.05     1.98    
-#> 10 vap_white pres_abs      0.00152  0.000252
-#> 11 vap_black pres_abs      0.00109  0.000840
-#> 12 vap_other pres_abs      0.00118  0.0134  
+#> # A tibble: 12 × 6
+#>    predictor outcome      estimate std.error  conf.low conf.high
+#>    <chr>     <chr>           <dbl>     <dbl>     <dbl>     <dbl>
+#>  1 vap_white pres_dem_hum  0.230    0.0224    0.186      0.274  
+#>  2 vap_black pres_dem_hum  0.588    0.0948    0.402      0.774  
+#>  3 vap_other pres_dem_hum  1.55     1.98     -2.34       5.44   
+#>  4 vap_white pres_rep_nix  0.382    0.0237    0.336      0.428  
+#>  5 vap_black pres_rep_nix -0.0775   0.0695   -0.214      0.0589 
+#>  6 vap_other pres_rep_nix  0.494    1.49     -2.44       3.43   
+#>  7 vap_white pres_ind_wal  0.387    0.0286    0.331      0.443  
+#>  8 vap_black pres_ind_wal  0.488    0.115     0.263      0.714  
+#>  9 vap_other pres_ind_wal -1.05     1.98     -4.94       2.84   
+#> 10 vap_white pres_abs      0.00152  0.000252  0.00102    0.00201
+#> 11 vap_black pres_abs      0.00109  0.000840 -0.000561   0.00274
+#> 12 vap_other pres_abs      0.00118  0.0134   -0.0251     0.0275 
 est = ei_est(regr = m, riesz = rr, data = spec) # Double/debiased ML estimate
 # Working with the output
 as.matrix(est)
@@ -208,19 +208,19 @@ vcov(est)[1:4, 1:4]
 
 # Contrasts
 ei_est(regr = m, riesz = rr, data = spec, contrast = list(predictor = c(1, -1, 0)))
-#> # A tibble: 4 × 4
-#>   predictor             outcome       estimate std.error
-#>   <chr>                 <chr>            <dbl>     <dbl>
-#> 1 vap_white - vap_black pres_dem_hum -0.356     0.0471  
-#> 2 vap_white - vap_black pres_rep_nix  0.458     0.0495  
-#> 3 vap_white - vap_black pres_ind_wal -0.103     0.0458  
-#> 4 vap_white - vap_black pres_abs      0.000454  0.000542
+#> # A tibble: 4 × 6
+#>   predictor             outcome       estimate std.error  conf.low conf.high
+#>   <chr>                 <chr>            <dbl>     <dbl>     <dbl>     <dbl>
+#> 1 vap_white - vap_black pres_dem_hum -0.356     0.0471   -0.448     -0.264  
+#> 2 vap_white - vap_black pres_rep_nix  0.458     0.0495    0.361      0.555  
+#> 3 vap_white - vap_black pres_ind_wal -0.103     0.0458   -0.192     -0.0130 
+#> 4 vap_white - vap_black pres_abs      0.000454  0.000542 -0.000610   0.00152
 ei_est(regr = m, riesz = rr, data = spec,
        contrast = list(predictor = c(-1, 1, 0), outcome = c(1, -1, 0, 0)))
-#> # A tibble: 1 × 4
-#>   predictor             outcome                     estimate std.error
-#>   <chr>                 <chr>                          <dbl>     <dbl>
-#> 1 vap_black - vap_white pres_dem_hum - pres_rep_nix    0.814    0.0700
+#> # A tibble: 1 × 6
+#>   predictor             outcome            estimate std.error conf.low conf.high
+#>   <chr>                 <chr>                 <dbl>     <dbl>    <dbl>     <dbl>
+#> 1 vap_black - vap_white pres_dem_hum - pr…    0.814    0.0700    0.677     0.952
 
 # Subsetting
 est = ei_est(m, rr, data = spec, subset = (state == "Alabama"))

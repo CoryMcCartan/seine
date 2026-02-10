@@ -10,7 +10,15 @@ plotted with
 ## Usage
 
 ``` r
-ei_spec(data, predictors, outcome, total, covariates = NULL, strip = FALSE)
+ei_spec(
+  data,
+  predictors,
+  outcome,
+  total,
+  covariates = NULL,
+  preproc = NULL,
+  strip = FALSE
+)
 
 # S3 method for class 'ei_spec'
 weights(object, normalize = TRUE, ...)
@@ -47,6 +55,24 @@ weights(object, normalize = TRUE, ...)
 
   \<[`tidy-select`](https://tidyselect.r-lib.org/reference/language.html)\>
   Covariates.
+
+- preproc:
+
+  An optional function which takes in a data frame of covariates and
+  returns a modeling-ready numeric matrix of covariates. Useful to apply
+  any preprocessing, such as a basis transformation, as part of the
+  estimation process. Passed to
+  [`rlang::as_function()`](https://rlang.r-lib.org/reference/as_function.html),
+  and so supports `purrr`-style lambda functions. This function is
+  called once when forming the `ei_spec` object so that the same
+  processing is applied during all estimation steps. The function may
+  also be re-used by other functions, like
+  [`ei_bench()`](https://corymccartan.com/seine/reference/ei_bench.md)
+  and
+  [`ei_test_car()`](https://corymccartan.com/seine/reference/ei_test_car.md).
+  The default is a call to
+  [`model.matrix()`](https://rdrr.io/r/stats/model.matrix.html) with the
+  formula `~ 0 + .`, i.e., all covariates and no predictors.
 
 - strip:
 
@@ -99,4 +125,16 @@ ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #> 4     0.783    0.216   0.00106        0.141        0.0571        0.799  0.00290
 #> 5     0.981    0.0181  0.000757       0.0375       0.222         0.727  0.0134 
 #> # ℹ 1,138 more rows
+
+# basis expansion
+if (requireNamespace("bases", quietly = TRUE)) {
+    spec = ei_spec(
+        data = elec_1968,
+        predictors = vap_white:vap_other,
+        outcome = pres_dem_hum:pres_abs,
+        total = pres_total,
+        covariates = c(pop_city:pop_rural, farm:educ_coll, starts_with("inc_")),
+        preproc = ~ bases::b_bart(.x, trees = 500)
+    )
+}
 ```

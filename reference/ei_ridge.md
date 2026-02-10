@@ -212,7 +212,13 @@ there is no closed-form solution. The unbounded regression is run to
 select the `penalty` automatically in this case, if it is not provided.
 Estimation is still efficient, though somewhat slower than in the
 unbounded case. The covariance matrix of the estimates is not available
-when bounds are applied.
+when bounds are applied. Note that supplying `bounds` does not guarantee
+those bounds will be respected by
+[`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md), and in
+general it is not necessarily recommended to use `bounds` in
+`ei_ridge()` any time the outcomes are bounded. Bounds can be enforced
+on local estimates in
+[`ei_est_local()`](https://corymccartan.com/seine/reference/ei_est_local.md).
 
 ## Weights
 
