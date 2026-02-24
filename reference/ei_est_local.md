@@ -87,8 +87,7 @@ as.array(x, ...)
   \\\[0, 1\]\\, for instance, then the bounds will be `c(0, 1)`. Setting
   `bounds = FALSE` forces unbounded estimates. The default uses the
   `bounds` attribute of `regr`, if available, or infers from the outcome
-  variable otherwise. Note that bounds are currently not applied if
-  `contrast` is provided.
+  variable otherwise.
 
 - sum_one:
 
@@ -176,21 +175,24 @@ ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 
 #> # A tibble: 13,716 × 8
 #>     .row predictor outcome      weight estimate std.error conf.low conf.high
 #>    <int> <chr>     <chr>         <dbl>    <dbl>     <dbl>    <dbl>     <dbl>
-#>  1     1 vap_white pres_dem_hum  5877.   0.0507   0.0260   0          0.224 
-#>  2     2 vap_white pres_dem_hum 16131.   0.0146   0.0137   0          0.106 
-#>  3     3 vap_white pres_dem_hum  4872.   0.0105   0.0454   0          0.313 
-#>  4     4 vap_white pres_dem_hum  3566.   0        0.0236   0          0.157 
-#>  5     5 vap_white pres_dem_hum  8801.   0.0263   0.00161  0.0190     0.0371
-#>  6     6 vap_white pres_dem_hum  1698.   0.110    0.0681   0          0.564 
-#>  7     7 vap_white pres_dem_hum  4970.   0        0.0364   0          0.243 
-#>  8     8 vap_white pres_dem_hum 22844.   0.0591   0.0152   0.00707    0.161 
-#>  9     9 vap_white pres_dem_hum  7731.   0        0.0304   0          0.178 
-#> 10    10 vap_white pres_dem_hum  5259.   0.0409   0.00651  0.00915    0.0843
+#>  1     1 vap_white pres_dem_hum  5877. 5.07e- 2   0.0260   0          0.224 
+#>  2     2 vap_white pres_dem_hum 16131. 1.46e- 2   0.0137   0          0.106 
+#>  3     3 vap_white pres_dem_hum  4872. 1.04e- 2   0.0454   0          0.313 
+#>  4     4 vap_white pres_dem_hum  3566. 8.67e-19   0.0236   0          0.157 
+#>  5     5 vap_white pres_dem_hum  8801. 2.63e- 2   0.00161  0.0190     0.0371
+#>  6     6 vap_white pres_dem_hum  1698. 1.10e- 1   0.0681   0          0.564 
+#>  7     7 vap_white pres_dem_hum  4970. 0          0.0364   0          0.243 
+#>  8     8 vap_white pres_dem_hum 22844. 6.02e- 2   0.0152   0.00707    0.162 
+#>  9     9 vap_white pres_dem_hum  7731. 0          0.0304   0          0.178 
+#> 10    10 vap_white pres_dem_hum  5259. 4.09e- 2   0.00651  0.00915    0.0842
 #> # ℹ 13,706 more rows
 
 b_cov = ei_local_cov(m, spec)
 e_orth = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE)
 e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
+#> Warning: More than 25% of units required a relaxed projection.
+#> ℹ This only affects the location of the local estimates, not the CI width.
+#> → Check your `b_cov` and consider one with a smaller condition number.
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 # average interval width
 c(
@@ -199,5 +201,5 @@ c(
     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
 )
 #>    e_orth    e_nbhd    e_rcov 
-#> 0.3626324 0.3123206 0.4427580 
+#> 0.3560320 0.3104823 0.4427580 
 ```
