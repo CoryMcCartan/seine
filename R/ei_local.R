@@ -47,7 +47,6 @@
 #'   for instance, then the bounds will be `c(0, 1)`. Setting `bounds = FALSE`
 #'   forces unbounded estimates. The default uses the `bounds` attribute of
 #'   `regr`, if available, or infers from the outcome variable otherwise.
-#'   Note that bounds are currently not applied if `contrast` is provided.
 #' @inheritParams ei_ridge
 #' @inheritParams ei_est
 #' @param conf_level A numeric specifying the level for confidence intervals.
@@ -181,6 +180,14 @@ ei_est_local = function(
         class = "ei_est_local"
     )
 
+    if (attr(eta_proj, "relax") > 0.25 * n) {
+        cli_warn(c(
+           "More than 25% of units required a relaxed projection.",
+           "i"="This only affects the location of the local estimates, not the CI width.",
+           ">"="Check your {.arg b_cov} and consider one with a smaller condition number."
+       ))
+    }
+
     if (has_bounds) {
         bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
         fac_se = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
@@ -306,8 +313,8 @@ check_proc_b_cov <- function(b_cov, resid, n_x) {
             ), call = parent.frame())
         }
     } else if (length(b_cov) == 1 && is.numeric(b_cov) && b_cov >= -1/(n_x - 1) && b_cov <= 1) {
-        cov_y = cov(resid) * (1 + diag(n_y) * 1e-8)
-        b_cov = cov_y %x% (b_cov + (1 + 1e-8 - b_cov) * diag(n_x))
+        cov_y = cov(resid) * (1 + diag(n_y) * 1e-6)
+        b_cov = cov_y %x% (b_cov + (1 + 1e-6 - b_cov) * diag(n_x))
     } else {
         cli_abort("Invalid {.arg b_cov} format. Consult documentation.", call = parent.frame())
     }
