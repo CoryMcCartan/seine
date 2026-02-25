@@ -60,11 +60,13 @@ as.array(x, ...)
   within each predictor. For example, set `b_cov=0` to assume no
   correlation in `b` across predictors, or set `b_cov=1` to assume
   perfect correlation in `b` across predictors, corresponding to a
-  (local) neighborhood model. When there are multiple outcome variables
-  and `b_cov` is a matrix with entries for each predictor, it will be
-  applied identically to each outcome. Alternatively, a matrix with
-  entries for each predictor-outcome combination may be provided, with
-  entries in the order (Y1\|X1, Y1\|X2, ..., Y2\|X1, Y2\|X2, ...).
+  (local) neighborhood model. (Sometimes, a value of 1 leads to
+  numerical difficulties, as in the example below; in this case, try a
+  value like 0.95 or so instead.) When there are multiple outcome
+  variables and `b_cov` is a matrix with entries for each predictor, it
+  will be applied identically to each outcome. Alternatively, a matrix
+  with entries for each predictor-outcome combination may be provided,
+  with entries in the order (Y1\|X1, Y1\|X2, ..., Y2\|X1, Y2\|X2, ...).
 
 - contrast:
 
@@ -189,10 +191,7 @@ ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 
 
 b_cov = ei_local_cov(m, spec)
 e_orth = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE)
-e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
-#> Warning: More than 25% of units required a relaxed projection.
-#> ℹ This only affects the location of the local estimates, not the CI width.
-#> → Check your `b_cov` and consider one with a smaller condition number.
+e_nbhd = ei_est_local(m, spec, b_cov = 0.95, bounds = c(0, 1), sum_one = TRUE)
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 # average interval width
 c(
@@ -201,5 +200,5 @@ c(
     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
 )
 #>    e_orth    e_nbhd    e_rcov 
-#> 0.3560320 0.3104823 0.4427580 
+#> 0.3560320 0.3046323 0.4427580 
 ```

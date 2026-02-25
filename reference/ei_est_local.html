@@ -108,7 +108,9 @@ same correlation structure as the regression residuals assumed for <code>b</code
 within each predictor.
 For example, set <code>b_cov=0</code> to assume no correlation in <code>b</code> across predictors,
 or set <code>b_cov=1</code> to assume perfect correlation in <code>b</code> across predictors,
-corresponding to a (local) neighborhood model.
+corresponding to a (local) neighborhood model. (Sometimes, a value of 1
+leads to numerical difficulties, as in the example below; in this case,
+try a value like 0.95 or so instead.)
 When there are multiple outcome variables and
 <code>b_cov</code> is a matrix with entries for each predictor, it will be applied
 identically to each outcome. Alternatively, a matrix with entries for each
@@ -233,10 +235,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">b_cov</span> <span class="op">=</span> <span class="fu"><a href="ei_local_cov.html">ei_local_cov</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">e_orth</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">1</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>More than 25% of units required a relaxed projection.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> This only affects the location of the local estimates, not the CI width.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> → Check your `b_cov` and consider one with a smaller condition number.</span>
+<span class="r-in"><span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0.95</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">e_rcov</span> <span class="op">=</span> <span class="fu">ei_est_local</span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="va">b_cov</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># average interval width</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
@@ -245,7 +244,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span>    e_rcov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    e_orth    e_nbhd    e_rcov </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3560320 0.3104823 0.4427580 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3560320 0.3046323 0.4427580 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
