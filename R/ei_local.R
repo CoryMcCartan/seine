@@ -34,7 +34,9 @@
 #'   within each predictor.
 #'   For example, set `b_cov=0` to assume no correlation in `b` across predictors,
 #'   or set `b_cov=1` to assume perfect correlation in `b` across predictors,
-#'   corresponding to a (local) neighborhood model.
+#'   corresponding to a (local) neighborhood model. (Sometimes, a value of 1
+#'   leads to numerical difficulties, as in the example below; in this case,
+#'   try a value like 0.95 or so instead.)
 #'   When there are multiple outcome variables and
 #'   `b_cov` is a matrix with entries for each predictor, it will be applied
 #'   identically to each outcome. Alternatively, a matrix with entries for each
@@ -80,7 +82,7 @@
 #'
 #' b_cov = ei_local_cov(m, spec)
 #' e_orth = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE)
-#' e_nbhd = ei_est_local(m, spec, b_cov = 1, bounds = c(0, 1), sum_one = TRUE)
+#' e_nbhd = ei_est_local(m, spec, b_cov = 0.95, bounds = c(0, 1), sum_one = TRUE)
 #' e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 #' # average interval width
 #' c(
@@ -152,6 +154,8 @@ ei_est_local = function(
         eta[, idx] = rl$preds[[k]]
     }
     eta_proj = local_proj(rl$x, eta, y - rl$yhat, b_cov, bounds, sum_one)
+    misses = attr(eta_proj, "misses")
+    relaxations = attr(eta_proj, "relax")
     if (!is.null(contrast)) {
         eta_proj = eta_proj %*% contr$m
     }
@@ -175,12 +179,12 @@ ei_est_local = function(
     }
     ests = tibble::new_tibble(
         ests,
-        proj_misses = attr(eta_proj, "misses"),
-        proj_relax = attr(eta_proj, "relax"),
+        proj_misses = misses,
+        proj_relax = relaxations,
         class = "ei_est_local"
     )
 
-    if (attr(eta_proj, "relax") > 0.25 * n) {
+    if (relaxations > 0.25 * n) {
         cli_warn(c(
            "More than 25% of units required a relaxed projection.",
            "i"="This only affects the location of the local estimates, not the CI width.",
