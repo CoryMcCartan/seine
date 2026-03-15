@@ -1,0 +1,205 @@
+---
+title: "Sensitivity analysis for ecological inference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sensitivity analysis for ecological inference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette demonstrates the sensitivity analysis tools in **seine**,
+using the `elec_1968` data on county-level voting in Southern states in the
+1968 U.S. presidential election.
+Sensitivity analysis is essential for ecological inference (EI) because all EI
+methods rely on an untestable identifying assumption---here, Conditional
+Average Representativeness, or CAR---that is unlikely to hold exactly in practice.
+The tools in **seine** are based on a nonparametric sensitivity framework
+developed by Chernozhukov et al. (2024).
+
+# Setting up the analysis
+
+We begin by loading the package and the data, and defining an `ei_spec` object
+that records the outcome, predictor, covariate, and total-count columns,
+following the setup from `vignette("seine")`.
+We use a BART basis expansion for nonparametric covariate adjustment, which
+we strongly recommend to avoid dependence on linearity assumptions.
+
+```{r setup}
+library(seine)
+data(elec_1968)
+
+spec = ei_spec(
+    elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
+    preproc = function(x) {
+        x = model.matrix(~ 0 + ., x) # convert factors to dummies
+        bases::b_bart(x, trees = 200)
+    }
+)
+```
+
+We fit the regression model with `ei_ridge()` and the Riesz representer with
+`ei_riesz()`, then combine them with `ei_est()` to estimate vote choice by race
+using double machine learning (DML).
+We focus on the *contrast* between White and Black voters, which is a direct
+measure of racially polarized voting.
+See the main vignette (`vignette("seine")`) for a full walkthrough of this
+estimation workflow.
+
+```{r}
+m = ei_ridge(spec)
+rr = ei_riesz(spec, penalty = m$penalty)
+
+est = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = 0.95)
+print(est)
+```
+
+# Sensitivity analysis
+
+The estimates above rest on the CAR assumption: that, conditional on the
+observed covariates, individual vote choice is independent of the individual's
+race.
+In practice, this assumption is unlikely to hold exactly, as there may be
+unobserved confounders.
+**seine** provides a number of tools to evaluate how sensitive the results are
+to violations of that assumption.
+
+The sensitivity framework considers the relationship between an unobserved
+confounding variable and (i) the outcome and (ii) the Riesz representer,
+measured in terms of partial $R^2$ values (`c_outcome` and `c_predictor`,
+respectively).
+Stronger relationships indicate more confounding and therefore more potential
+bias in the original estimates.
+
+The `ei_sens()` function provides a simple interface to this framework.
+Users provide values for the sensitivity parameters, and a bound on the absolute
+bias is returned.
+In the following example, we investigate the effect of an omitted confounder
+that explains 50% of the residual variation in the outcome and 20% of the
+variation in the Riesz representer.
+
+```{r}
+ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
+```
+
+We can also work backwards and ask what one of the sensitivity parameters would
+have to be in order to produce a certain amount of bias.
+For example, if we assumed a worst-case scenario where the confounder explains
+the entire outcome (`c_outcome = 1`), we can ask how strongly that confounder
+would need to be related to the Riesz representer to produce a bias of up to
+5pp.
+
+```{r}
+ei_sens(est, c_outcome = 1, bias_bound = 0.05)
+```
+
+For most predictors and outcomes, the answer is not very much!
+
+## Benchmarking
+
+The `c_outcome` parameter is relatively easy to understand, but `c_predictor`
+is more difficult to interpret (though see the methodology paper for more
+discussion).
+To help understand plausible values of these parameters, we can conduct a
+**benchmarking analysis** that treats each of our *observed* covariates in turn
+as a hypothetical *unobserved* confounder, and calculates the implied values of
+the sensitivity parameters.
+
+```{r}
+bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
+
+subset(bench, outcome == "pres_rep_nix")
+```
+
+```{r include=FALSE}
+fmt_pp = \(x) paste0(format(100*x, digits=2), "%")
+est_pt = subset(est, outcome=="pres_rep_nix")$estimate 
+bb = subset(bench, covariate == "state" & outcome == "pres_rep_nix")
+est_bias = subset(ei_sens(est, bb$c_outcome, bb$c_predictor), outcome == "pres_rep_nix")$bias_bound
+est_max = max(abs(bench$est_chg))
+```
+
+The table above shows the benchmark values for each covariate for the racially polarized Nixon vote estimand.
+The `confounding` column is an additional component of the sensitivity analysis
+that is discussed in the paper; the default value is 1, which is a conservative
+worst-case bound.
+The benchmark values here show that `state` is far and away the strongest
+observed confounder, whose inclusion changes the estimate by `r fmt_pp(est_max)`.
+If the unobserved confounders were as strong as `state`, we might expect a
+significant amount of bias, as we will see next.
+
+## Bias contour plot
+
+Rather than perform this sensitivity analysis on a single set of sensitivity
+parameters, we can run it across all combinations of parameter values, and
+visualize the results on a **bias contour plot.**
+We can further overlay the benchmarking values to help interpret the results.
+
+```{r}
+#| fig.alt: >
+#|   Bias contour plot for the racially polarized Nixon vote
+sens = ei_sens(est) # the default evaluates on a grid of parameters
+plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
+```
+
+The contour lines indicate how much bias could result from an unobserved
+confounder with the specified sensitivity parameters.
+The blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
+This is a helpful value to compare against, because bias of that size
+corresponds to a predictable drop in coverage rates of confidence intervals.
+For example, bias of 1 standard error means that a confidence interval with
+95% nominal coverage will actually have coverage of only around 80%.
+
+The red asterisks indicate the benchmark values for each covariate.
+Most are clustered in the lower-left corner and can't be distinguished. In
+contrast, the benchmark for `state` shows that an unobserved confounder of that
+strength could lead to bias of around `r fmt_pp(est_bias)`, which is substantial
+compared to the estimate itself, which is `r fmt_pp(est_pt)`.
+
+## Robustness value
+
+Finally, it can be helpful to summarize the sensitivity analysis by a single
+number.
+The `ei_sens_rv()` function calculates the **robustness value**, which measures
+the minimum strength of an unobserved confounder that would lead to a bias of
+a given amount.
+Here, we consider bias sufficient to eliminate any evidence of racially
+polarized voting, i.e., bias equal to the estimated difference between White
+and Black voters.
+
+```{r}
+ei_sens_rv(est, bias_bound = estimate)
+```
+
+The robustness value (one for each predictor/outcome combination) is
+relatively small for Wallace's vote share, indicating low robustness (high
+sensitivity).
+In particular, it is far smaller than the amount of confounding benchmarked by
+the observed `state` variable.
+For Humphrey and Nixon's vote shares, however, the robustness values are larger,
+indicating more confidence in the finding of racially polarized voting for those
+candidates.
+
+As with any single-number summary, it is important to consider sensitivity
+beyond the single value, by using the contour plot and the benchmarking
+analysis.
+
+# References
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
+Long story short: Omitted variable bias in causal machine learning
+(No. w30302). *National Bureau of Economic Research.*

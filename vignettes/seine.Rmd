@@ -20,7 +20,7 @@ EI commonly arises when two datasets are joined using a shared geographic
 identifier, and when individual data are not released for privacy reasons.
 To take some recent examples from the *New York Times*:
 
-- [Estimating COIVD vaccine uptake by political beliefs](https://www.nytimes.com/interactive/2021/04/17/us/vaccine-hesitancy-politics.html)
+- [Estimating COVID vaccine uptake by political beliefs](https://www.nytimes.com/interactive/2021/04/17/us/vaccine-hesitancy-politics.html)
 - [Understanding which demographics supported a progressive mayoral candidate](https://www.nytimes.com/interactive/2025/06/25/nyregion/nyc-mayor-election-results-map-mamdani-cuomo.html)
 - [Evaluating the differential impact of tariffs on political partisans](https://www.nytimes.com/interactive/2025/03/15/business/economy/tariffs-trump-maps-voters.html)
 
@@ -190,7 +190,7 @@ spec = ei_spec(
 print(spec)
 ```
 
-The only other argument to `ei_spec()` to is `preproc`, which describes preprocessing done to the covariates before model fitting.
+The only other argument to `ei_spec()` is `preproc`, which describes preprocessing done to the covariates before model fitting.
 This argument powers the nonparametric estimation in **seine**: by using various basis expansions in `preproc`, flexible and assumption-lean models can be fit.
 We *strongly recommend* using a nonparametric basis expansion, because otherwise the EI estimates are dependent on the covariates entering the regression model linearly.
 
@@ -226,8 +226,8 @@ by providing `scale = FALSE`.
 Alternatively, we could use the formula interface, which would also let us
 specify our own interaction terms; here, we interact `state` with all other
 variables.
-Nonparmetric basis expansions like `splines::bs()` and `bases::b_tpsob()` can also be used in the formula interface.
-Formulas in **seine** require the user separate the predictors and covariates by
+Nonparametric basis expansions like `splines::bs()` and `bases::b_tpsob()` can also be used in the formula interface.
+Formulas in **seine** require the user to separate the predictors and covariates by
 a vertical bar.
 
 ```{r}
@@ -316,6 +316,8 @@ est_form = ei_est(m_form, rr_form, elec_1968)
 
 Often, a particular _contrast_ is of interest, such as the difference in vote shares between two groups.
 The `contrast=` argument to `ei_est()` allows for estimating these contrasts directly, with proper uncertainty quantification.
+Here, we estimate the difference in vote shares between predictor group 1 (White voters) and predictor group 2 (Black voters).
+This is a measure of racially polarized voting.
 ```{r}
 est_c = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = 0.95)
 print(est_c)
@@ -357,7 +359,15 @@ sd(est_m$estimate - est_rr$estimate) # estimates (here) are close
 sd(est_m$std.error - est_rr$std.error) # standard errors are very different
 ```
 
-<!--# Future: local estimates -->
+# Local estimates
+
+Sometimes, it is of interest to produce estimates that are even more fine-grained
+than what is possible with the `subset` argument to `ei_est()`: estimates for a single
+precinct or geography.
+**seine** provides two functions for this purpose: `ei_bounds()`, which produces
+guaranteed-valid partial identification bounds for each geography, and `ei_est_local()`, which produces point estimates and confidence intervals for each geography under CAR and a few more assumptions.
+The former bounds are also sometimes referred to as the Duncan--Davis bounds.
+See `vignette("local")` for a full walkthrough of this functionality.
 
 # Sensitivity analysis
 
@@ -365,128 +375,11 @@ The entire analysis so far has rested on the critical CAR assumption.
 In practice, no such independence assumption ever holds exactly.
 Thus, it is important to evaluate how sensitive the results are to violations
 of that identifying assumption.
-
-**seine** provides a number of tools to do this.
-All are based on a nonparametric sensitivity framework developed by Chernozhukov
-et al. (2024).
-This framework considers the relationship between an unobserved confounding
-variable and the outcome and predictors, measured in terms of certain partial
-$R^2$ values.
-Essentially, the stronger the relationship, the more confounding is present
-and the more biased the original estimates are.
-
-The `ei_sens()` function provides a simple interface to this framework.
-Users provide values for sensitivity parameters, and a bound on the absolute
-bias is returned.
-In the following example, we investigate the effect of an omitted confounder
-that explains 50% of the residual variation in the outcome and 20% of the
-variation in the Riesz representer, compared to the true representer.
-
-```{r}
-ei_sens(est_c, c_outcome = 0.5, c_predictor = 0.2)
-```
-
-We can also work backwards and ask what one of the sensitivity parameters would
-have to be in order to produce a certain amount of bias.
-For example, if we assumed a worst-case scenario where the confounder explains
-the entire outcome (`c_outcome = 1`), we can ask how strongly that confounder
-would need to be related to the Riesz representer to produce a bias of up to
-5pp.
-
-```{r}
-ei_sens(est_c, c_outcome = 1, bias_bound = 0.05)
-```
-
-For most predictors and outcomes, the answer is not very much!
-
-The `c_outcome` parameter is relatively easy to understand, but `c_predictor`
-is more difficult to interpret (though see the methodology paper for more
-discussion).
-To help understand plausible values of these parameters, we can conduct a
-**benchmarking analysis** that treats each of our *observed* covariates in turn
-as a hypothetical *unobserved* confounder, and then calculates the values of the
-sensitivity parameters in that instance.
-Because of the amount of automated inference behind the scenes, this analysis
-only works using the tidy estimation framework.
-
-```{r}
-bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
-
-subset(bench, outcome == "pres_rep_nix")
-```
-
-```{r include=FALSE}
-fmt_pp = \(x) scales::percent(x, suffix="pp")
-est_pt = subset(est_c, outcome=="pres_rep_nix")$estimate 
-bb = subset(bench, covariate == "state" & outcome == "pres_rep_nix")
-est_bias = subset(ei_sens(est_c, bb$c_outcome, bb$c_predictor), outcome == "pres_rep_nix")$bias_bound
-est_max = max(abs(bench$est_chg))
-```
-
-The table above shows the benchmark values for each covariate for the White
-preference for Humphrey estimand.
-The `confounding` column is an additional component of the sensitivity analysis
-that is discussed in the paper; the default value is 1, which is a conservative
-worst-case bound.
-The benchmark values here show that `state` is far and away the strongest
-observed confounder, whose inclusion changes the estimate by `r fmt_pp(est_max)`.
-If the unobserved confounders were as strong as `state`, we might expect a
-significant amount of bias, as we will see next.
-
-Rather than perform this sensitivity analysis on a single set of sensitivity
-parameters, we can run it across all combinations of parameter values, and
-visualize the results on a **bias contour plot.**
-We can further overlay the benchmarking values to help interpret the results.
-
-```{r}
-#| fig.alt: >
-#|   Bias contour plot for the White preference for Humphrey
-sens = ei_sens(est_c) # the default evaluates on a grid of parameters
-plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
-```
-
-The contour lines indicate how much bias could result from an unobserved
-confounder with the specified sensitivity parameters.
-The blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
-This is a helpful value to compare against, because bias of that size
-corresponds to a predictable drop in coverage rates of confidence intervals.
-For example, bias of 1 standard error means that a confidence interval with
-95% nominal coverage will actually have coverage of only around 80%.
-
-
-The red asterisks indicate the benchmark values for each covariate.
-Most are clustered in the lower-left corner and can't be distinguished. In
-contrast, the benchmark for `state` shows that an unobserved confounder of that
-strength could lead to bias of around `r fmt_pp(est_bias)`, which is substantial compared to the
-estimate itself, which is `r fmt_pp(est_pt)`.
-
-Finally, it can be helpful to summarize the sensitivity analysis by a single
-number.
-The `ei_sens_rv()` function calculates the **robustness value**, which measures
-the minimum strength of an unobserved confounder that would lead to a bias of
-a given amount.
-Here, we might consider be interested in bias that would be sufficient to
-eliminate any evidence of racially polarized voting, i.e., bias equal to the esimated difference between White and Black voters.
-
-```{r}
-ei_sens_rv(est_c, bias_bound = estimate)
-```
-
-The robustness value (one for each predictor/outcome combination) is
-relatively small for Wallace's vote share, indicating low robustness (high sensitivity).
-In particular, it is far smaller than the amount of confounding benchmarked by the observed `state` variable.
-For Humphrey and Nixon's vote shares, however, the robustness values are larger, indicating more confidence in the finding of racially polarized voting for those candidates.
-
-As with any single-number summary, it is important to consider sensitivity
-beyond the single value, by using the contour plot and the benchmarking
-analysis.
+**seine** provides a suite of tools for this purpose; see
+`vignette("sensitivity")` for a full walkthrough.
 
 # References
 
 McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
 estimation of conditional means from aggregate data.
 Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
-
-Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
-Long story short: Omitted variable bias in causal machine learning
-(No. w30302). *National Bureau of Economic Research.*

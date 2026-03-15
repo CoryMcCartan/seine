@@ -27,9 +27,7 @@
 
 \item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, which will
 affect the contours which are plotted. If \code{bounds = NULL} (the default),
-they will be inferred from the outcome variable: if it is contained within
-\eqn{[0, 1]}, for instance, then the bounds will be \code{c(0, 1)}. Setting
-\code{bounds = FALSE} forces unbounded estimates.}
+they will be inferred where possible. Setting \code{bounds = FALSE} turns off these labels.}
 
 \item{bench}{A data frame of benchmark values, from \code{\link[=ei_bench]{ei_bench()}}, to plot.}
 

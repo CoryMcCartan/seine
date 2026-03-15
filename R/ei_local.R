@@ -316,6 +316,7 @@ ei_local_cov <- function(regr, data, prior_obs = 10) {
         }
     }
     # apply inv-wishart shrinkage
+    prior_cov = cov(resid(regr)) %x% diag(n_x)
     b_cov0 = (prior_obs * prior_cov + n * b_cov0) /
         (n + prior_obs - n_x * n_y - 1)
 

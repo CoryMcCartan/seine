@@ -1,0 +1,223 @@
+---
+title: "Local estimates for ecological inference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Local estimates for ecological inference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Global ecological inference estimates describe average behavior across all units
+in the data.
+Sometimes, however, estimates for each individual unit (precinct, county, or
+other geography) are of interest: to map spatial variation, to examine outliers,
+or to inform decisions at the local level.
+**seine** provides two approaches for this.
+`ei_bounds()` computes guaranteed-valid partial identification bounds for each
+unit, relying only on the accounting identity and known limits on the outcome.
+`ei_est_local()` produces point estimates and confidence intervals under the
+Conditional Average Representativeness (CAR) assumption and a model for
+within-unit variation, using a fitted regression model.
+The former bounds are also sometimes called the Duncan-Davis bounds.
+
+# Setting up the analysis
+
+We will use the `elec_1968` data included in the package, which contain
+county-level election returns from Southern states in the 1968 U.S.
+presidential election.
+We want to estimate the individual-level association between race and
+presidential vote choice for each county.
+
+```{r setup}
+library(seine)
+data(elec_1968)
+```
+
+For the bounds, only the data are needed.
+For `ei_est_local()`, we also need a fitted regression model, so we set up an
+`ei_spec` object and call `ei_ridge()`.
+
+```{r}
+spec = ei_spec(
+    elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
+    preproc = function(x) {
+        x = model.matrix(~ 0 + ., x) # convert factors to dummies
+        bases::b_bart(x, trees = 200)
+    }
+)
+
+m = ei_ridge(spec)
+```
+
+See the main vignette (`vignette("seine")`) for a full walkthrough of the
+estimation workflow.
+
+# Partial identification bounds
+
+The simplest local quantities to compute are partial identification bounds:
+for each county and each predictor-outcome combination, the range of values
+for the local estimand $\beta_{gj} = \Pr(Y = j \mid X = x_g, G = g)$ that is
+consistent with the observed aggregate data.
+These bounds require no modeling assumptions beyond the accounting identity and
+the specified bounds on the outcome.
+
+`ei_bounds()` takes an `ei_spec` object (or a formula) and returns a data frame
+with one row per unit per predictor-outcome combination.
+
+```{r}
+bnds = ei_bounds(spec, bounds = c(0, 1))
+head(bnds)
+```
+
+The `min` and `max` columns give the sharp bounds for each unit.
+The `weight` column is the product of the predictor proportion and the total,
+which is useful for aggregating.
+When the bounds are wide for many units, this indicates a fundamentally
+difficult identification problem, regardless of modeling choices.
+
+To aggregate the bounds across all units to produce bounds on the global
+estimands, pass `global = TRUE`.
+
+```{r}
+ei_bounds(spec, bounds = c(0, 1), global = TRUE)
+```
+
+The `as.array()` method reformats the output as a three-dimensional array with
+dimensions units by predictors by outcomes, which can be convenient for further
+analysis.
+
+```{r}
+bnds_arr = as.array(bnds)
+dim(bnds_arr) # rows x predictors x outcomes
+```
+
+Bounds on contrasts, such as the difference in vote share between White and
+Black voters, can be computed directly by passing a `contrast` argument.
+
+```{r}
+ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0)))
+```
+
+# Estimating the local covariance
+
+Point estimates and confidence intervals from `ei_est_local()` require a model
+for how the local estimands vary around their conditional mean within each unit.
+This variation is captured by the `b_cov` argument, a covariance matrix for
+the local estimands $\beta_{gj}$ around the regression prediction.
+
+`ei_local_cov()` estimates this covariance from the data, under the CAR
+assumption and an additional homoskedasticity condition.
+Concretely, it fits a ridge regression of the empirical second moments of the
+regression residuals on the cross-products of the predictor variables, and uses
+the polarization identity to recover the covariance for each predictor-outcome
+pair.
+A small amount of shrinkage towards the global residual covariance is applied,
+controlled by `prior_obs`.
+
+```{r}
+b_cov = ei_local_cov(m, spec)
+round(b_cov, 3)
+```
+
+The rows and columns are ordered by predictor within outcome, i.e.
+(Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
+Large diagonal entries indicate high within-unit variation in the local
+estimands, relative to the regression predictions.
+Off-diagonal entries reflect the extent to which, within a county, vote choices
+across racial groups tend to move together.
+
+# Local point estimates
+
+With the regression model and a covariance structure in hand, `ei_est_local()`
+projects the regression predictions onto the accounting constraint to produce
+local estimates that exactly satisfy the ecological identity within each county.
+The function also computes valid confidence intervals using Chebyshev's
+inequality or, under a unimodality assumption, the tighter unimodal bound.
+
+The `b_cov` argument controls the assumed covariance structure.
+There are three common choices:
+
+- `b_cov = ei_local_cov(m, spec)`: the **data-estimated covariance**, which
+  uses the structure estimated above. *This is the recommended choice*.
+- `b_cov = 0`: the **orthogonal model**, which assumes no correlation in the
+  local estimands across predictors within a unit. When the estimated `b_cov`
+  is implausible, this can be an acceptable choice.
+- `b_cov = 0.95` (or another value near 1): the **neighborhood model**, which
+  assumes nearly perfect positive correlation across predictors. This is
+  appropriate when counties are relatively homogeneous and the local estimands
+  are expected to vary together. However, it leads to quite narrow confidence
+  intervals, which may not cover the truth in practice.
+
+We fit all three and compare the average width of the resulting confidence
+intervals.
+
+```{r}
+e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m, spec, b_cov = 0,    bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m, spec, b_cov = 0.95, bounds = c(0, 1), sum_one = TRUE)
+
+c(
+    estimated = mean(e_rcov$conf.high - e_rcov$conf.low),
+    orthogonal = mean(e_orth$conf.high - e_orth$conf.low),
+    neighborhood = mean(e_nbhd$conf.high - e_nbhd$conf.low)
+)
+```
+
+The orthogonal model tends to produce the widest intervals.
+The neighborhood model can be narrower when the predictor proportions within a
+county are nearly uniform, because the accounting constraint then binds tightly.
+The estimated covariance typically lies between the two extremes, and as
+mentioned above is the recommended default.
+
+Setting `sum_one = TRUE` enforces the constraint that the local vote shares
+across candidates sum to one within each racial group, which is the correct
+restriction for these data.
+The `bounds = c(0, 1)` argument truncates estimates to the unit interval and
+caps the standard errors implied by the width of the bounds.
+
+To examine results for a specific county, we can filter the output.
+
+```{r}
+subset(e_rcov, .row == 1)
+```
+
+The `as.array()` method provides a convenient view of the point estimates as a
+three-dimensional array.
+
+```{r}
+head(as.array(e_rcov)[, , "pres_dem_hum"])
+```
+
+Finally, taking a weighted average of the local estimates against the `weight`
+column reproduces the global estimate from `ei_est()`.
+
+```{r}
+grps = split(e_rcov, ~ predictor + outcome)
+sapply(grps, function(g) weighted.mean(g$estimate, g$weight))
+```
+
+# References
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+
+Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
+Long story short: Omitted variable bias in causal machine learning
+(No. w30302). *National Bureau of Economic Research.*
+
+
+<small>
+This vignette was originally produced by a large language model, and then reviewed and edited by the package authors.
+</small>

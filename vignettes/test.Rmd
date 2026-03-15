@@ -1,0 +1,125 @@
+---
+title: "Testing the CAR assumption"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Testing the CAR assumption}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+All estimation in **seine** rests on the Conditional Average Representativeness
+(CAR) assumption: that individual outcomes are mean-independent of predictor group
+membership, conditional on the observed covariates.
+`ei_test_car()` provides a formal test of this assumption.
+However, the test has important limitations that users should understand before
+interpreting its results.
+
+# What the test does
+
+The CAR assumption implies that the conditional expectation function (CEF) of
+the aggregate outcome takes a specific partially linear form.
+`ei_test_car()` tests this implication by comparing a fully nonparametric
+estimate of the CEF to one constrained to that form, and evaluating the
+goodness-of-fit difference via a Wald statistic.
+A significant result indicates that the data are inconsistent with the partially
+linear structure implied by CAR.
+
+By default, the p-value is computed via a permutation test (Kennedy-Cade 1996)
+on the Wald statistic.
+For large samples (2000 or more observations), the asymptotic chi-squared
+distribution, which is faster, is used by default instead.
+
+```{r setup}
+library(seine)
+data(elec_1968)
+
+spec = ei_spec(
+    elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
+    preproc = function(x) {
+        x = model.matrix(~ 0 + ., x) # convert factors to dummies
+        bases::b_bart(x, trees = 200)
+    }
+)
+
+ei_test_car(spec, iter = 200) # use iter = 1000 or more in practice
+```
+
+The output is a data frame with one row per outcome variable.
+The `W` column contains the Wald statistic, `df` its degrees of freedom, and
+`p.value` the p-value for each outcome.
+P-values are not adjusted for multiple testing by default; pass them to
+`p.adjust()` if a correction is desired.
+
+# Limitations
+
+`ei_test_car()` is a useful diagnostic, but its limitations are substantial and
+should be kept in mind when interpreting the results.
+
+**The test only checks a necessary implication of CAR, not CAR itself.**
+CAR is a condition on individual-level data, but only aggregate-level data are
+observed.
+The test asks whether the aggregate CEF is inconsistent with CAR; a failure to
+reject does not mean CAR holds, only that the data are not in conflict with one
+of its implications.
+There may be many forms of individual-level confounding that leave the aggregate
+CEF approximately in the partially linear form, and which the test will not
+detect.
+
+**The test requires a rich basis expansion to have power.**
+If the `preproc` argument to `ei_spec()` does not include a flexible basis
+expansion of the covariates and predictors, the test will have little power to
+detect violations of CAR.
+An interaction between the predictors and covariates that is not captured by the
+basis will not be flagged.
+A warning is issued if `preproc` is absent.
+In general, the richer the basis expansion, the better the test can detect
+violations, but also the more data are needed for the test statistic to be
+well-calibrated.
+
+**The test may be anti-conservative in small samples.**
+The Wald statistic is only asymptotically chi-squared, and the permutation
+approximation of the null distribution may also be imperfect when the
+dimensionality of the basis expansion is large relative to the sample size.
+In practice, this means the test may reject too often in small samples.
+The `undersmooth` argument controls how aggressively the partially linear
+component is estimated, and increasing it can improve Type I error control at
+the cost of power.
+
+**A significant result does not prevent estimation.**
+Rejecting the null means the data suggest CAR does not hold exactly.
+It does not mean that estimation with `ei_est()` is impossible or useless,
+only that the estimates may be biased.
+In that case, the sensitivity analysis tools in `vignette("sensitivity")` are
+important for assessing how much the conclusions depend on the assumption.
+Conversely, a non-significant result is weak evidence that the assumption holds
+and does not substitute for careful subject-matter reasoning about what
+confounders might be present.
+
+# References
+
+Helwig, N. E. (2022). Robust permutation tests for penalized splines.
+*Stats*, 5(3), 916-933.
+
+Kennedy, P. E., & Cade, B. S. (1996). Randomization tests for multiple
+regression. *Communications in Statistics-Simulation and Computation*,
+25(4), 923-936.
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+
+
+<small>
+This vignette was originally produced by a large language model, and then reviewed and edited by the package authors.
+</small>

@@ -3,8 +3,8 @@
 ^LICENSE\.md$
 ^data-raw\/
 ^data-raw$
-^notes.txt$
-^todo.txt$
+^notes\.(txt|md)$
+^todo\.(txt|md)$
 ^README\.Rmd$
 ^_pkgdown\.yml$
 ^docs$
