@@ -171,6 +171,8 @@ We will demonstrate both approaches here, however.
 To create an EI *specification*, we call `ei_spec()` and use `tidyselect` syntax
 to specify the outcome, predictors, covariates, and the column with the total
 number of people in each aggregation unit.
+The function returns an `ei_spec` object, which is just a data frame with some
+additional metadata about these variables.
 
 ```{r}
 spec = ei_spec(
@@ -178,15 +180,22 @@ spec = ei_spec(
     predictors = vap_white:vap_other,
     outcome = pres_dem_hum:pres_abs,
     total = pres_total,
-    covariates = c(state, pop_city:pop_rural, farm:educ_coll,
-                   inc_00_03k:inc_25_99k)
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
+    preproc = function(x) {
+        x = model.matrix(~ 0 + ., x) # convert factors to dummies
+        bases::b_bart(x, trees = 200)
+    }
 )
 
 print(spec)
 ```
 
-An `ei_spec` object is just a data frame with some additional metadata about
-these variables.
+The only other argument to `ei_spec()` to is `preproc`, which describes preprocessing done to the covariates before model fitting.
+This argument powers the nonparametric estimation in **seine**: by using various basis expansions in `preproc`, flexible and assumption-lean models can be fit.
+We *strongly recommend* using a nonparametric basis expansion, because otherwise the EI estimates are dependent on the covariates entering the regression model linearly.
+
+Here, we are using `b_bart()` from the [`bases`](https://cran.r-project.org/package=bases) package, which produces a basis expansion that allows for approximately fitting a Bayesian Additive Regression Trees (BART) model.
+Other options include `b_tpsob()`, `b_rff()`, and `b_inter()`, or functions from the `splines` package.
 
 ## Fitting the regression
 
@@ -197,11 +206,6 @@ estimation.
 We recommend using `ei_ridge()` to fit the regression model, because it will
 automatically use this structure, and automatically determine the ridge penalty
 using a closed-form expression for the leave-one-out errors.
-To make the regression nonparametric, basis expansions such as kernel functions,
-polynomials, or splines can be used.
-The [`bases`](https://cran.r-project.org/package=bases) package and the built-in
-`splines` package provide functions that carry out these expansions and can be
-used inside model formulas.
 
 Using the tidy interface, fitting the regression is as simple as calling
 `ei_ridge()` on the `ei_spec` object:
@@ -222,6 +226,7 @@ by providing `scale = FALSE`.
 Alternatively, we could use the formula interface, which would also let us
 specify our own interaction terms; here, we interact `state` with all other
 variables.
+Nonparmetric basis expansions like `splines::bs()` and `bases::b_tpsob()` can also be used in the formula interface.
 Formulas in **seine** require the user separate the predictors and covariates by
 a vertical bar.
 
@@ -309,6 +314,14 @@ The same call works with the formula interface.
 est_form = ei_est(m_form, rr_form, elec_1968)
 ```
 
+Often, a particular _contrast_ is of interest, such as the difference in vote shares between two groups.
+The `contrast=` argument to `ei_est()` allows for estimating these contrasts directly, with proper uncertainty quantification.
+```{r}
+est_c = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = 0.95)
+print(est_c)
+```
+
+
 Occasionally, it is helpful to examine the estimates in a different format.
 The `as.matrix()` method works on `ei_est` objects and can be used on any
 column of the object, such as the estimate or standard error.
@@ -326,7 +339,8 @@ The `subset=` argument to `ei_est()` allows for producing estimates in these
 smaller areas.
 
 ```{r}
-as.matrix(ei_est(m, rr, spec, subset = (state == "Mississippi")))
+as.matrix(ei_est(m, rr, spec, subset = pop_city >= 0.9))
+as.matrix(ei_est(m, rr, spec, subset = state == "Mississippi"))
 ```
 
 Finally, `ei_est()` actually also works with a regression model alone, or a
@@ -369,7 +383,7 @@ that explains 50% of the residual variation in the outcome and 20% of the
 variation in the Riesz representer, compared to the true representer.
 
 ```{r}
-ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
+ei_sens(est_c, c_outcome = 0.5, c_predictor = 0.2)
 ```
 
 We can also work backwards and ask what one of the sensitivity parameters would
@@ -380,7 +394,7 @@ would need to be related to the Riesz representer to produce a bias of up to
 5pp.
 
 ```{r}
-ei_sens(est, c_outcome = 1, bias_bound = 0.05)
+ei_sens(est_c, c_outcome = 1, bias_bound = 0.05)
 ```
 
 For most predictors and outcomes, the answer is not very much!
@@ -396,9 +410,17 @@ Because of the amount of automated inference behind the scenes, this analysis
 only works using the tidy estimation framework.
 
 ```{r}
-bench = ei_bench(spec)
+bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
 
-subset(bench, predictor == "white" & outcome == "dem_hum")
+subset(bench, outcome == "pres_rep_nix")
+```
+
+```{r include=FALSE}
+fmt_pp = \(x) scales::percent(x, suffix="pp")
+est_pt = subset(est_c, outcome=="pres_rep_nix")$estimate 
+bb = subset(bench, covariate == "state" & outcome == "pres_rep_nix")
+est_bias = subset(ei_sens(est_c, bb$c_outcome, bb$c_predictor), outcome == "pres_rep_nix")$bias_bound
+est_max = max(abs(bench$est_chg))
 ```
 
 The table above shows the benchmark values for each covariate for the White
@@ -407,7 +429,7 @@ The `confounding` column is an additional component of the sensitivity analysis
 that is discussed in the paper; the default value is 1, which is a conservative
 worst-case bound.
 The benchmark values here show that `state` is far and away the strongest
-observed confounder, whose inclusion changes the estimate by 6.5pp.
+observed confounder, whose inclusion changes the estimate by `r fmt_pp(est_max)`.
 If the unobserved confounders were as strong as `state`, we might expect a
 significant amount of bias, as we will see next.
 
@@ -419,8 +441,8 @@ We can further overlay the benchmarking values to help interpret the results.
 ```{r}
 #| fig.alt: >
 #|   Bias contour plot for the White preference for Humphrey
-sens = ei_sens(est) # the default evaluates on a grid of parameters
-plot(sens, bench = bench)
+sens = ei_sens(est_c) # the default evaluates on a grid of parameters
+plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
 ```
 
 The contour lines indicate how much bias could result from an unobserved
@@ -431,43 +453,29 @@ corresponds to a predictable drop in coverage rates of confidence intervals.
 For example, bias of 1 standard error means that a confidence interval with
 95% nominal coverage will actually have coverage of only around 80%.
 
+
 The red asterisks indicate the benchmark values for each covariate.
 Most are clustered in the lower-left corner and can't be distinguished. In
 contrast, the benchmark for `state` shows that an unobserved confounder of that
-strength could lead to bias of around 15pp, which is substantial compared to the
-estimate itself, which is 22.5pp.
+strength could lead to bias of around `r fmt_pp(est_bias)`, which is substantial compared to the
+estimate itself, which is `r fmt_pp(est_pt)`.
 
 Finally, it can be helpful to summarize the sensitivity analysis by a single
 number.
 The `ei_sens_rv()` function calculates the **robustness value**, which measures
 the minimum strength of an unobserved confounder that would lead to a bias of
 a given amount.
-Here, we might consider a bias of one standard error to be problematic, due
-to its implications for the coverage of our confidence intervals.
+Here, we might consider be interested in bias that would be sufficient to
+eliminate any evidence of racially polarized voting, i.e., bias equal to the esimated difference between White and Black voters.
 
 ```{r}
-ei_sens_rv(est, bias_bound = 1 * std.error)
+ei_sens_rv(est_c, bias_bound = estimate)
 ```
 
-All of the robustness values (one for each predictor/outcome combination) are
-relatively small, indicating low robustness (high sensitivity).
-In particular, they are all far smaller than the amount of confounding
-benchmarked by the observed `state` variable.
-
-Alternatively, we might be interested in bias that would be sufficient to
-eliminate any evidence of racially polarized voting---i.e., to equalize the
-vote shares across racial groups.
-For clarity, we'll show this analysis for just the Humphrey vote.
-
-```{r}
-hum_avg = weighted.mean(elec_1968$pres_dem_hum, elec_1968$pres_total)
-est_hum = subset(est, outcome == "dem_hum")
-ei_sens_rv(est_hum, bias_bound = estimate - hum_avg)
-```
-
-We see that it would take a larger amount of confounding, compared to the
-previous analysis, to eliminate evidence of racially polarized voting for
-Humprhey.
+The robustness value (one for each predictor/outcome combination) is
+relatively small for Wallace's vote share, indicating low robustness (high sensitivity).
+In particular, it is far smaller than the amount of confounding benchmarked by the observed `state` variable.
+For Humphrey and Nixon's vote shares, however, the robustness values are larger, indicating more confidence in the finding of racially polarized voting for those candidates.
 
 As with any single-number summary, it is important to consider sensitivity
 beyond the single value, by using the contour plot and the benchmarking

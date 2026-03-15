@@ -227,9 +227,7 @@ ei_sens_rv <- function(est, bias_bound, confounding = 1) {
 #' @param predictor A predictor variable to plot, as a character vector. Defaults to first.
 #' @param bounds A vector `c(min, max)` of bounds for the outcome, which will
 #'   affect the contours which are plotted. If `bounds = NULL` (the default),
-#'   they will be inferred from the outcome variable: if it is contained within
-#'   \eqn{[0, 1]}, for instance, then the bounds will be `c(0, 1)`. Setting
-#'   `bounds = FALSE` forces unbounded estimates.
+#'   they will be inferred where possible. Setting `bounds = FALSE` turns off these labels.
 #' @param bench A data frame of benchmark values, from [ei_bench()], to plot.
 #' @param plot_se A vector of multiples of the standard error to plot as contours.
 #' @param contour_exp Powers of 10 for which to plot contours of the bias bound.
@@ -304,10 +302,12 @@ plot.ei_sens <- function(
         )
     }
 
-    if (is.null(bounds)) {
+    if (isFALSE(bounds)) {
+        bounds = numeric(0)
+    } else if (is.null(bounds)) {
         bounds = check_bounds(attr(x, "bounds_inf"), NULL)
     }
-    bounds[is.infinite(bounds)] = range(x$estimate)[is.infinite(bounds)]
+    bounds = bounds[is.finite(bounds)]
 
     x = x[x$outcome == y & x$predictor == predictor, ]
     cx = unique(x$c_outcome)
@@ -360,18 +360,20 @@ plot.ei_sens <- function(
         add = TRUE,
         method = "edge"
     )
-    graphics::contour(
-        cx,
-        cy,
-        cz,
-        lwd = 2 * lwd,
-        labcex = 0.85 * cex,
-        col = "#a42",
-        levels = abs(bounds - x$estimate[1]),
-        labels = paste("Estimate =", bounds),
-        add = TRUE,
-        method = "edge"
-    )
+    if (length(bounds) > 0) {
+        graphics::contour(
+            cx,
+            cy,
+            cz,
+            lwd = 2 * lwd,
+            labcex = 0.85 * cex,
+            col = "#a42",
+            levels = abs(bounds - x$estimate[1]),
+            labels = paste("Estimate =", format(bounds, digits = 3)),
+            add = TRUE,
+            method = "edge"
+        )
+    }
     if (length(plot_se) > 0) {
         graphics::contour(
             cx,
