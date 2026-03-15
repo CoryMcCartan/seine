@@ -125,8 +125,8 @@ ei_test_car(spec, iter=20) # use a larger number in practice
 #> # A tibble: 4 × 4
 #>   outcome          W    df p.value
 #>   <chr>        <dbl> <int>   <dbl>
-#> 1 pres_dem_hum  296.   105    0.05
-#> 2 pres_rep_nix  254.   105    0.05
-#> 3 pres_ind_wal  353.   105    0.05
-#> 4 pres_abs      210.   105    0.05
+#> 1 pres_dem_hum  248.   104    0.05
+#> 2 pres_rep_nix  198.   104    0.05
+#> 3 pres_ind_wal  272.   104    0.05
+#> 4 pres_abs      162.   104    0.15
 ```

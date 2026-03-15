@@ -18,7 +18,8 @@ ei_est_local(
   sum_one = NULL,
   conf_level = 0.95,
   regr_var = TRUE,
-  unimodal = TRUE
+  unimodal = TRUE,
+  gaussian = FALSE
 )
 
 # S3 method for class 'ei_est_local'
@@ -120,6 +121,13 @@ as.array(x, ...)
   If `TRUE`, assume a unimodal residual distribution. Reduces width of
   confidence intervals by a factor of 2/3.
 
+- gaussian:
+
+  If `TRUE`, use Gaussian quantiles for confidence intervals, rather
+  than Chebyshev's inequality. This will produce narrower confidence
+  intervals, but they will not be guaranteed to have the nominal
+  coverage. Overrides the `unimodal` argument.
+
 - x:
 
   An object of class `ei_est_local`
@@ -200,5 +208,5 @@ c(
     e_rcov = mean(e_rcov$conf.high - e_rcov$conf.low)
 )
 #>    e_orth    e_nbhd    e_rcov 
-#> 0.3560320 0.3046323 0.4427580 
+#> 0.3560320 0.3046323 0.4133530 
 ```

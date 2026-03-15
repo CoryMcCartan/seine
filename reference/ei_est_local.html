@@ -35,6 +35,13 @@ gtag('config', 'G-2KH5JZ6JS1');
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/seine.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/sensitivity.html">Sensitivity analysis for ecological inference</a></li>
+    <li><a class="dropdown-item" href="../articles/local.html">Local estimates for ecological inference</a></li>
+    <li><a class="dropdown-item" href="../articles/test.html">Testing the CAR assumption</a></li>
+    <li><a class="dropdown-item" href="../articles/zzz_contour.html">Custom sensitivity contour plots</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -70,7 +77,8 @@ estimates may be truncated to variable bounds.</p>
 <span>  sum_one <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  conf_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  regr_var <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  unimodal <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  unimodal <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  gaussian <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'ei_est_local'</span></span>
@@ -166,6 +174,13 @@ with <code><a href="ei_ridge.html">ei_ridge()</a></code>, and requires that func
 width of confidence intervals by a factor of 2/3.</p></dd>
 
 
+<dt id="arg-gaussian">gaussian<a class="anchor" aria-label="anchor" href="#arg-gaussian"></a></dt>
+<dd><p>If <code>TRUE</code>, use Gaussian quantiles for confidence intervals,
+rather than Chebyshev's inequality. This will produce narrower confidence
+intervals, but they will not be guaranteed to have the nominal coverage.
+Overrides the <code>unimodal</code> argument.</p></dd>
+
+
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>An object of class <code>ei_est_local</code></p></dd>
 
@@ -244,7 +259,7 @@ Working paper <a href="https://arxiv.org/abs/2509.20194" class="external-link">a
 <span class="r-in"><span>    e_rcov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    e_orth    e_nbhd    e_rcov </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3560320 0.3046323 0.4427580 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3560320 0.3046323 0.4133530 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

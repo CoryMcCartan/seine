@@ -9,7 +9,7 @@ their local mean. See the reference for more detail.
 ## Usage
 
 ``` r
-ei_local_cov(regr, data)
+ei_local_cov(regr, data, prior_obs = 10)
 ```
 
 ## Arguments
@@ -27,6 +27,12 @@ ei_local_cov(regr, data)
   [ei_spec](https://corymccartan.com/seine/reference/ei_spec.md) object
   that was used to fit the regression.
 
+- prior_obs:
+
+  The effective sample size of the inverse-Wishart conjugate prior,
+  which shrinks the estimate towards the covariance of the regression
+  residuals. Smaller values mean less shrinkage.
+
 ## Value
 
 A covariance matrix. The variables are ordered by predictor within
@@ -41,7 +47,10 @@ second moments of the residuals on these predictors, and uses the
 polarization identity discussed in the references to estimate the
 covariance for each local estimand. When the estiamated covariance is
 not positive semidefinite, it is projected onto the cone of positive
-semidefinite matrices.
+semidefinite matrices. A small amount of shrinkage is applied towards a
+naive estimator (the covariance of the regression residuals) under an
+inverse-Wishart conjugate prior, whose effective sample size is given by
+`prior_obs`.
 
 ## References
 

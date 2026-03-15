@@ -37,6 +37,13 @@ gtag('config', 'G-2KH5JZ6JS1');
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/seine.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/sensitivity.html">Sensitivity analysis for ecological inference</a></li>
+    <li><a class="dropdown-item" href="../articles/local.html">Local estimates for ecological inference</a></li>
+    <li><a class="dropdown-item" href="../articles/test.html">Testing the CAR assumption</a></li>
+    <li><a class="dropdown-item" href="../articles/zzz_contour.html">Custom sensitivity contour plots</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -98,9 +105,7 @@ the observed covariates can also be overlaid.</p>
 <dt id="arg-bounds">bounds<a class="anchor" aria-label="anchor" href="#arg-bounds"></a></dt>
 <dd><p>A vector <code>c(min, max)</code> of bounds for the outcome, which will
 affect the contours which are plotted. If <code>bounds = NULL</code> (the default),
-they will be inferred from the outcome variable: if it is contained within
-\([0, 1]\), for instance, then the bounds will be <code>c(0, 1)</code>. Setting
-<code>bounds = FALSE</code> forces unbounded estimates.</p></dd>
+they will be inferred where possible. Setting <code>bounds = FALSE</code> turns off these labels.</p></dd>
 
 
 <dt id="arg-bench">bench<a class="anchor" aria-label="anchor" href="#arg-bench"></a></dt>
