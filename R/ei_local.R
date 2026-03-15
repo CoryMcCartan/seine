@@ -61,6 +61,10 @@
 #'   with [ei_ridge()], and requires that function be called with `vcov = TRUE`.
 #' @param unimodal If `TRUE`, assume a unimodal residual distribution. Reduces
 #'   width of confidence intervals by a factor of 2/3.
+#' @param gaussian If `TRUE`, use Gaussian quantiles for confidence intervals,
+#'   rather than Chebyshev's inequality. This will produce narrower confidence
+#'   intervals, but they will not be guaranteed to have the nominal coverage.
+#'   Overrides the `unimodal` argument.
 #'
 #' @returns A data frame with estimates. The `.row` column in the output
 #'   corresponds to the observation index in the input. The `weight` column contains
@@ -101,7 +105,8 @@ ei_est_local = function(
     sum_one = NULL,
     conf_level = 0.95,
     regr_var = TRUE,
-    unimodal = TRUE
+    unimodal = TRUE,
+    gaussian = FALSE
 ) {
     y = est_check_outcome(regr, data, NULL)
     n = nrow(y)
@@ -186,23 +191,27 @@ ei_est_local = function(
 
     if (relaxations > 0.25 * n) {
         cli_warn(c(
-           "More than 25% of units required a relaxed projection.",
-           "i"="This only affects the location of the local estimates, not the CI width.",
-           ">"="Check your {.arg b_cov} and consider one with a smaller condition number."
-       ))
+            "More than 25% of units required a relaxed projection.",
+            "i" = "This only affects the location of the local estimates, not the CI width.",
+            ">" = "Check your {.arg b_cov} and consider one with a smaller condition number."
+        ))
     }
 
     if (has_bounds) {
         bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
-        fac_se = if (isTRUE(unimodal)) sqrt(1/12) else 0.5
+        fac_se = if (isTRUE(unimodal)) sqrt(1 / 12) else 0.5
         ests$std.error = pmin(ests$std.error, fac_se * (bb$max - bb$min))
     }
 
     if (!isFALSE(conf_level)) {
-        fac = if (isTRUE(unimodal)) 4 / 9 else 1
-        chebyshev = sqrt(fac / (1 - conf_level))
-        ests$conf.low = ests$estimate - chebyshev * ests$std.error
-        ests$conf.high = ests$estimate + chebyshev * ests$std.error
+        if (isTRUE(gaussian)) {
+            crit = qnorm(0.5 + conf_level / 2)
+        } else {
+            fac = if (isTRUE(unimodal)) 4 / 9 else 1
+            crit = sqrt(fac / (1 - conf_level)) # chebyshev
+        }
+        ests$conf.low = ests$estimate - crit * ests$std.error
+        ests$conf.high = ests$estimate + crit * ests$std.error
 
         if (has_bounds) {
             ests$conf.low = pmax(ests$conf.low, bb$min)
@@ -226,7 +235,7 @@ as.array.ei_est_local = function(x, ...) {
     n_x = length(nm_x)
     n_y = length(nm_y)
     n = nrow(x) / n_x / n_y
-    array(x$estimate, dim=c(n, n_x, n_y), dimnames=list(NULL, nm_x, nm_y))
+    array(x$estimate, dim = c(n, n_x, n_y), dimnames = list(NULL, nm_x, nm_y))
 }
 
 #' Estimate the residual covariance of the local estimands
@@ -244,11 +253,17 @@ as.array.ei_est_local = function(x, ...) {
 #' in the references to estimate the covariance for each local estimand. When
 #' the estiamated covariance is not positive semidefinite, it is projected onto
 #' the cone of positive semidefinite matrices.
+#' A small amount of shrinkage is applied towards a naive estimator (the
+#' covariance of the regression residuals) under an inverse-Wishart conjugate prior,
+#' whose effective sample size is given by `prior_obs`.
 #'
 #' @param regr A fitted regression model, from [ei_ridge()], or another kind
 #'    of regression model wrapped with [ei_wrap_model()].
 #' @param data The data frame, matrix, or [ei_spec] object that was used to fit
 #'   the regression.
+#' @param prior_obs The effective sample size of the inverse-Wishart conjugate prior,
+#'   which shrinks the estimate towards the covariance of the regression residuals.
+#'   Smaller values mean less shrinkage.
 #'
 #' @returns A covariance matrix. The variables are ordered by predictor within
 #'   outcome, e.g. (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
@@ -256,7 +271,7 @@ as.array.ei_est_local = function(x, ...) {
 #' @inherit ei_est references
 #'
 #' @export
-ei_local_cov <- function(regr, data) {
+ei_local_cov <- function(regr, data, prior_obs = 10) {
     if (!inherits(regr, "ei_ridge")) {
         cli_abort("{.fun ei_local_cov} only supports regressions fit with {.fn ei_ridge}.")
     }
@@ -270,15 +285,19 @@ ei_local_cov <- function(regr, data) {
     n_x = length(xcols)
 
     idx_tri = c(lower.tri(diag(n_y), diag = TRUE))
-    yr = row_kronecker(resid(regr), resid(regr), 0)[, idx_tri]
+    yr = row_kronecker(resid(regr), resid(regr), 0)[, idx_tri, drop = FALSE]
     udv = svd(cbind(row_kronecker(x, x, 0)))
 
     fit = ridge_auto(udv, yr, rep(1, n), vcov = FALSE)
     pred_sigma = function(j, k) {
         x_plug = numeric(n_x)
-        x_plug[c(j, k)] = 1
+        if (j == k) {
+            x_plug[j] = 1
+        } else {
+            x_plug[c(j, k)] = 0.5
+        }
         sigma = matrix(0, n_y, n_y)
-        pred = 0.5 * (x_plug %x% x_plug) %*% fit$coef
+        pred = (x_plug %x% x_plug) %*% fit$coef
         sigma[lower.tri(sigma, diag = TRUE)] = pred
         sigma[upper.tri(sigma)] = t(sigma)[upper.tri(sigma)]
         sigma
@@ -288,15 +307,23 @@ ei_local_cov <- function(regr, data) {
     for (j in seq_len(n_x)) {
         for (k in seq_len(j)) {
             off = (seq_len(n_y) - 1) * n_x
-            pred_part = 2 * (pred_sigma(j, k) - 0.25 * pred_sigma(j, j) - 0.25 * pred_sigma(k, k))
+            pred_part = 2 *
+                (pred_sigma(j, k) -
+                    0.25 * pred_sigma(j, j) -
+                    0.25 * pred_sigma(k, k))
             b_cov0[j + off, k + off] = pred_part
             b_cov0[k + off, j + off] = pred_part
         }
     }
-    eig = eigen(b_cov0)
-    b_cov = eig$vectors %*% diag(pmax(eig$values, 1e-8)) %*% t(eig$vectors)
+    # apply inv-wishart shrinkage
+    b_cov0 = (prior_obs * prior_cov + n * b_cov0) /
+        (n + prior_obs - n_x * n_y - 1)
 
-    cov_nm = c(outer(colnames(x), colnames(y), paste, sep=":"))
+    eig = eigen(b_cov0)
+    ev_new = pmax(eig$values, 1e-7)
+    b_cov = eig$vectors %*% diag(ev_new) %*% t(eig$vectors)
+
+    cov_nm = c(outer(colnames(x), colnames(y), paste, sep = ":"))
     colnames(b_cov) <- rownames(b_cov) <- cov_nm
 
     b_cov
@@ -316,7 +343,12 @@ check_proc_b_cov <- function(b_cov, resid, n_x) {
                 ">" = "Expected either {n_x}x{n_x} or {n_x * n_y}x{n_x * n_y}."
             ), call = parent.frame())
         }
-    } else if (length(b_cov) == 1 && is.numeric(b_cov) && b_cov >= -1/(n_x - 1) && b_cov <= 1) {
+    } else if (
+        length(b_cov) == 1 &&
+            is.numeric(b_cov) &&
+            b_cov >= -1 / (n_x - 1) &&
+            b_cov <= 1
+    ) {
         cov_y = cov(resid) * (1 + diag(n_y) * 1e-6)
         b_cov = cov_y %x% (b_cov + (1 + 1e-6 - b_cov) * diag(n_x))
     } else {
@@ -366,7 +398,7 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
         b0 = cbind(b0, -bounds[2] + eta)
     }
 
-    idx_eps = sum_one * n_x + seq_len(2*n_y)
+    idx_eps = sum_one * n_x + seq_len(2 * n_y)
     patt_eps = cbind(diag(n_y), -diag(n_y))
 
     constr_pt = function(Dmat, bvec, tol) {
@@ -390,8 +422,12 @@ local_proj = function(x, eta, eps, b_cov, bounds, sum_one) {
         relax_D = FALSE
         repeat {
             Dmat = if (!relax_D) b_cov else b_cov_relax
-            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = function(e) NULL)
-            if (!is.null(ans)) break
+            ans = tryCatch(constr_pt(Dmat, b0[i, ], tol), error = function(e) {
+                NULL
+            })
+            if (!is.null(ans)) {
+                break
+            }
             if (tol > 0.0005) {
                 if (!relax_D) {
                     relaxations = relaxations + 1
@@ -446,7 +482,7 @@ local_sds = function(x, b_cov, regb_cov, sigma2, contr_m, is_contr = FALSE) {
 }
 
 local_basis = function(x) {
-    qr.Q(qr(cbind(x, diag(length(x)))))[, -1, drop=FALSE]
+    qr.Q(qr(cbind(x, diag(length(x)))))[, -1, drop = FALSE]
 }
 
 # project onto plane spanned by H along metric defined by R = chol(b_cov)

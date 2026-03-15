@@ -15,7 +15,8 @@ ei_est_local(
   sum_one = NULL,
   conf_level = 0.95,
   regr_var = TRUE,
-  unimodal = TRUE
+  unimodal = TRUE,
+  gaussian = FALSE
 )
 
 \method{as.array}{ei_est_local}(x, ...)
@@ -85,6 +86,11 @@ with \code{\link[=ei_ridge]{ei_ridge()}}, and requires that function be called w
 
 \item{unimodal}{If \code{TRUE}, assume a unimodal residual distribution. Reduces
 width of confidence intervals by a factor of 2/3.}
+
+\item{gaussian}{If \code{TRUE}, use Gaussian quantiles for confidence intervals,
+rather than Chebyshev's inequality. This will produce narrower confidence
+intervals, but they will not be guaranteed to have the nominal coverage.
+Overrides the \code{unimodal} argument.}
 
 \item{x}{An object of class \code{ei_est_local}}
 

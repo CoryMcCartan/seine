@@ -4,7 +4,7 @@
 \alias{ei_local_cov}
 \title{Estimate the residual covariance of the local estimands}
 \usage{
-ei_local_cov(regr, data)
+ei_local_cov(regr, data, prior_obs = 10)
 }
 \arguments{
 \item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
@@ -12,6 +12,10 @@ of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.}
 
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression.}
+
+\item{prior_obs}{The effective sample size of the inverse-Wishart conjugate prior,
+which shrinks the estimate towards the covariance of the regression residuals.
+Smaller values mean less shrinkage.}
 }
 \value{
 A covariance matrix. The variables are ordered by predictor within
@@ -32,6 +36,9 @@ residuals on these predictors, and uses the polarization identity discussed
 in the references to estimate the covariance for each local estimand. When
 the estiamated covariance is not positive semidefinite, it is projected onto
 the cone of positive semidefinite matrices.
+A small amount of shrinkage is applied towards a naive estimator (the
+covariance of the regression residuals) under an inverse-Wishart conjugate prior,
+whose effective sample size is given by \code{prior_obs}.
 }
 \references{
 McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
