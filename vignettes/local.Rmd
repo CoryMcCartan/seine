@@ -14,26 +14,22 @@ knitr::opts_chunk$set(
 )
 ```
 
-Global ecological inference estimates describe average behavior across all units
-in the data.
-Sometimes, however, estimates for each individual unit (precinct, county, or
-other geography) are of interest: to map spatial variation, to examine outliers,
-or to inform decisions at the local level.
+The main estimation routine in **seine**, `ei_est()`, produces _global_ estimates, $\mathbb{E}[Y\mid X]$ for the entire population under study.
+Sometimes, however, estimates for each individual aggregation unit (such as precincts, counties, or
+other geographies) are of interest.
 **seine** provides two approaches for this.
-`ei_bounds()` computes guaranteed-valid partial identification bounds for each
+`ei_bounds()` computes guaranteed-valid partial identification (Duncan-Davis) bounds for each
 unit, relying only on the accounting identity and known limits on the outcome.
 `ei_est_local()` produces point estimates and confidence intervals under the
-Conditional Average Representativeness (CAR) assumption and a model for
-within-unit variation, using a fitted regression model.
-The former bounds are also sometimes called the Duncan-Davis bounds.
+same coarsening at random (CAR) assumption that `ei_est()` relies on, plus (for now) an additional homoskedasticity assumption.
 
 # Setting up the analysis
 
-We will use the `elec_1968` data included in the package, which contain
-county-level election returns from Southern states in the 1968 U.S.
-presidential election.
-We want to estimate the individual-level association between race and
-presidential vote choice for each county.
+We begin by loading the 1968 election data, and defining an `ei_spec` object
+that records the outcome, predictor, covariate, and total-count columns,
+following the setup from `vignette("seine")`.
+We now want to estimate the individual-level association between race and
+presidential vote choice _within_ each county.
 
 ```{r setup}
 library(seine)
@@ -74,40 +70,47 @@ the specified bounds on the outcome.
 
 `ei_bounds()` takes an `ei_spec` object (or a formula) and returns a data frame
 with one row per unit per predictor-outcome combination.
+The `bounds` argument specifies the known limits on the outcome, which are typically
+[0, 1] for proportions.
+Without known bounds on the outcome or other statistical assumptions, the local estimates are completely unidentified.
 
 ```{r}
-bnds = ei_bounds(spec, bounds = c(0, 1))
-head(bnds)
+bounds = ei_bounds(spec, bounds = c(0, 1))
+head(bounds)
 ```
 
 The `min` and `max` columns give the sharp bounds for each unit.
-The `weight` column is the product of the predictor proportion and the total,
-which is useful for aggregating.
-When the bounds are wide for many units, this indicates a fundamentally
-difficult identification problem, regardless of modeling choices.
+The `weight` column contains the number of observations in that unit and predictor group.
+This column can be used to aggregate estimates across units.
 
-To aggregate the bounds across all units to produce bounds on the global
-estimands, pass `global = TRUE`.
+Since aggregating bounds is a common operation, `ei_bounds()` provides the `global = TRUE` argument to automatically compute the global bounds by taking a weighted average of the local bounds.
 
 ```{r}
 ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 ```
 
-The `as.array()` method reformats the output as a three-dimensional array with
-dimensions units by predictors by outcomes, which can be convenient for further
+As is common with partial identification, the bounds can be quite wide.
+For example, without further assumptions, nothing can be said about the Black preference for Wallace except that it is between 0.8% and 94.6%.
+
+The `as.array()` method reformats the output as a four-dimensional array with
+dimensions units by predictors by outcomes by (min, max), which may be convenient for further
 analysis.
 
 ```{r}
-bnds_arr = as.array(bnds)
-dim(bnds_arr) # rows x predictors x outcomes
+dim(as.array(bounds))
 ```
 
 Bounds on contrasts, such as the difference in vote share between White and
 Black voters, can be computed directly by passing a `contrast` argument.
+Computing these bounds is more involved and requires solving a linear program for each unit, but the output is the same format as above.
+Here, we calculate bounds on White-Black racially polarized voting for each candidate.
 
 ```{r}
 ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0)))
 ```
+
+Note that because contrasts _across_ predictor groups involve fundamentally different numbers of people in each unit, these bounds cannot be aggregated across units in a meaningful way.
+For a bound on the global contrast, you can aggregate non-contrasted bounds and then take the contrast of the global bounds.
 
 # Estimating the local covariance
 
@@ -118,32 +121,44 @@ the local estimands $\beta_{gj}$ around the regression prediction.
 
 `ei_local_cov()` estimates this covariance from the data, under the CAR
 assumption and an additional homoskedasticity condition.
-Concretely, it fits a ridge regression of the empirical second moments of the
-regression residuals on the cross-products of the predictor variables, and uses
-the polarization identity to recover the covariance for each predictor-outcome
-pair.
-A small amount of shrinkage towards the global residual covariance is applied,
-controlled by `prior_obs`.
+A small amount of shrinkage is applied, controlled by the `prior_obs` argument.
+Details are provided in McCartan & Kuriwaki (2025+).
 
 ```{r}
 b_cov = ei_local_cov(m, spec)
-round(b_cov, 3)
+round(sqrt(diag(b_cov)), 3)
+round(b_cov[1:3, 1:3], 3)
 ```
 
 The rows and columns are ordered by predictor within outcome, i.e.
 (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
-Large diagonal entries indicate high within-unit variation in the local
-estimands, relative to the regression predictions.
-Off-diagonal entries reflect the extent to which, within a county, vote choices
-across racial groups tend to move together.
+One can visualize the estimated covariance structure with `heatmap()` or the [`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
+```{r}
+heatmap(
+    b_cov,
+    Rowv = NA,
+    col = hcl.colors(n = 100, palette = "Spectral"),
+    symm = TRUE,
+    mar = c(12, 12)
+)
+```
+
+We strongly recommend examining the estimated covariance structure and evaluating if the estimates are plausible.
+For example, preferences for Black and Other voters are correlated (blue) and somewhat anticorrelated with preferences for White voters (orange/red).
+Support for Humphrey is generally anticorrelated with support for Nixon and Wallace.
+These two patterns make sense in context.
+
+On the other hand, the estimated standard deviation for Black support for different candidates is quite large, around 0.3, especially compared to low variation in White preference for e.g. Humphrey, which has standard deviation just 0.086.
+As a reminder, these estimates are of the _residual_ variation, after controlling for covariates.
+Still, we might be expect redisual variation in Black support to be smaller across the board, especially for the segregationist Wallace.
 
 # Local point estimates
 
 With the regression model and a covariance structure in hand, `ei_est_local()`
 projects the regression predictions onto the accounting constraint to produce
 local estimates that exactly satisfy the ecological identity within each county.
-The function also computes valid confidence intervals using Chebyshev's
-inequality or, under a unimodality assumption, the tighter unimodal bound.
+The function also computes asymptotically valid confidence intervals.
+Estimates and intervals will be truncated to the possible values obtained from `ei_bounds()`.
 
 The `b_cov` argument controls the assumed covariance structure.
 There are three common choices:
@@ -159,13 +174,13 @@ There are three common choices:
   are expected to vary together. However, it leads to quite narrow confidence
   intervals, which may not cover the truth in practice.
 
-We fit all three and compare the average width of the resulting confidence
+Here, we fit all three and compare the average width of the resulting confidence
 intervals.
 
 ```{r}
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
-e_orth = ei_est_local(m, spec, b_cov = 0,    bounds = c(0, 1), sum_one = TRUE)
-e_nbhd = ei_est_local(m, spec, b_cov = 0.95, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m, spec, b_cov = 0,     bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m, spec, b_cov = 0.95,  bounds = c(0, 1), sum_one = TRUE)
 
 c(
     estimated = mean(e_rcov$conf.high - e_rcov$conf.low),
@@ -174,17 +189,21 @@ c(
 )
 ```
 
-The orthogonal model tends to produce the widest intervals.
-The neighborhood model can be narrower when the predictor proportions within a
-county are nearly uniform, because the accounting constraint then binds tightly.
-The estimated covariance typically lies between the two extremes, and as
-mentioned above is the recommended default.
-
 Setting `sum_one = TRUE` enforces the constraint that the local vote shares
 across candidates sum to one within each racial group, which is the correct
 restriction for these data.
 The `bounds = c(0, 1)` argument truncates estimates to the unit interval and
 caps the standard errors implied by the width of the bounds.
+
+We can visualize the distribution of local estimates for a particular predictor-outcome combination with a histogram.
+```{r}
+hist(
+    subset(e_rcov, predictor == "vap_white" & outcome == "pres_dem_hum")$estimate,
+    breaks = 50,
+    main = "White support for Humphrey",
+    xlab = "% Humphrey"
+)
+```
 
 To examine results for a specific county, we can filter the output.
 
@@ -196,15 +215,7 @@ The `as.array()` method provides a convenient view of the point estimates as a
 three-dimensional array.
 
 ```{r}
-head(as.array(e_rcov)[, , "pres_dem_hum"])
-```
-
-Finally, taking a weighted average of the local estimates against the `weight`
-column reproduces the global estimate from `ei_est()`.
-
-```{r}
-grps = split(e_rcov, ~ predictor + outcome)
-sapply(grps, function(g) weighted.mean(g$estimate, g$weight))
+head(as.array(e_rcov)[, , "pres_rep_nix"])
 ```
 
 # References

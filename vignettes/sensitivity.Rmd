@@ -25,7 +25,7 @@ developed by Chernozhukov et al. (2024).
 
 # Setting up the analysis
 
-We begin by loading the package and the data, and defining an `ei_spec` object
+We begin by loading the 1968 election data, and defining an `ei_spec` object
 that records the outcome, predictor, covariate, and total-count columns,
 following the setup from `vignette("seine")`.
 We use a BART basis expansion for nonparametric covariate adjustment, which
