@@ -125,15 +125,20 @@ full walkthrough of this estimation workflow.</p>
 <code class="sourceCode R"><span><span class="va">m</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_ridge.html">ei_ridge</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span>
 <span><span class="va">rr</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_riesz.html">ei_riesz</a></span><span class="op">(</span><span class="va">spec</span>, penalty <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">penalty</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">est</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>, conf_level <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="va">est</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est.html">ei_est</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">rr</span>, <span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>, conf_level <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 6</span></span></span>
-<span><span class="co">#&gt;   predictor             outcome       estimate std.error conf.low conf.high</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_black pres_dem_hum -<span style="color: #BB0000;">0.366</span>      0.047<span style="text-decoration: underline;">2</span>  -<span style="color: #BB0000;">0.458</span>    -<span style="color: #BB0000;">0.273</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_black pres_rep_nix  0.508      0.049<span style="text-decoration: underline;">0</span>   0.411     0.604  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_black pres_ind_wal -<span style="color: #BB0000;">0.142</span>      0.041<span style="text-decoration: underline;">3</span>  -<span style="color: #BB0000;">0.223</span>    -<span style="color: #BB0000;">0.061</span><span style="color: #BB0000; text-decoration: underline;">3</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_black pres_abs      0.000<span style="text-decoration: underline;">367</span>   0.001<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">95</span>   0.002<span style="text-decoration: underline;">68</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 4</span></span></span>
+<span><span class="co">#&gt;   predictor             outcome       estimate std.error</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_black pres_dem_hum -<span style="color: #BB0000;">0.366</span>      0.047<span style="text-decoration: underline;">2</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_black pres_rep_nix  0.508      0.049<span style="text-decoration: underline;">0</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_black pres_ind_wal -<span style="color: #BB0000;">0.142</span>      0.041<span style="text-decoration: underline;">3</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_black pres_abs      0.000<span style="text-decoration: underline;">367</span>   0.001<span style="text-decoration: underline;">18</span></span></span></code></pre></div>
+<p>While we normally do not recommend setting
+<code>conf_level = FALSE</code> to suppress confidence intervals, here
+we do, so that the output can more easily fit on the screen. If
+confidence intervals are present in <code>est</code>, they will be
+adjusted by the senstivity analysis below.</p>
 </div>
 <div class="section level2">
 <h2 id="sensitivity-analysis">Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
@@ -158,14 +163,13 @@ residual variation in the outcome and 20% of the variation in the Riesz
 representer.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span>, c_outcome <span class="op">=</span> <span class="fl">0.5</span>, c_predictor <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 9</span></span></span>
-<span><span class="co">#&gt;   predictor  outcome estimate std.error conf.low conf.high c_outcome c_predictor</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white… pres_d… -<span style="color: #BB0000;">3.66</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.047<span style="text-decoration: underline;">2</span>   -<span style="color: #BB0000;">0.792</span>     0.060<span style="text-decoration: underline;">6</span>       0.5         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white… pres_r…  5.08<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.049<span style="text-decoration: underline;">0</span>    0.013<span style="text-decoration: underline;">0</span>    1.00         0.5         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white… pres_i… -<span style="color: #BB0000;">1.42</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.041<span style="text-decoration: underline;">3</span>   -<span style="color: #BB0000;">0.658</span>     0.373        0.5         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white… pres_a…  3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   0.001<span style="text-decoration: underline;">18</span>  -<span style="color: #BB0000;">0.016</span><span style="color: #BB0000; text-decoration: underline;">7</span>    0.017<span style="text-decoration: underline;">4</span>       0.5         0.2</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: bias_bound &lt;dbl&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
+<span><span class="co">#&gt;   predictor          outcome estimate std.error c_outcome c_predictor bias_bound</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_b… pres_d… -<span style="color: #BB0000;">3.66</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.047<span style="text-decoration: underline;">2</span>        0.5         0.2     0.334 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_b… pres_r…  5.08<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.049<span style="text-decoration: underline;">0</span>        0.5         0.2     0.398 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_b… pres_i… -<span style="color: #BB0000;">1.42</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.041<span style="text-decoration: underline;">3</span>        0.5         0.2     0.434 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_b… pres_a…  3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   0.001<span style="text-decoration: underline;">18</span>       0.5         0.2     0.014<span style="text-decoration: underline;">7</span></span></span></code></pre></div>
 <p>We can also work backwards and ask what one of the sensitivity
 parameters would have to be in order to produce a certain amount of
 bias. For example, if we assumed a worst-case scenario where the
@@ -174,14 +178,13 @@ can ask how strongly that confounder would need to be related to the
 Riesz representer to produce a bias of up to 5pp.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span>, c_outcome <span class="op">=</span> <span class="fl">1</span>, bias_bound <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 9</span></span></span>
-<span><span class="co">#&gt;   predictor  outcome estimate std.error conf.low conf.high c_outcome c_predictor</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white… pres_d… -<span style="color: #BB0000;">3.66</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.047<span style="text-decoration: underline;">2</span>   -<span style="color: #BB0000;">0.508</span>    -<span style="color: #BB0000;">0.223</span>          1     0.002<span style="text-decoration: underline;">80</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white… pres_r…  5.08<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.049<span style="text-decoration: underline;">0</span>    0.361     0.654          1     0.001<span style="text-decoration: underline;">97</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white… pres_i… -<span style="color: #BB0000;">1.42</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.041<span style="text-decoration: underline;">3</span>   -<span style="color: #BB0000;">0.273</span>    -<span style="color: #BB0000;">0.011</span><span style="color: #BB0000; text-decoration: underline;">3</span>         1     0.001<span style="text-decoration: underline;">65</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white… pres_a…  3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   0.001<span style="text-decoration: underline;">18</span>  -<span style="color: #BB0000;">0.051</span><span style="color: #BB0000; text-decoration: underline;">9</span>    0.052<span style="text-decoration: underline;">7</span>         1     0.590  </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: bias_bound &lt;dbl&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
+<span><span class="co">#&gt;   predictor          outcome estimate std.error c_outcome c_predictor bias_bound</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_b… pres_d… -<span style="color: #BB0000;">3.66</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.047<span style="text-decoration: underline;">2</span>          1     0.002<span style="text-decoration: underline;">80</span>       0.05</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_b… pres_r…  5.08<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.049<span style="text-decoration: underline;">0</span>          1     0.001<span style="text-decoration: underline;">97</span>       0.05</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_b… pres_i… -<span style="color: #BB0000;">1.42</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.041<span style="text-decoration: underline;">3</span>          1     0.001<span style="text-decoration: underline;">65</span>       0.05</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_b… pres_a…  3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   0.001<span style="text-decoration: underline;">18</span>         1     0.590         0.05</span></span></code></pre></div>
 <p>For most predictors and outcomes, the answer is not very much!</p>
 <div class="section level3">
 <h3 id="benchmarking">Benchmarking<a class="anchor" aria-label="anchor" href="#benchmarking"></a>
@@ -196,14 +199,13 @@ understand plausible values of these parameters, we can conduct a
 sensitivity parameters.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bench</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bench.html">ei_bench</a></span><span class="op">(</span><span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ⠙ ETA:18s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
+<span><span class="co">#&gt; ⠙ ETA:17s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
 <span><span class="co">#&gt; ⠹ ETA:16s  Benchmarking <span style="color: #00BB00;">pop_city</span> [2/13]</span></span>
 <span><span class="co">#&gt; ⠸ ETA:13s  Benchmarking <span style="color: #00BB00;">pop_rural</span> [4/13]</span></span>
 <span><span class="co">#&gt; ⠼ ETA:10s  Benchmarking <span style="color: #00BB00;">nonfarm</span> [6/13]</span></span>
 <span><span class="co">#&gt; ⠴ ETA: 7s  Benchmarking <span style="color: #00BB00;">educ_hsch</span> [8/13]</span></span>
-<span><span class="co">#&gt; ⠦ ETA: 4s  Benchmarking <span style="color: #00BB00;">inc_00_03k</span> [10/13]</span></span>
-<span><span class="co">#&gt; ⠧ ETA: 1s  Benchmarking <span style="color: #00BB00;">inc_08_25k</span> [12/13]</span></span>
-<span><span class="co">#&gt; ⠧ ETA: 0s  Benchmarking <span style="color: #00BB00;">inc_25_99k</span> [13/13]</span></span>
+<span><span class="co">#&gt; ⠦ ETA: 3s  Benchmarking <span style="color: #00BB00;">inc_03_08k</span> [11/13]</span></span>
+<span><span class="co">#&gt; ⠦ ETA: 0s  Benchmarking <span style="color: #00BB00;">inc_25_99k</span> [13/13]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">bench</span>, <span class="va">outcome</span> <span class="op">==</span> <span class="st">"pres_rep_nix"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 13 × 7</span></span></span>
@@ -228,7 +230,7 @@ column is an additional component of the sensitivity analysis that is
 discussed in the paper; the default value is 1, which is a conservative
 worst-case bound. The benchmark values here show that <code>state</code>
 is far and away the strongest observed confounder, whose inclusion
-changes the estimate by 38%. If the unobserved confounders were as
+changes the estimate by 38pp. If the unobserved confounders were as
 strong as <code>state</code>, we might expect a significant amount of
 bias, as we will see next.</p>
 </div>
@@ -255,8 +257,9 @@ around 80%.</p>
 <p>The red asterisks indicate the benchmark values for each covariate.
 Most are clustered in the lower-left corner and can’t be distinguished.
 In contrast, the benchmark for <code>state</code> shows that an
-unobserved confounder of that strength could lead to bias of around 46%,
-which is substantial compared to the estimate itself, which is 51%.</p>
+unobserved confounder of that strength could lead to bias of around
+46pp, which is substantial compared to the estimate itself, which is
+51pp.</p>
 </div>
 <div class="section level3">
 <h3 id="robustness-value">Robustness value<a class="anchor" aria-label="anchor" href="#robustness-value"></a>
@@ -270,13 +273,13 @@ polarized voting, i.e., bias equal to the estimated difference between
 White and Black voters.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens_rv.html">ei_sens_rv</a></span><span class="op">(</span><span class="va">est</span>, bias_bound <span class="op">=</span> <span class="va">estimate</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
-<span><span class="co">#&gt;   predictor             outcome    estimate std.error conf.low conf.high      rv</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_black pres_dem_… -<span style="color: #BB0000;">3.66</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.047<span style="text-decoration: underline;">2</span>  -<span style="color: #BB0000;">0.458</span>    -<span style="color: #BB0000;">0.273</span>   0.320  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_black pres_rep_…  5.08<span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.049<span style="text-decoration: underline;">0</span>   0.411     0.604   0.360  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_black pres_ind_… -<span style="color: #BB0000;">1.42</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-1</span>   0.041<span style="text-decoration: underline;">3</span>  -<span style="color: #BB0000;">0.223</span>    -<span style="color: #BB0000;">0.061</span><span style="color: #BB0000; text-decoration: underline;">3</span>  0.109  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_black pres_abs    3.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-4</span>   0.001<span style="text-decoration: underline;">18</span> -<span style="color: #BB0000;">0.001</span><span style="color: #BB0000; text-decoration: underline;">95</span>   0.002<span style="text-decoration: underline;">68</span> 0.008<span style="text-decoration: underline;">76</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
+<span><span class="co">#&gt;   predictor             outcome       estimate std.error      rv</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> vap_white - vap_black pres_dem_hum -<span style="color: #BB0000;">0.366</span>      0.047<span style="text-decoration: underline;">2</span>  0.320  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> vap_white - vap_black pres_rep_nix  0.508      0.049<span style="text-decoration: underline;">0</span>  0.360  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> vap_white - vap_black pres_ind_wal -<span style="color: #BB0000;">0.142</span>      0.041<span style="text-decoration: underline;">3</span>  0.109  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> vap_white - vap_black pres_abs      0.000<span style="text-decoration: underline;">367</span>   0.001<span style="text-decoration: underline;">18</span> 0.008<span style="text-decoration: underline;">76</span></span></span></code></pre></div>
 <p>The robustness value (one for each predictor/outcome combination) is
 relatively small for Wallace’s vote share, indicating low robustness
 (high sensitivity). In particular, it is far smaller than the amount of

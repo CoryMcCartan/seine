@@ -52,16 +52,21 @@ for a full walkthrough of this estimation workflow.
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
 
-est = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = 0.95)
+est = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = FALSE)
 print(est)
-#> # A tibble: 4 × 6
-#>   predictor             outcome       estimate std.error conf.low conf.high
-#>   <chr>                 <chr>            <dbl>     <dbl>    <dbl>     <dbl>
-#> 1 vap_white - vap_black pres_dem_hum -0.366      0.0472  -0.458    -0.273  
-#> 2 vap_white - vap_black pres_rep_nix  0.508      0.0490   0.411     0.604  
-#> 3 vap_white - vap_black pres_ind_wal -0.142      0.0413  -0.223    -0.0613 
-#> 4 vap_white - vap_black pres_abs      0.000367   0.00118 -0.00195   0.00268
+#> # A tibble: 4 × 4
+#>   predictor             outcome       estimate std.error
+#>   <chr>                 <chr>            <dbl>     <dbl>
+#> 1 vap_white - vap_black pres_dem_hum -0.366      0.0472 
+#> 2 vap_white - vap_black pres_rep_nix  0.508      0.0490 
+#> 3 vap_white - vap_black pres_ind_wal -0.142      0.0413 
+#> 4 vap_white - vap_black pres_abs      0.000367   0.00118
 ```
+
+While we normally do not recommend setting `conf_level = FALSE` to
+suppress confidence intervals, here we do, so that the output can more
+easily fit on the screen. If confidence intervals are present in `est`,
+they will be adjusted by the senstivity analysis below.
 
 ## Sensitivity analysis
 
@@ -87,14 +92,13 @@ outcome and 20% of the variation in the Riesz representer.
 
 ``` r
 ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
-#> # A tibble: 4 × 9
-#>   predictor  outcome estimate std.error conf.low conf.high c_outcome c_predictor
-#>   <chr>      <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
-#> 1 vap_white… pres_d… -3.66e-1   0.0472   -0.792     0.0606       0.5         0.2
-#> 2 vap_white… pres_r…  5.08e-1   0.0490    0.0130    1.00         0.5         0.2
-#> 3 vap_white… pres_i… -1.42e-1   0.0413   -0.658     0.373        0.5         0.2
-#> 4 vap_white… pres_a…  3.67e-4   0.00118  -0.0167    0.0174       0.5         0.2
-#> # ℹ 1 more variable: bias_bound <dbl>
+#> # A tibble: 4 × 7
+#>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
+#>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
+#> 1 vap_white - vap_b… pres_d… -3.66e-1   0.0472        0.5         0.2     0.334 
+#> 2 vap_white - vap_b… pres_r…  5.08e-1   0.0490        0.5         0.2     0.398 
+#> 3 vap_white - vap_b… pres_i… -1.42e-1   0.0413        0.5         0.2     0.434 
+#> 4 vap_white - vap_b… pres_a…  3.67e-4   0.00118       0.5         0.2     0.0147
 ```
 
 We can also work backwards and ask what one of the sensitivity
@@ -106,14 +110,13 @@ representer to produce a bias of up to 5pp.
 
 ``` r
 ei_sens(est, c_outcome = 1, bias_bound = 0.05)
-#> # A tibble: 4 × 9
-#>   predictor  outcome estimate std.error conf.low conf.high c_outcome c_predictor
-#>   <chr>      <chr>      <dbl>     <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
-#> 1 vap_white… pres_d… -3.66e-1   0.0472   -0.508    -0.223          1     0.00280
-#> 2 vap_white… pres_r…  5.08e-1   0.0490    0.361     0.654          1     0.00197
-#> 3 vap_white… pres_i… -1.42e-1   0.0413   -0.273    -0.0113         1     0.00165
-#> 4 vap_white… pres_a…  3.67e-4   0.00118  -0.0519    0.0527         1     0.590  
-#> # ℹ 1 more variable: bias_bound <dbl>
+#> # A tibble: 4 × 7
+#>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
+#>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
+#> 1 vap_white - vap_b… pres_d… -3.66e-1   0.0472          1     0.00280       0.05
+#> 2 vap_white - vap_b… pres_r…  5.08e-1   0.0490          1     0.00197       0.05
+#> 3 vap_white - vap_b… pres_i… -1.42e-1   0.0413          1     0.00165       0.05
+#> 4 vap_white - vap_b… pres_a…  3.67e-4   0.00118         1     0.590         0.05
 ```
 
 For most predictors and outcomes, the answer is not very much!
@@ -130,14 +133,13 @@ parameters.
 
 ``` r
 bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
-#> ⠙ ETA:18s  Benchmarking state [1/13]
+#> ⠙ ETA:17s  Benchmarking state [1/13]
 #> ⠹ ETA:16s  Benchmarking pop_city [2/13]
 #> ⠸ ETA:13s  Benchmarking pop_rural [4/13]
 #> ⠼ ETA:10s  Benchmarking nonfarm [6/13]
 #> ⠴ ETA: 7s  Benchmarking educ_hsch [8/13]
-#> ⠦ ETA: 4s  Benchmarking inc_00_03k [10/13]
-#> ⠧ ETA: 1s  Benchmarking inc_08_25k [12/13]
-#> ⠧ ETA: 0s  Benchmarking inc_25_99k [13/13]
+#> ⠦ ETA: 3s  Benchmarking inc_03_08k [11/13]
+#> ⠦ ETA: 0s  Benchmarking inc_25_99k [13/13]
 
 subset(bench, outcome == "pres_rep_nix")
 #> # A tibble: 13 × 7
@@ -164,7 +166,7 @@ additional component of the sensitivity analysis that is discussed in
 the paper; the default value is 1, which is a conservative worst-case
 bound. The benchmark values here show that `state` is far and away the
 strongest observed confounder, whose inclusion changes the estimate by
-38%. If the unobserved confounders were as strong as `state`, we might
+38pp. If the unobserved confounders were as strong as `state`, we might
 expect a significant amount of bias, as we will see next.
 
 ### Bias contour plot
@@ -194,8 +196,8 @@ example, bias of 1 standard error means that a confidence interval with
 The red asterisks indicate the benchmark values for each covariate. Most
 are clustered in the lower-left corner and can’t be distinguished. In
 contrast, the benchmark for `state` shows that an unobserved confounder
-of that strength could lead to bias of around 46%, which is substantial
-compared to the estimate itself, which is 51%.
+of that strength could lead to bias of around 46pp, which is substantial
+compared to the estimate itself, which is 51pp.
 
 ### Robustness value
 
@@ -210,13 +212,13 @@ difference between White and Black voters.
 
 ``` r
 ei_sens_rv(est, bias_bound = estimate)
-#> # A tibble: 4 × 7
-#>   predictor             outcome    estimate std.error conf.low conf.high      rv
-#>   <chr>                 <chr>         <dbl>     <dbl>    <dbl>     <dbl>   <dbl>
-#> 1 vap_white - vap_black pres_dem_… -3.66e-1   0.0472  -0.458    -0.273   0.320  
-#> 2 vap_white - vap_black pres_rep_…  5.08e-1   0.0490   0.411     0.604   0.360  
-#> 3 vap_white - vap_black pres_ind_… -1.42e-1   0.0413  -0.223    -0.0613  0.109  
-#> 4 vap_white - vap_black pres_abs    3.67e-4   0.00118 -0.00195   0.00268 0.00876
+#> # A tibble: 4 × 5
+#>   predictor             outcome       estimate std.error      rv
+#>   <chr>                 <chr>            <dbl>     <dbl>   <dbl>
+#> 1 vap_white - vap_black pres_dem_hum -0.366      0.0472  0.320  
+#> 2 vap_white - vap_black pres_rep_nix  0.508      0.0490  0.360  
+#> 3 vap_white - vap_black pres_ind_wal -0.142      0.0413  0.109  
+#> 4 vap_white - vap_black pres_abs      0.000367   0.00118 0.00876
 ```
 
 The robustness value (one for each predictor/outcome combination) is
