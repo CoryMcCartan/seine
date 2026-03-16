@@ -132,10 +132,10 @@ round(b_cov[1:3, 1:3], 3)
 
 The rows and columns are ordered by predictor within outcome, i.e.
 (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
-One can visualize the estimated covariance structure with `heatmap()` or the [`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
-```{r}
+One can visualize the estimated correlation structure with `heatmap()` or the [`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
+```{r fig.height=7.5, fig.alt = "Heatmap of the estimated correlation structure for local estimands"}
 heatmap(
-    b_cov,
+    cov2cor(b_cov),
     Rowv = NA,
     col = hcl.colors(n = 100, palette = "Spectral"),
     symm = TRUE,
@@ -196,7 +196,7 @@ The `bounds = c(0, 1)` argument truncates estimates to the unit interval and
 caps the standard errors implied by the width of the bounds.
 
 We can visualize the distribution of local estimates for a particular predictor-outcome combination with a histogram.
-```{r}
+```{r fig.alt="Histogram of local estimates for White support for Humphrey"}
 hist(
     subset(e_rcov, predictor == "vap_white" & outcome == "pres_dem_hum")$estimate,
     breaks = 50,

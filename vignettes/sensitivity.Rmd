@@ -43,7 +43,7 @@ spec = ei_spec(
     covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
     preproc = function(x) {
         x = model.matrix(~ 0 + ., x) # convert factors to dummies
-        bases::b_bart(x, trees = 200)
+        bases::b_bart(x, trees = 250)
     }
 )
 ```
@@ -106,7 +106,7 @@ would need to be related to the Riesz representer to produce a bias of up to
 ei_sens(est, c_outcome = 1, bias_bound = 0.05)
 ```
 
-For most predictors and outcomes, the answer is not very much!
+For all of the outcomes except `pres_abs`, whose estimate is much smaller than 0.05, the answer is not very much!
 
 ## Benchmarking
 
@@ -148,9 +148,7 @@ parameters, we can run it across all combinations of parameter values, and
 visualize the results on a **bias contour plot.**
 We can further overlay the benchmarking values to help interpret the results.
 
-```{r}
-#| fig.alt: >
-#|   Bias contour plot for the racially polarized Nixon vote
+```{r fig.height = 7, fig.alt = "Bias contour plot for the racially polarized Nixon vote"}
 sens = ei_sens(est) # the default evaluates on a grid of parameters
 plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
 ```

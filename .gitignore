@@ -4,6 +4,7 @@
 .Rdata
 .Rapp.history
 .httr-oauth
+*_files
 
 *.bak
 *.tmp
