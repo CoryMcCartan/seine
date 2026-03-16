@@ -81,26 +81,27 @@ gtag('config', 'G-2KH5JZ6JS1');
 
     
     
-<p>Global ecological inference estimates describe average behavior
-across all units in the data. Sometimes, however, estimates for each
-individual unit (precinct, county, or other geography) are of interest:
-to map spatial variation, to examine outliers, or to inform decisions at
-the local level. <strong>seine</strong> provides two approaches for
-this. <code><a href="../reference/ei_bounds.html">ei_bounds()</a></code> computes guaranteed-valid partial
-identification bounds for each unit, relying only on the accounting
-identity and known limits on the outcome. <code><a href="../reference/ei_est_local.html">ei_est_local()</a></code>
-produces point estimates and confidence intervals under the Conditional
-Average Representativeness (CAR) assumption and a model for within-unit
-variation, using a fitted regression model. The former bounds are also
-sometimes called the Duncan-Davis bounds.</p>
+<p>The main estimation routine in <strong>seine</strong>,
+<code><a href="../reference/ei_est.html">ei_est()</a></code>, produces <em>global</em> estimates, <span class="math inline">\(\mathbb{E}[Y\mid X]\)</span> for the entire
+population under study. Sometimes, however, estimates for each
+individual aggregation unit (such as precincts, counties, or other
+geographies) are of interest. <strong>seine</strong> provides two
+approaches for this. <code><a href="../reference/ei_bounds.html">ei_bounds()</a></code> computes guaranteed-valid
+partial identification (Duncan-Davis) bounds for each unit, relying only
+on the accounting identity and known limits on the outcome.
+<code><a href="../reference/ei_est_local.html">ei_est_local()</a></code> produces point estimates and confidence
+intervals under the same coarsening at random (CAR) assumption that
+<code><a href="../reference/ei_est.html">ei_est()</a></code> relies on, plus (for now) an additional
+homoskedasticity assumption.</p>
 <div class="section level2">
 <h2 id="setting-up-the-analysis">Setting up the analysis<a class="anchor" aria-label="anchor" href="#setting-up-the-analysis"></a>
 </h2>
-<p>We will use the <code>elec_1968</code> data included in the package,
-which contain county-level election returns from Southern states in the
-1968 U.S. presidential election. We want to estimate the
+<p>We begin by loading the 1968 election data, and defining an
+<code>ei_spec</code> object that records the outcome, predictor,
+covariate, and total-count columns, following the setup from
+<code><a href="../articles/seine.html">vignette("seine")</a></code>. We now want to estimate the
 individual-level association between race and presidential vote choice
-for each county.</p>
+<em>within</em> each county.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://corymccartan.com/seine/">seine</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span></code></pre></div>
@@ -136,10 +137,14 @@ bounds require no modeling assumptions beyond the accounting identity
 and the specified bounds on the outcome.</p>
 <p><code><a href="../reference/ei_bounds.html">ei_bounds()</a></code> takes an <code>ei_spec</code> object (or a
 formula) and returns a data frame with one row per unit per
-predictor-outcome combination.</p>
+predictor-outcome combination. The <code>bounds</code> argument
+specifies the known limits on the outcome, which are typically [0, 1]
+for proportions. Without known bounds on the outcome or other
+statistical assumptions, the local estimates are completely
+unidentified.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bnds</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bounds.html">ei_bounds</a></span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bnds</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">bounds</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bounds.html">ei_bounds</a></span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bounds</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">#&gt;    .row predictor outcome      weight    min    max</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -150,12 +155,13 @@ predictor-outcome combination.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     5 vap_white pres_dem_hum  <span style="text-decoration: underline;">8</span>801. 0.019<span style="text-decoration: underline;">0</span> 0.038<span style="text-decoration: underline;">2</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     6 vap_white pres_dem_hum  <span style="text-decoration: underline;">1</span>698. 0      1</span></span></code></pre></div>
 <p>The <code>min</code> and <code>max</code> columns give the sharp
-bounds for each unit. The <code>weight</code> column is the product of
-the predictor proportion and the total, which is useful for aggregating.
-When the bounds are wide for many units, this indicates a fundamentally
-difficult identification problem, regardless of modeling choices.</p>
-<p>To aggregate the bounds across all units to produce bounds on the
-global estimands, pass <code>global = TRUE</code>.</p>
+bounds for each unit. The <code>weight</code> column contains the number
+of observations in that unit and predictor group. This column can be
+used to aggregate estimates across units.</p>
+<p>Since aggregating bounds is a common operation,
+<code><a href="../reference/ei_bounds.html">ei_bounds()</a></code> provides the <code>global = TRUE</code>
+argument to automatically compute the global bounds by taking a weighted
+average of the local bounds.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_bounds.html">ei_bounds</a></span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, global <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 4</span></span></span>
@@ -173,16 +179,22 @@ global estimands, pass <code>global = TRUE</code>.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> vap_white pres_abs     0.000<span style="text-decoration: underline;">010</span>8 0.001<span style="text-decoration: underline;">79</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span> vap_black pres_abs     0         0.008<span style="text-decoration: underline;">44</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span> vap_other pres_abs     0         0.091<span style="text-decoration: underline;">0</span></span></span></code></pre></div>
+<p>As is common with partial identification, the bounds can be quite
+wide. For example, without further assumptions, nothing can be said
+about the Black preference for Wallace except that it is between 0.8%
+and 94.6%.</p>
 <p>The <code><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array()</a></code> method reformats the output as a
-three-dimensional array with dimensions units by predictors by outcomes,
-which can be convenient for further analysis.</p>
+four-dimensional array with dimensions units by predictors by outcomes
+by (min, max), which may be convenient for further analysis.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bnds_arr</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array</a></span><span class="op">(</span><span class="va">bnds</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">bnds_arr</span><span class="op">)</span> <span class="co"># rows x predictors x outcomes</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array</a></span><span class="op">(</span><span class="va">bounds</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1143    3    4    2</span></span></code></pre></div>
 <p>Bounds on contrasts, such as the difference in vote share between
 White and Black voters, can be computed directly by passing a
-<code>contrast</code> argument.</p>
+<code>contrast</code> argument. Computing these bounds is more involved
+and requires solving a linear program for each unit, but the output is
+the same format as above. Here, we calculate bounds on White-Black
+racially polarized voting for each candidate.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_bounds.html">ei_bounds</a></span><span class="op">(</span><span class="va">spec</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,572 × 5</span></span></span>
@@ -199,6 +211,11 @@ White and Black voters, can be computed directly by passing a
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>     9 vap_white - vap_black pres_dem_hum -<span style="color: #BB0000;">0.474</span> 0.178 </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>    10 vap_white - vap_black pres_dem_hum -<span style="color: #BB0000;">0.991</span> 0.085<span style="text-decoration: underline;">5</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4,562 more rows</span></span></span></code></pre></div>
+<p>Note that because contrasts <em>across</em> predictor groups involve
+fundamentally different numbers of people in each unit, these bounds
+cannot be aggregated across units in a meaningful way. For a bound on
+the global contrast, you can aggregate non-contrasted bounds and then
+take the contrast of the global bounds.</p>
 </div>
 <div class="section level2">
 <h2 id="estimating-the-local-covariance">Estimating the local covariance<a class="anchor" aria-label="anchor" href="#estimating-the-local-covariance"></a>
@@ -210,99 +227,56 @@ captured by the <code>b_cov</code> argument, a covariance matrix for the
 local estimands <span class="math inline">\(\beta_{gj}\)</span> around
 the regression prediction.</p>
 <p><code><a href="../reference/ei_local_cov.html">ei_local_cov()</a></code> estimates this covariance from the data,
-under the CAR assumption and an additional homoskedasticity condition.
-Concretely, it fits a ridge regression of the empirical second moments
-of the regression residuals on the cross-products of the predictor
-variables, and uses the polarization identity to recover the covariance
-for each predictor-outcome pair. A small amount of shrinkage towards the
-global residual covariance is applied, controlled by
-<code>prior_obs</code>.</p>
+under the CAR assumption and an additional homoskedasticity condition. A
+small amount of shrinkage is applied, controlled by the
+<code>prior_obs</code> argument. Details are provided in McCartan &amp;
+Kuriwaki (2025+).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">b_cov</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_local_cov.html">ei_local_cov</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">b_cov</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">b_cov</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; vap_white:pres_dem_hum vap_black:pres_dem_hum vap_other:pres_dem_hum </span></span>
+<span><span class="co">#&gt;                  0.078                  0.264                  0.245 </span></span>
+<span><span class="co">#&gt; vap_white:pres_rep_nix vap_black:pres_rep_nix vap_other:pres_rep_nix </span></span>
+<span><span class="co">#&gt;                  0.175                  0.159                  0.323 </span></span>
+<span><span class="co">#&gt; vap_white:pres_ind_wal vap_black:pres_ind_wal vap_other:pres_ind_wal </span></span>
+<span><span class="co">#&gt;                  0.173                  0.329                  0.353 </span></span>
+<span><span class="co">#&gt;     vap_white:pres_abs     vap_black:pres_abs     vap_other:pres_abs </span></span>
+<span><span class="co">#&gt;                  0.008                  0.004                  0.017</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">b_cov</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                        vap_white:pres_dem_hum vap_black:pres_dem_hum</span></span>
 <span><span class="co">#&gt; vap_white:pres_dem_hum                  0.006                 -0.008</span></span>
 <span><span class="co">#&gt; vap_black:pres_dem_hum                 -0.008                  0.070</span></span>
 <span><span class="co">#&gt; vap_other:pres_dem_hum                 -0.005                  0.058</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix                 -0.003                 -0.002</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix                  0.007                  0.006</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix                  0.004                  0.010</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal                 -0.003                  0.010</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal                  0.001                 -0.076</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal                  0.001                 -0.069</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt;                        vap_other:pres_dem_hum vap_white:pres_rep_nix</span></span>
-<span><span class="co">#&gt; vap_white:pres_dem_hum                 -0.005                 -0.003</span></span>
-<span><span class="co">#&gt; vap_black:pres_dem_hum                  0.058                 -0.002</span></span>
-<span><span class="co">#&gt; vap_other:pres_dem_hum                  0.060                  0.014</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix                  0.014                  0.031</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix                 -0.001                 -0.022</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix                 -0.020                 -0.056</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal                 -0.009                 -0.027</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal                 -0.058                  0.024</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal                 -0.040                  0.042</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                      0.001                  0.000</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt;                        vap_black:pres_rep_nix vap_other:pres_rep_nix</span></span>
-<span><span class="co">#&gt; vap_white:pres_dem_hum                  0.007                  0.004</span></span>
-<span><span class="co">#&gt; vap_black:pres_dem_hum                  0.006                  0.010</span></span>
-<span><span class="co">#&gt; vap_other:pres_dem_hum                 -0.001                 -0.020</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix                 -0.022                 -0.056</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix                  0.025                  0.041</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix                  0.041                  0.104</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal                  0.015                  0.052</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal                 -0.031                 -0.052</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal                 -0.040                 -0.084</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt;                        vap_white:pres_ind_wal vap_black:pres_ind_wal</span></span>
-<span><span class="co">#&gt; vap_white:pres_dem_hum                 -0.003                  0.001</span></span>
-<span><span class="co">#&gt; vap_black:pres_dem_hum                  0.010                 -0.076</span></span>
-<span><span class="co">#&gt; vap_other:pres_dem_hum                 -0.009                 -0.058</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix                 -0.027                  0.024</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix                  0.015                 -0.031</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix                  0.052                 -0.052</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal                  0.030                 -0.025</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal                 -0.025                  0.108</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal                 -0.043                  0.110</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                      0.000                 -0.001</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                      0.000                  0.000</span></span>
-<span><span class="co">#&gt;                        vap_other:pres_ind_wal vap_white:pres_abs</span></span>
-<span><span class="co">#&gt; vap_white:pres_dem_hum                  0.001                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_dem_hum                 -0.069                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_dem_hum                 -0.040                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix                  0.042                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix                 -0.040                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix                 -0.084                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal                 -0.043                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal                  0.110                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal                  0.125                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                      0.000                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                     -0.001                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                      0.000                  0</span></span>
-<span><span class="co">#&gt;                        vap_black:pres_abs vap_other:pres_abs</span></span>
-<span><span class="co">#&gt; vap_white:pres_dem_hum              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_dem_hum              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_dem_hum              0.001                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_rep_nix              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_rep_nix              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_rep_nix              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_ind_wal              0.000                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_ind_wal             -0.001                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_ind_wal             -0.001                  0</span></span>
-<span><span class="co">#&gt; vap_white:pres_abs                  0.000                  0</span></span>
-<span><span class="co">#&gt; vap_black:pres_abs                  0.000                  0</span></span>
-<span><span class="co">#&gt; vap_other:pres_abs                  0.000                  0</span></span></code></pre></div>
+<span><span class="co">#&gt;                        vap_other:pres_dem_hum</span></span>
+<span><span class="co">#&gt; vap_white:pres_dem_hum                 -0.005</span></span>
+<span><span class="co">#&gt; vap_black:pres_dem_hum                  0.058</span></span>
+<span><span class="co">#&gt; vap_other:pres_dem_hum                  0.060</span></span></code></pre></div>
 <p>The rows and columns are ordered by predictor within outcome, i.e.
-(Y1|X1, Y1|X2, …, Y2|X1, Y2|X2, …). Large diagonal entries indicate high
-within-unit variation in the local estimands, relative to the regression
-predictions. Off-diagonal entries reflect the extent to which, within a
-county, vote choices across racial groups tend to move together.</p>
+(Y1|X1, Y1|X2, …, Y2|X1, Y2|X2, …). One can visualize the estimated
+covariance structure with <code><a href="https://rdrr.io/r/stats/heatmap.html" class="external-link">heatmap()</a></code> or the <a href="https://cran.r-project.org/package=corrplot" class="external-link"><code>corrplot</code></a>
+pacakge.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/heatmap.html" class="external-link">heatmap</a></span><span class="op">(</span></span>
+<span>    <span class="va">b_cov</span>,</span>
+<span>    Rowv <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>    col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, palette <span class="op">=</span> <span class="st">"Spectral"</span><span class="op">)</span>,</span>
+<span>    symm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="local_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="700"></p>
+<p>We strongly recommend examining the estimated covariance structure
+and evaluating if the estimates are plausible. For example, preferences
+for Black and Other voters are correlated (blue) and somewhat
+anticorrelated with preferences for White voters (orange/red). Support
+for Humphrey is generally anticorrelated with support for Nixon and
+Wallace. These two patterns make sense in context.</p>
+<p>On the other hand, the estimated standard deviation for Black support
+for different candidates is quite large, around 0.3, especially compared
+to low variation in White preference for e.g. Humphrey, which has
+standard deviation just 0.086. As a reminder, these estimates are of the
+<em>residual</em> variation, after controlling for covariates. Still, we
+might be expect redisual variation in Black support to be smaller across
+the board, especially for the segregationist Wallace.</p>
 </div>
 <div class="section level2">
 <h2 id="local-point-estimates">Local point estimates<a class="anchor" aria-label="anchor" href="#local-point-estimates"></a>
@@ -311,8 +285,9 @@ county, vote choices across racial groups tend to move together.</p>
 <code><a href="../reference/ei_est_local.html">ei_est_local()</a></code> projects the regression predictions onto the
 accounting constraint to produce local estimates that exactly satisfy
 the ecological identity within each county. The function also computes
-valid confidence intervals using Chebyshev’s inequality or, under a
-unimodality assumption, the tighter unimodal bound.</p>
+asymptotically valid confidence intervals. Estimates and intervals will
+be truncated to the possible values obtained from
+<code><a href="../reference/ei_bounds.html">ei_bounds()</a></code>.</p>
 <p>The <code>b_cov</code> argument controls the assumed covariance
 structure. There are three common choices:</p>
 <ul>
@@ -333,12 +308,12 @@ counties are relatively homogeneous and the local estimands are expected
 to vary together. However, it leads to quite narrow confidence
 intervals, which may not cover the truth in practice.</li>
 </ul>
-<p>We fit all three and compare the average width of the resulting
+<p>Here, we fit all three and compare the average width of the resulting
 confidence intervals.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">e_rcov</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est_local.html">ei_est_local</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="va">b_cov</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">e_orth</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est_local.html">ei_est_local</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0</span>,    bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est_local.html">ei_est_local</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0.95</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">e_orth</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est_local.html">ei_est_local</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0</span>,     bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">e_nbhd</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_est_local.html">ei_est_local</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">spec</span>, b_cov <span class="op">=</span> <span class="fl">0.95</span>,  bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, sum_one <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    estimated <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_rcov</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span>,</span>
@@ -347,20 +322,25 @@ confidence intervals.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;    estimated   orthogonal neighborhood </span></span>
 <span><span class="co">#&gt;    0.4165165    0.2876576    0.2334284</span></span></code></pre></div>
-<p>The orthogonal model tends to produce the widest intervals. The
-neighborhood model can be narrower when the predictor proportions within
-a county are nearly uniform, because the accounting constraint then
-binds tightly. The estimated covariance typically lies between the two
-extremes, and as mentioned above is the recommended default.</p>
 <p>Setting <code>sum_one = TRUE</code> enforces the constraint that the
 local vote shares across candidates sum to one within each racial group,
 which is the correct restriction for these data. The
 <code>bounds = c(0, 1)</code> argument truncates estimates to the unit
 interval and caps the standard errors implied by the width of the
 bounds.</p>
+<p>We can visualize the distribution of local estimates for a particular
+predictor-outcome combination with a histogram.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">e_rcov</span>, <span class="va">predictor</span> <span class="op">==</span> <span class="st">"vap_white"</span> <span class="op">&amp;</span> <span class="va">outcome</span> <span class="op">==</span> <span class="st">"pres_dem_hum"</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span>,</span>
+<span>    breaks <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>    main <span class="op">=</span> <span class="st">"White support for Humphrey"</span>,</span>
+<span>    xlab <span class="op">=</span> <span class="st">"% Humphrey"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="local_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
 <p>To examine results for a specific county, we can filter the
 output.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">e_rcov</span>, <span class="va">.row</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 8</span></span></span>
 <span><span class="co">#&gt;     .row predictor outcome      weight estimate std.error conf.low conf.high</span></span>
@@ -379,29 +359,15 @@ output.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span>     1 vap_other pres_abs       13.3  0.001<span style="text-decoration: underline;">23</span>   0.009<span style="text-decoration: underline;">54</span>  0          0.029<span style="text-decoration: underline;">7</span></span></span></code></pre></div>
 <p>The <code><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array()</a></code> method provides a convenient view of the
 point estimates as a three-dimensional array.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">)</span><span class="op">[</span>, , <span class="st">"pres_dem_hum"</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        vap_white vap_black vap_other</span></span>
-<span><span class="co">#&gt; [1,] 0.111049420 0.4776159 0.9024011</span></span>
-<span><span class="co">#&gt; [2,] 0.053312727 0.4074466 0.9000749</span></span>
-<span><span class="co">#&gt; [3,] 0.003871053 0.6155130 0.8955696</span></span>
-<span><span class="co">#&gt; [4,] 0.041992105 0.4968093 0.8936855</span></span>
-<span><span class="co">#&gt; [5,] 0.029622310 0.4278036 0.8956958</span></span>
-<span><span class="co">#&gt; [6,] 0.108993598 0.6715685 0.8941690</span></span></code></pre></div>
-<p>Finally, taking a weighted average of the local estimates against the
-<code>weight</code> column reproduces the global estimate from
-<code><a href="../reference/ei_est.html">ei_est()</a></code>.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grps</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">e_rcov</span>, <span class="op">~</span> <span class="va">predictor</span> <span class="op">+</span> <span class="va">outcome</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">grps</span>, <span class="kw">function</span><span class="op">(</span><span class="va">g</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/weighted.mean.html" class="external-link">weighted.mean</a></span><span class="op">(</span><span class="va">g</span><span class="op">$</span><span class="va">estimate</span>, <span class="va">g</span><span class="op">$</span><span class="va">weight</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     vap_black.pres_abs     vap_other.pres_abs     vap_white.pres_abs </span></span>
-<span><span class="co">#&gt;           1.520710e-03           7.274520e-04           1.552457e-03 </span></span>
-<span><span class="co">#&gt; vap_black.pres_dem_hum vap_other.pres_dem_hum vap_white.pres_dem_hum </span></span>
-<span><span class="co">#&gt;           5.166252e-01           9.086030e-01           2.625707e-01 </span></span>
-<span><span class="co">#&gt; vap_black.pres_ind_wal vap_other.pres_ind_wal vap_white.pres_ind_wal </span></span>
-<span><span class="co">#&gt;           4.691351e-01           1.498855e-10           3.182293e-01 </span></span>
-<span><span class="co">#&gt; vap_black.pres_rep_nix vap_other.pres_rep_nix vap_white.pres_rep_nix </span></span>
-<span><span class="co">#&gt;           1.271900e-02           9.066955e-02           4.176476e-01</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">)</span><span class="op">[</span>, , <span class="st">"pres_rep_nix"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       vap_white   vap_black  vap_other</span></span>
+<span><span class="co">#&gt; [1,] 0.10135960 0.00000e+00 0.09636897</span></span>
+<span><span class="co">#&gt; [2,] 0.13338927 0.00000e+00 0.09824133</span></span>
+<span><span class="co">#&gt; [3,] 0.07996136 0.00000e+00 0.10443038</span></span>
+<span><span class="co">#&gt; [4,] 0.07276098 0.00000e+00 0.10519746</span></span>
+<span><span class="co">#&gt; [5,] 0.22660678 0.00000e+00 0.10231746</span></span>
+<span><span class="co">#&gt; [6,] 0.11193454 5.20417e-18 0.10583097</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

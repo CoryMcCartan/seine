@@ -1,25 +1,30 @@
 # Local estimates for ecological inference
 
-Global ecological inference estimates describe average behavior across
-all units in the data. Sometimes, however, estimates for each individual
-unit (precinct, county, or other geography) are of interest: to map
-spatial variation, to examine outliers, or to inform decisions at the
-local level. **seine** provides two approaches for this.
+The main estimation routine in **seine**,
+[`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md),
+produces *global* estimates, \\\mathbb{E}\[Y\mid X\]\\ for the entire
+population under study. Sometimes, however, estimates for each
+individual aggregation unit (such as precincts, counties, or other
+geographies) are of interest. **seine** provides two approaches for
+this.
 [`ei_bounds()`](https://corymccartan.com/seine/reference/ei_bounds.md)
-computes guaranteed-valid partial identification bounds for each unit,
-relying only on the accounting identity and known limits on the outcome.
+computes guaranteed-valid partial identification (Duncan-Davis) bounds
+for each unit, relying only on the accounting identity and known limits
+on the outcome.
 [`ei_est_local()`](https://corymccartan.com/seine/reference/ei_est_local.md)
-produces point estimates and confidence intervals under the Conditional
-Average Representativeness (CAR) assumption and a model for within-unit
-variation, using a fitted regression model. The former bounds are also
-sometimes called the Duncan-Davis bounds.
+produces point estimates and confidence intervals under the same
+coarsening at random (CAR) assumption that
+[`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md) relies
+on, plus (for now) an additional homoskedasticity assumption.
 
 ## Setting up the analysis
 
-We will use the `elec_1968` data included in the package, which contain
-county-level election returns from Southern states in the 1968 U.S.
-presidential election. We want to estimate the individual-level
-association between race and presidential vote choice for each county.
+We begin by loading the 1968 election data, and defining an `ei_spec`
+object that records the outcome, predictor, covariate, and total-count
+columns, following the setup from
+[`vignette("seine")`](https://corymccartan.com/seine/articles/seine.md).
+We now want to estimate the individual-level association between race
+and presidential vote choice *within* each county.
 
 ``` r
 library(seine)
@@ -63,11 +68,15 @@ identity and the specified bounds on the outcome.
 
 [`ei_bounds()`](https://corymccartan.com/seine/reference/ei_bounds.md)
 takes an `ei_spec` object (or a formula) and returns a data frame with
-one row per unit per predictor-outcome combination.
+one row per unit per predictor-outcome combination. The `bounds`
+argument specifies the known limits on the outcome, which are typically
+\[0, 1\] for proportions. Without known bounds on the outcome or other
+statistical assumptions, the local estimates are completely
+unidentified.
 
 ``` r
-bnds = ei_bounds(spec, bounds = c(0, 1))
-head(bnds)
+bounds = ei_bounds(spec, bounds = c(0, 1))
+head(bounds)
 #> # A tibble: 6 × 6
 #>    .row predictor outcome      weight    min    max
 #>   <int> <chr>     <chr>         <dbl>  <dbl>  <dbl>
@@ -80,13 +89,14 @@ head(bnds)
 ```
 
 The `min` and `max` columns give the sharp bounds for each unit. The
-`weight` column is the product of the predictor proportion and the
-total, which is useful for aggregating. When the bounds are wide for
-many units, this indicates a fundamentally difficult identification
-problem, regardless of modeling choices.
+`weight` column contains the number of observations in that unit and
+predictor group. This column can be used to aggregate estimates across
+units.
 
-To aggregate the bounds across all units to produce bounds on the global
-estimands, pass `global = TRUE`.
+Since aggregating bounds is a common operation,
+[`ei_bounds()`](https://corymccartan.com/seine/reference/ei_bounds.md)
+provides the `global = TRUE` argument to automatically compute the
+global bounds by taking a weighted average of the local bounds.
 
 ``` r
 ei_bounds(spec, bounds = c(0, 1), global = TRUE)
@@ -107,19 +117,26 @@ ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 #> 12 vap_other pres_abs     0         0.0910
 ```
 
+As is common with partial identification, the bounds can be quite wide.
+For example, without further assumptions, nothing can be said about the
+Black preference for Wallace except that it is between 0.8% and 94.6%.
+
 The [`as.array()`](https://rdrr.io/r/base/array.html) method reformats
-the output as a three-dimensional array with dimensions units by
-predictors by outcomes, which can be convenient for further analysis.
+the output as a four-dimensional array with dimensions units by
+predictors by outcomes by (min, max), which may be convenient for
+further analysis.
 
 ``` r
-bnds_arr = as.array(bnds)
-dim(bnds_arr) # rows x predictors x outcomes
+dim(as.array(bounds))
 #> [1] 1143    3    4    2
 ```
 
 Bounds on contrasts, such as the difference in vote share between White
 and Black voters, can be computed directly by passing a `contrast`
-argument.
+argument. Computing these bounds is more involved and requires solving a
+linear program for each unit, but the output is the same format as
+above. Here, we calculate bounds on White-Black racially polarized
+voting for each candidate.
 
 ``` r
 ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0)))
@@ -139,6 +156,12 @@ ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0)))
 #> # ℹ 4,562 more rows
 ```
 
+Note that because contrasts *across* predictor groups involve
+fundamentally different numbers of people in each unit, these bounds
+cannot be aggregated across units in a meaningful way. For a bound on
+the global contrast, you can aggregate non-contrasted bounds and then
+take the contrast of the global bounds.
+
 ## Estimating the local covariance
 
 Point estimates and confidence intervals from
@@ -150,102 +173,64 @@ conditional mean within each unit. This variation is captured by the
 
 [`ei_local_cov()`](https://corymccartan.com/seine/reference/ei_local_cov.md)
 estimates this covariance from the data, under the CAR assumption and an
-additional homoskedasticity condition. Concretely, it fits a ridge
-regression of the empirical second moments of the regression residuals
-on the cross-products of the predictor variables, and uses the
-polarization identity to recover the covariance for each
-predictor-outcome pair. A small amount of shrinkage towards the global
-residual covariance is applied, controlled by `prior_obs`.
+additional homoskedasticity condition. A small amount of shrinkage is
+applied, controlled by the `prior_obs` argument. Details are provided in
+McCartan & Kuriwaki (2025+).
 
 ``` r
 b_cov = ei_local_cov(m, spec)
-round(b_cov, 3)
+round(sqrt(diag(b_cov)), 3)
+#> vap_white:pres_dem_hum vap_black:pres_dem_hum vap_other:pres_dem_hum 
+#>                  0.078                  0.264                  0.245 
+#> vap_white:pres_rep_nix vap_black:pres_rep_nix vap_other:pres_rep_nix 
+#>                  0.175                  0.159                  0.323 
+#> vap_white:pres_ind_wal vap_black:pres_ind_wal vap_other:pres_ind_wal 
+#>                  0.173                  0.329                  0.353 
+#>     vap_white:pres_abs     vap_black:pres_abs     vap_other:pres_abs 
+#>                  0.008                  0.004                  0.017
+round(b_cov[1:3, 1:3], 3)
 #>                        vap_white:pres_dem_hum vap_black:pres_dem_hum
 #> vap_white:pres_dem_hum                  0.006                 -0.008
 #> vap_black:pres_dem_hum                 -0.008                  0.070
 #> vap_other:pres_dem_hum                 -0.005                  0.058
-#> vap_white:pres_rep_nix                 -0.003                 -0.002
-#> vap_black:pres_rep_nix                  0.007                  0.006
-#> vap_other:pres_rep_nix                  0.004                  0.010
-#> vap_white:pres_ind_wal                 -0.003                  0.010
-#> vap_black:pres_ind_wal                  0.001                 -0.076
-#> vap_other:pres_ind_wal                  0.001                 -0.069
-#> vap_white:pres_abs                      0.000                  0.000
-#> vap_black:pres_abs                      0.000                  0.000
-#> vap_other:pres_abs                      0.000                  0.000
-#>                        vap_other:pres_dem_hum vap_white:pres_rep_nix
-#> vap_white:pres_dem_hum                 -0.005                 -0.003
-#> vap_black:pres_dem_hum                  0.058                 -0.002
-#> vap_other:pres_dem_hum                  0.060                  0.014
-#> vap_white:pres_rep_nix                  0.014                  0.031
-#> vap_black:pres_rep_nix                 -0.001                 -0.022
-#> vap_other:pres_rep_nix                 -0.020                 -0.056
-#> vap_white:pres_ind_wal                 -0.009                 -0.027
-#> vap_black:pres_ind_wal                 -0.058                  0.024
-#> vap_other:pres_ind_wal                 -0.040                  0.042
-#> vap_white:pres_abs                      0.000                  0.000
-#> vap_black:pres_abs                      0.001                  0.000
-#> vap_other:pres_abs                      0.000                  0.000
-#>                        vap_black:pres_rep_nix vap_other:pres_rep_nix
-#> vap_white:pres_dem_hum                  0.007                  0.004
-#> vap_black:pres_dem_hum                  0.006                  0.010
-#> vap_other:pres_dem_hum                 -0.001                 -0.020
-#> vap_white:pres_rep_nix                 -0.022                 -0.056
-#> vap_black:pres_rep_nix                  0.025                  0.041
-#> vap_other:pres_rep_nix                  0.041                  0.104
-#> vap_white:pres_ind_wal                  0.015                  0.052
-#> vap_black:pres_ind_wal                 -0.031                 -0.052
-#> vap_other:pres_ind_wal                 -0.040                 -0.084
-#> vap_white:pres_abs                      0.000                  0.000
-#> vap_black:pres_abs                      0.000                  0.000
-#> vap_other:pres_abs                      0.000                  0.000
-#>                        vap_white:pres_ind_wal vap_black:pres_ind_wal
-#> vap_white:pres_dem_hum                 -0.003                  0.001
-#> vap_black:pres_dem_hum                  0.010                 -0.076
-#> vap_other:pres_dem_hum                 -0.009                 -0.058
-#> vap_white:pres_rep_nix                 -0.027                  0.024
-#> vap_black:pres_rep_nix                  0.015                 -0.031
-#> vap_other:pres_rep_nix                  0.052                 -0.052
-#> vap_white:pres_ind_wal                  0.030                 -0.025
-#> vap_black:pres_ind_wal                 -0.025                  0.108
-#> vap_other:pres_ind_wal                 -0.043                  0.110
-#> vap_white:pres_abs                      0.000                  0.000
-#> vap_black:pres_abs                      0.000                 -0.001
-#> vap_other:pres_abs                      0.000                  0.000
-#>                        vap_other:pres_ind_wal vap_white:pres_abs
-#> vap_white:pres_dem_hum                  0.001                  0
-#> vap_black:pres_dem_hum                 -0.069                  0
-#> vap_other:pres_dem_hum                 -0.040                  0
-#> vap_white:pres_rep_nix                  0.042                  0
-#> vap_black:pres_rep_nix                 -0.040                  0
-#> vap_other:pres_rep_nix                 -0.084                  0
-#> vap_white:pres_ind_wal                 -0.043                  0
-#> vap_black:pres_ind_wal                  0.110                  0
-#> vap_other:pres_ind_wal                  0.125                  0
-#> vap_white:pres_abs                      0.000                  0
-#> vap_black:pres_abs                     -0.001                  0
-#> vap_other:pres_abs                      0.000                  0
-#>                        vap_black:pres_abs vap_other:pres_abs
-#> vap_white:pres_dem_hum              0.000                  0
-#> vap_black:pres_dem_hum              0.000                  0
-#> vap_other:pres_dem_hum              0.001                  0
-#> vap_white:pres_rep_nix              0.000                  0
-#> vap_black:pres_rep_nix              0.000                  0
-#> vap_other:pres_rep_nix              0.000                  0
-#> vap_white:pres_ind_wal              0.000                  0
-#> vap_black:pres_ind_wal             -0.001                  0
-#> vap_other:pres_ind_wal             -0.001                  0
-#> vap_white:pres_abs                  0.000                  0
-#> vap_black:pres_abs                  0.000                  0
-#> vap_other:pres_abs                  0.000                  0
+#>                        vap_other:pres_dem_hum
+#> vap_white:pres_dem_hum                 -0.005
+#> vap_black:pres_dem_hum                  0.058
+#> vap_other:pres_dem_hum                  0.060
 ```
 
 The rows and columns are ordered by predictor within outcome, i.e.
-(Y1\|X1, Y1\|X2, …, Y2\|X1, Y2\|X2, …). Large diagonal entries indicate
-high within-unit variation in the local estimands, relative to the
-regression predictions. Off-diagonal entries reflect the extent to
-which, within a county, vote choices across racial groups tend to move
-together.
+(Y1\|X1, Y1\|X2, …, Y2\|X1, Y2\|X2, …). One can visualize the estimated
+covariance structure with
+[`heatmap()`](https://rdrr.io/r/stats/heatmap.html) or the
+[`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
+
+``` r
+heatmap(
+    b_cov,
+    Rowv = NA,
+    col = hcl.colors(n = 100, palette = "Spectral"),
+    symm = TRUE,
+    mar = c(12, 12)
+)
+```
+
+![](local_files/figure-html/unnamed-chunk-8-1.png)
+
+We strongly recommend examining the estimated covariance structure and
+evaluating if the estimates are plausible. For example, preferences for
+Black and Other voters are correlated (blue) and somewhat anticorrelated
+with preferences for White voters (orange/red). Support for Humphrey is
+generally anticorrelated with support for Nixon and Wallace. These two
+patterns make sense in context.
+
+On the other hand, the estimated standard deviation for Black support
+for different candidates is quite large, around 0.3, especially compared
+to low variation in White preference for e.g. Humphrey, which has
+standard deviation just 0.086. As a reminder, these estimates are of the
+*residual* variation, after controlling for covariates. Still, we might
+be expect redisual variation in Black support to be smaller across the
+board, especially for the segregationist Wallace.
 
 ## Local point estimates
 
@@ -253,9 +238,10 @@ With the regression model and a covariance structure in hand,
 [`ei_est_local()`](https://corymccartan.com/seine/reference/ei_est_local.md)
 projects the regression predictions onto the accounting constraint to
 produce local estimates that exactly satisfy the ecological identity
-within each county. The function also computes valid confidence
-intervals using Chebyshev’s inequality or, under a unimodality
-assumption, the tighter unimodal bound.
+within each county. The function also computes asymptotically valid
+confidence intervals. Estimates and intervals will be truncated to the
+possible values obtained from
+[`ei_bounds()`](https://corymccartan.com/seine/reference/ei_bounds.md).
 
 The `b_cov` argument controls the assumed covariance structure. There
 are three common choices:
@@ -273,13 +259,13 @@ are three common choices:
   quite narrow confidence intervals, which may not cover the truth in
   practice.
 
-We fit all three and compare the average width of the resulting
+Here, we fit all three and compare the average width of the resulting
 confidence intervals.
 
 ``` r
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
-e_orth = ei_est_local(m, spec, b_cov = 0,    bounds = c(0, 1), sum_one = TRUE)
-e_nbhd = ei_est_local(m, spec, b_cov = 0.95, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m, spec, b_cov = 0,     bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m, spec, b_cov = 0.95,  bounds = c(0, 1), sum_one = TRUE)
 
 c(
     estimated = mean(e_rcov$conf.high - e_rcov$conf.low),
@@ -290,17 +276,25 @@ c(
 #>    0.4165165    0.2876576    0.2334284
 ```
 
-The orthogonal model tends to produce the widest intervals. The
-neighborhood model can be narrower when the predictor proportions within
-a county are nearly uniform, because the accounting constraint then
-binds tightly. The estimated covariance typically lies between the two
-extremes, and as mentioned above is the recommended default.
-
 Setting `sum_one = TRUE` enforces the constraint that the local vote
 shares across candidates sum to one within each racial group, which is
 the correct restriction for these data. The `bounds = c(0, 1)` argument
 truncates estimates to the unit interval and caps the standard errors
 implied by the width of the bounds.
+
+We can visualize the distribution of local estimates for a particular
+predictor-outcome combination with a histogram.
+
+``` r
+hist(
+    subset(e_rcov, predictor == "vap_white" & outcome == "pres_dem_hum")$estimate,
+    breaks = 50,
+    main = "White support for Humphrey",
+    xlab = "% Humphrey"
+)
+```
+
+![](local_files/figure-html/unnamed-chunk-10-1.png)
 
 To examine results for a specific county, we can filter the output.
 
@@ -327,31 +321,14 @@ The [`as.array()`](https://rdrr.io/r/base/array.html) method provides a
 convenient view of the point estimates as a three-dimensional array.
 
 ``` r
-head(as.array(e_rcov)[, , "pres_dem_hum"])
-#>        vap_white vap_black vap_other
-#> [1,] 0.111049420 0.4776159 0.9024011
-#> [2,] 0.053312727 0.4074466 0.9000749
-#> [3,] 0.003871053 0.6155130 0.8955696
-#> [4,] 0.041992105 0.4968093 0.8936855
-#> [5,] 0.029622310 0.4278036 0.8956958
-#> [6,] 0.108993598 0.6715685 0.8941690
-```
-
-Finally, taking a weighted average of the local estimates against the
-`weight` column reproduces the global estimate from
-[`ei_est()`](https://corymccartan.com/seine/reference/ei_est.md).
-
-``` r
-grps = split(e_rcov, ~ predictor + outcome)
-sapply(grps, function(g) weighted.mean(g$estimate, g$weight))
-#>     vap_black.pres_abs     vap_other.pres_abs     vap_white.pres_abs 
-#>           1.520710e-03           7.274520e-04           1.552457e-03 
-#> vap_black.pres_dem_hum vap_other.pres_dem_hum vap_white.pres_dem_hum 
-#>           5.166252e-01           9.086030e-01           2.625707e-01 
-#> vap_black.pres_ind_wal vap_other.pres_ind_wal vap_white.pres_ind_wal 
-#>           4.691351e-01           1.498855e-10           3.182293e-01 
-#> vap_black.pres_rep_nix vap_other.pres_rep_nix vap_white.pres_rep_nix 
-#>           1.271900e-02           9.066955e-02           4.176476e-01
+head(as.array(e_rcov)[, , "pres_rep_nix"])
+#>       vap_white   vap_black  vap_other
+#> [1,] 0.10135960 0.00000e+00 0.09636897
+#> [2,] 0.13338927 0.00000e+00 0.09824133
+#> [3,] 0.07996136 0.00000e+00 0.10443038
+#> [4,] 0.07276098 0.00000e+00 0.10519746
+#> [5,] 0.22660678 0.00000e+00 0.10231746
+#> [6,] 0.11193454 5.20417e-18 0.10583097
 ```
 
 ## References

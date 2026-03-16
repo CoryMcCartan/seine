@@ -93,7 +93,7 @@ framework developed by Chernozhukov et al. (2024).</p>
 <div class="section level2">
 <h2 id="setting-up-the-analysis">Setting up the analysis<a class="anchor" aria-label="anchor" href="#setting-up-the-analysis"></a>
 </h2>
-<p>We begin by loading the package and the data, and defining an
+<p>We begin by loading the 1968 election data, and defining an
 <code>ei_spec</code> object that records the outcome, predictor,
 covariate, and total-count columns, following the setup from
 <code><a href="../articles/seine.html">vignette("seine")</a></code>. We use a BART basis expansion for
@@ -196,7 +196,7 @@ understand plausible values of these parameters, we can conduct a
 sensitivity parameters.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bench</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bench.html">ei_bench</a></span><span class="op">(</span><span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ⠙ ETA:17s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
+<span><span class="co">#&gt; ⠙ ETA:18s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
 <span><span class="co">#&gt; ⠹ ETA:16s  Benchmarking <span style="color: #00BB00;">pop_city</span> [2/13]</span></span>
 <span><span class="co">#&gt; ⠸ ETA:13s  Benchmarking <span style="color: #00BB00;">pop_rural</span> [4/13]</span></span>
 <span><span class="co">#&gt; ⠼ ETA:10s  Benchmarking <span style="color: #00BB00;">nonfarm</span> [6/13]</span></span>

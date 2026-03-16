@@ -11,7 +11,7 @@ framework developed by Chernozhukov et al. (2024).
 
 ## Setting up the analysis
 
-We begin by loading the package and the data, and defining an `ei_spec`
+We begin by loading the 1968 election data, and defining an `ei_spec`
 object that records the outcome, predictor, covariate, and total-count
 columns, following the setup from
 [`vignette("seine")`](https://corymccartan.com/seine/articles/seine.md).
@@ -130,7 +130,7 @@ parameters.
 
 ``` r
 bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
-#> ⠙ ETA:17s  Benchmarking state [1/13]
+#> ⠙ ETA:18s  Benchmarking state [1/13]
 #> ⠹ ETA:16s  Benchmarking pop_city [2/13]
 #> ⠸ ETA:13s  Benchmarking pop_rural [4/13]
 #> ⠼ ETA:10s  Benchmarking nonfarm [6/13]
