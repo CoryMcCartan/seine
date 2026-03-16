@@ -4,14 +4,18 @@
 \alias{ei_local_cov}
 \title{Estimate the residual covariance of the local estimands}
 \usage{
-ei_local_cov(regr, data, prior_obs = 10)
+ei_local_cov(regr, data, subset = NULL, prior_obs = 10)
 }
 \arguments{
 \item{regr}{A fitted regression model, from \code{\link[=ei_ridge]{ei_ridge()}}, or another kind
 of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.}
 
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
-the regression.}
+the regression or Riesz representer.}
+
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
 \item{prior_obs}{The effective sample size of the inverse-Wishart conjugate prior,
 which shrinks the estimate towards the covariance of the regression residuals.

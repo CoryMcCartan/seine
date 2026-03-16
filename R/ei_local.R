@@ -274,8 +274,7 @@ as.array.ei_est_local = function(x, ...) {
 #'
 #' @param regr A fitted regression model, from [ei_ridge()], or another kind
 #'    of regression model wrapped with [ei_wrap_model()].
-#' @param data The data frame, matrix, or [ei_spec] object that was used to fit
-#'   the regression.
+#' @inheritParams ei_est
 #' @param prior_obs The effective sample size of the inverse-Wishart conjugate prior,
 #'   which shrinks the estimate towards the covariance of the regression residuals.
 #'   Smaller values mean less shrinkage.
@@ -286,12 +285,12 @@ as.array.ei_est_local = function(x, ...) {
 #' @inherit ei_est references
 #'
 #' @export
-ei_local_cov <- function(regr, data, prior_obs = 10) {
+ei_local_cov <- function(regr, data, subset = NULL, prior_obs = 10) {
     if (!inherits(regr, "ei_ridge")) {
         cli_abort("{.fun ei_local_cov} only supports regressions fit with {.fn ei_ridge}.")
     }
     y = regr$y
-    n = nrow(y)
+    n_orig = nrow(y)
     n_y = ncol(y)
 
     xcols = regr$blueprint$ei_x
@@ -299,8 +298,14 @@ ei_local_cov <- function(regr, data, prior_obs = 10) {
     x = as.matrix(pull_x(data, idx_x))
     n_x = length(xcols)
 
+    subset_idx = which(check_subset(eval_tidy(enquo(subset), data), n_orig))
+    y = y[subset_idx, , drop = FALSE]
+    x = x[subset_idx, , drop = FALSE]
+    resid_sub = resid(regr)[subset_idx, , drop = FALSE]
+    n = length(subset_idx)
+
     idx_tri = c(lower.tri(diag(n_y), diag = TRUE))
-    yr = row_kronecker(resid(regr), resid(regr), 0)[, idx_tri, drop = FALSE]
+    yr = row_kronecker(resid_sub, resid_sub, 0)[, idx_tri, drop = FALSE]
     udv = svd(cbind(row_kronecker(x, x, 0)))
 
     fit = ridge_auto(udv, yr, rep(1, n), vcov = FALSE)
@@ -331,7 +336,7 @@ ei_local_cov <- function(regr, data, prior_obs = 10) {
         }
     }
     # apply inv-wishart shrinkage
-    prior_cov = cov(resid(regr)) %x% diag(n_x)
+    prior_cov = cov(resid_sub) %x% diag(n_x)
     b_cov0 = (prior_obs * prior_cov + n * b_cov0) /
         (n + prior_obs - n_x * n_y - 1)
 

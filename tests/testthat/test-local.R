@@ -58,7 +58,7 @@ test_that("local confidence intervals are very narrow with neighborhood model", 
     m = ei_ridge(spec, vcov = TRUE)
 
     e1 = ei_est_local(m, spec, b_cov=0, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
-    e2 = ei_est_local(m, spec, b_cov=1, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
+    e2 = ei_est_local(m, spec, b_cov=0.95, bounds=c(0, 1), sum_one = TRUE, conf_level = 0.95, regr_var = TRUE)
     w1 = e1$conf.high - e1$conf.low
     w2 = e2$conf.high - e2$conf.low
     expect_gt(mean(w2 < w1), 0.5)
@@ -106,4 +106,26 @@ test_that("ei_est_local works with subset", {
     expect_true(all(unique(ests_subset$.row) %in% c(1, 2, 3)))
     # Should have fewer rows than full
     expect_lt(nrow(ests_subset), nrow(ests_all))
+})
+
+
+test_that("ei_local_cov works with subset", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total,
+                   covariates = c(pop_urban, farm, educ_elem, educ_coll, inc_00_03k))
+    m = ei_ridge(spec)
+
+    b_cov_all = ei_local_cov(m, spec)
+    b_cov_sub = ei_local_cov(m, spec, subset = 1:50)
+
+    # Both return square matrices of the same dimension
+    expect_equal(dim(b_cov_all), dim(b_cov_sub))
+    expect_equal(rownames(b_cov_all), rownames(b_cov_sub))
+
+    # Estimates differ (subset uses different data)
+    expect_false(isTRUE(all.equal(b_cov_all, b_cov_sub)))
+
+    # The subset result is still a valid covariance matrix (symmetric, PSD)
+    expect_equal(b_cov_sub, t(b_cov_sub))
+    expect_true(all(eigen(b_cov_sub)$values >= 0))
 })
