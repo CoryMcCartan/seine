@@ -86,3 +86,24 @@ test_that("local confidence intervals work with contrasts", {
     expect_equal(nrow(ests), nrow(spec))
     expect_lt(mean(ests$estimate), 0)
 })
+
+
+test_that("ei_est_local works with subset", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total,
+                   covariates = c(pop_urban, farm, educ_elem, educ_coll, inc_00_03k))
+
+    m = ei_ridge(spec)
+
+    # Test with logical subset (using numeric indexing)
+    ests_all = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 0.95)
+    ests_subset = ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE,
+                               conf_level = 0.95, subset = 1:3)
+
+    # Should have 3 rows × 3 predictors × 4 outcomes
+    expect_equal(nrow(ests_subset), 3 * 3 * 4)
+    # .row should be 1, 2, 3
+    expect_true(all(unique(ests_subset$.row) %in% c(1, 2, 3)))
+    # Should have fewer rows than full
+    expect_lt(nrow(ests_subset), nrow(ests_all))
+})

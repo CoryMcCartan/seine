@@ -406,3 +406,44 @@ test_that("contrast with multiple outcomes respects the linear combination", {
     # Maximum possible: 2*1 + 1*1 = 3
     expect_true(all(result$max <= 3))
 })
+
+
+test_that("ei_bounds works with subset (ei_spec)", {
+    data(elec_1968)
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+                   total = pres_total, covariates = c(state, pop_urban, farm))
+
+    result_all = ei_bounds(spec, bounds = c(0, 1))
+    result_subset = ei_bounds(spec, bounds = c(0, 1), subset = (state == "Alabama"))
+
+    alabama_idx = which(spec$state == "Alabama")
+    n_pred = length(attr(spec, "ei_x"))
+    n_out  = length(attr(spec, "ei_y"))
+
+    # Correct number of rows
+    expect_equal(nrow(result_subset), length(alabama_idx) * n_pred * n_out)
+    # .row values are the original row indices
+    expect_setequal(unique(result_subset$.row), alabama_idx)
+    # Bounds values match the corresponding rows of the full result
+    result_all_ala = result_all[result_all$.row %in% alabama_idx, ]
+    expect_equal(result_subset$min, result_all_ala$min)
+    expect_equal(result_subset$max, result_all_ala$max)
+})
+
+
+test_that("ei_bounds works with numeric subset (formula)", {
+    data = data.frame(
+        x1 = c(0.6, 0.4, 0.7, 0.5),
+        x2 = c(0.4, 0.6, 0.3, 0.5),
+        y1 = c(0.3, 0.5, 0.4, 0.45),
+        total = c(100, 200, 150, 180)
+    )
+
+    result_all = ei_bounds(y1 ~ x1 + x2, data = data, total = total, bounds = c(0, 1))
+    result_subset = ei_bounds(y1 ~ x1 + x2, data = data, total = total, bounds = c(0, 1),
+                              subset = c(1, 3))
+
+    # Should have 2 rows (rows 1 and 3) × 2 predictors × 1 outcome = 4
+    expect_equal(nrow(result_subset), 4)
+    expect_true(all(result_subset$.row %in% c(1, 3)))
+})

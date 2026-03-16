@@ -65,13 +65,13 @@
 #' }))
 #'
 #' @export
-ei_bounds <- function(x, ..., total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, global = FALSE) {
+ei_bounds <- function(x, ..., total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, subset = NULL, global = FALSE) {
     UseMethod("ei_bounds")
 }
 
 #' @export
 #' @rdname ei_bounds
-ei_bounds.ei_spec <- function(x, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, global = FALSE, ...) {
+ei_bounds.ei_spec <- function(x, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, subset = NULL, global = FALSE, ...) {
     spec = x
     validate_ei_spec(spec)
 
@@ -89,12 +89,13 @@ ei_bounds.ei_spec <- function(x, total, contrast = NULL, bounds = c(0, 1), sum_o
         total = as.numeric(eval_tidy(enquo(total), spec))
     }
 
-    ei_bounds_bridge(x_mat, y_mat, total, contrast, bounds, sum_one, global)
+    subset = eval_tidy(enquo(subset), spec)
+    ei_bounds_bridge(x_mat, y_mat, total, contrast, bounds, sum_one, global, subset)
 }
 
 #' @export
 #' @rdname ei_bounds
-ei_bounds.formula <- function(formula, data, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, global = FALSE, ...) {
+ei_bounds.formula <- function(formula, data, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, subset = NULL, global = FALSE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs = NULL, rhs = forms$predictors))
     form_out = terms(rlang::new_formula(forms$outcome, rhs = NULL))
@@ -116,19 +117,19 @@ ei_bounds.formula <- function(formula, data, total, contrast = NULL, bounds = c(
     y = as.matrix(processed$outcomes)
 
     total = as.numeric(eval_tidy(enquo(total), data))
+    subset = eval_tidy(enquo(subset), data)
 
-    ei_bounds_bridge(x, y, total, contrast, processed$blueprint$bounds, sum_one, global)
+    ei_bounds_bridge(x, y, total, contrast, processed$blueprint$bounds, sum_one, global, subset)
 }
 
 
 #' @export
 #' @rdname ei_bounds
-ei_bounds.data.frame <- function(x, y, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, global = FALSE, ...) {
+ei_bounds.data.frame <- function(x, y, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, subset = NULL, global = FALSE, ...) {
     x_mat = as.matrix(x)
     check_preds(x_mat, call = rlang::new_call(rlang::sym("ei_bounds")))
     y_mat = as.matrix(y)
 
-    # Get total
     if (missing(total)) {
         cli_abort("{.arg total} is required when using data frames or matrices.")
     }
@@ -136,13 +137,13 @@ ei_bounds.data.frame <- function(x, y, total, contrast = NULL, bounds = c(0, 1),
 
     bounds = check_bounds(bounds, y_mat)
 
-    ei_bounds_bridge(x_mat, y_mat, total, contrast, bounds, sum_one, global)
+    ei_bounds_bridge(x_mat, y_mat, total, contrast, bounds, sum_one, global, subset)
 }
 
 #' @export
 #' @rdname ei_bounds
-ei_bounds.matrix <- function(x, y, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, global = FALSE, ...) {
-    ei_bounds.data.frame(x, y, total, contrast, bounds, sum_one, global, ...)
+ei_bounds.matrix <- function(x, y, total, contrast = NULL, bounds = c(0, 1), sum_one = NULL, subset = NULL, global = FALSE, ...) {
+    ei_bounds.data.frame(x, y, total, contrast, bounds, sum_one, subset, global, ...)
 }
 
 #' @export
@@ -156,7 +157,18 @@ ei_bounds.default <- function(x, ...) {
 
 # Implementation --------------------------------------------------------------
 
-ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, global = FALSE) {
+ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, global = FALSE, subset = NULL) {
+    # Apply subset first, preserving original row indices for .row column
+    original_rows = seq_len(nrow(x))
+    subset_lgl = check_subset(subset, nrow(x))
+    if (!all(subset_lgl)) {
+        subset_idx = which(subset_lgl)
+        x = x[subset_idx, , drop = FALSE]
+        y = y[subset_idx, , drop = FALSE]
+        total = total[subset_idx]
+        original_rows = subset_idx
+    }
+
     n = nrow(x)
     n_x = ncol(x)
     n_y = ncol(y)
@@ -203,7 +215,7 @@ ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, glo
         )
     } else {
         out = list(
-            .row = rep(seq_len(n), length(contr$x_nm)),
+            .row = rep(original_rows, length(contr$x_nm)),
             predictor = rep(contr$x_nm, each = n),
             outcome = rep(contr$y_nm, each = n),
             weight = 1L,

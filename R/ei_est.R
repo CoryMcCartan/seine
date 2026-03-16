@@ -95,22 +95,7 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
 
     # set up subset
     subset = eval_tidy(enquo(subset), data)
-    if (!is.null(subset)) {
-        if (is.logical(subset)) {
-            subset = 1*subset
-        } else if (is.numeric(subset)) {
-            subset = 1*(seq_len(n) == subset)
-        } else {
-            cli_abort("The {.arg subset} argument must be a logical or integer
-                       vector.", call=parent.frame())
-        }
-        if (any(is.na(subset))) {
-            cli_abort("The {.arg subset} argument must not contain missing values.",
-                      call=parent.frame())
-        }
-    } else {
-        subset = rep(1, n)
-    }
+    subset = as.numeric(check_subset(subset, n))
 
     # set up total and weights
     if (missing(total)) {
@@ -206,6 +191,26 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     }
 
     out
+}
+
+check_subset = function(subset, n) {
+    if (!is.null(subset)) {
+        if (is.logical(subset)) {
+            # ok
+        } else if (is.numeric(subset)) {
+            subset = seq_len(n) %in% subset
+        } else {
+            cli_abort("The {.arg subset} argument must be a logical or integer vector.",
+                      call = parent.frame())
+        }
+        if (any(is.na(subset))) {
+            cli_abort("The {.arg subset} argument must not contain missing values.",
+                      call = parent.frame())
+        }
+    } else {
+        subset = rep(TRUE, n)
+    }
+    subset
 }
 
 check_contrast <- function(contrast, x_nm, y_nm) {

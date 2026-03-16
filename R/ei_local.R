@@ -51,6 +51,9 @@
 #'   `regr`, if available, or infers from the outcome variable otherwise.
 #' @inheritParams ei_ridge
 #' @inheritParams ei_est
+#' @param subset <[`data-masking`][rlang::args_data_masking]> An optional
+#'   indexing vector describing the subset of units over which to calculate
+#'   estimates.
 #' @param conf_level A numeric specifying the level for confidence intervals.
 #'   If `FALSE`, no confidence intervals are calculated.
 #'   For `regr` arguments from [ei_wrap_model()], confidence intervals will not
@@ -103,13 +106,14 @@ ei_est_local = function(
     contrast = NULL,
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
+    subset = NULL,
     conf_level = 0.95,
     regr_var = TRUE,
     unimodal = TRUE,
     gaussian = FALSE
 ) {
     y = est_check_outcome(regr, data, NULL)
-    n = nrow(y)
+    n_orig = nrow(y)
     n_y = ncol(y)
 
     if (inherits(regr, "ei_wrapped") && isTRUE(regr_var) && !isFALSE(conf_level)) {
@@ -121,9 +125,19 @@ ei_est_local = function(
         )
         regr_var = FALSE
     }
+    rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = isTRUE(regr_var))
 
-    rl = est_check_regr(regr, data, n, NULL, n_y, vcov = isTRUE(regr_var))
+    # subset the predictions and x
+    subset_idx = which(check_subset(eval_tidy(enquo(subset), data), n_orig))
+    n = length(subset_idx)
     n_x = length(rl$preds)
+    rl$preds = lapply(rl$preds, function(p) p[subset_idx, , drop = FALSE])
+    rl$x = rl$x[subset_idx, , drop = FALSE]
+    rl$yhat = rl$yhat[subset_idx, , drop = FALSE]
+    if (!is.null(rl$vcov_u)) {
+        rl$vcov_u = rl$vcov_u[subset_idx, , drop = FALSE]
+    }
+    y = y[subset_idx, , drop = FALSE]
 
     bounds = check_bounds(bounds, y, clamp = 1e-8)
     if (is.null(sum_one) && all(bounds == c(0, 1))) {
@@ -140,6 +154,7 @@ ei_est_local = function(
     } else {
         total = eval_tidy(enquo(total), data)
     }
+    total = total[subset_idx]
 
     if (missing(b_cov)) {
         cli_abort(c(
@@ -168,7 +183,7 @@ ei_est_local = function(
     sds = local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
 
     ests = list(
-        .row = rep(seq_len(n), length(x_nm)),
+        .row = rep(subset_idx, length(x_nm)),
         predictor = rep(x_nm, each = n),
         outcome = rep(y_nm, each = n),
         weight = 1L,

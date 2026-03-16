@@ -17,6 +17,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE
 )
 
@@ -26,6 +27,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -37,6 +39,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -48,6 +51,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -59,6 +63,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -96,6 +101,10 @@ be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
 within each predictor group. Can only apply when \code{bounds} are enforced and
 there is more than one outcome variable. If \code{NULL}, infers \code{sum_one = TRUE}
 when the bounds are \code{c(0, 1)} and the outcome variables sum to 1.}
+
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
 \item{global}{If \code{TRUE}, aggregate the bounds across units to produce bounds
 on the global estimands.}

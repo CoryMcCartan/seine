@@ -13,6 +13,7 @@ ei_est_local(
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
+  subset = NULL,
   conf_level = 0.95,
   regr_var = TRUE,
   unimodal = TRUE,
@@ -73,6 +74,10 @@ forces unbounded estimates. The default uses the \code{bounds} attribute of
 Can only apply when \code{bounds} are enforced and there is more than one
 outcome variable. If \code{NULL}, infers \code{sum_one = TRUE} when the bounds
 are \code{c(0, 1)} the outcome variables sum to 1.}
+
+\item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
+indexing vector describing the subset of units over which to calculate
+estimates.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE}, no confidence intervals are calculated.
