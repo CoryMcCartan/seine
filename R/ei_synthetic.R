@@ -100,8 +100,17 @@
 #' )
 #'
 #' @export
-ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p) - 1)/2),
-                        r2_xz = 0.5, r2_bz = 0.5, b_loc = NULL, b_cov = NULL) {
+ei_synthetic = function(
+    n,
+    p = 0,
+    n_x = 2,
+    x = n_x:1,
+    z = 0.25 * exp(-(seq_len(p) - 1) / 2),
+    r2_xz = 0.5,
+    r2_bz = 0.5,
+    b_loc = NULL,
+    b_cov = NULL
+) {
     if (is.matrix(x) || is.data.frame(x)) {
         need_x = FALSE
         x = as.matrix(x)
@@ -118,19 +127,21 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
         p = ncol(z)
     } else {
         if (is.null(z)) {
-            z = exp(-(seq_len(p) - 1)/2)
+            z = exp(-(seq_len(p) - 1) / 2)
         }
         need_z = TRUE
         p = length(z)
     }
     if (missing(n)) {
-        cli_abort("If {.arg x} and {.arg z} are not a matrix or data frame,
-                  you must specify {.arg n}.")
+        cli_abort(
+            "If {.arg x} and {.arg z} are not a matrix or data frame,
+                  you must specify {.arg n}."
+        )
     }
 
-    dd = p*need_z + n_x*need_x
-    iz = seq_len(p*need_z)
-    ix = p*need_z + seq_len(n_x*need_x)
+    dd = p * need_z + n_x * need_x
+    iz = seq_len(p * need_z)
+    ix = p * need_z + seq_len(n_x * need_x)
     mu = numeric(dd)
     L = matrix(0, nrow = dd, ncol = dd)
 
@@ -141,7 +152,7 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
         # normal approx .to Dirichlet
         sx = sum(x)
         mu[ix] = x / sx
-        L[ix, ix] = chol(((1 + 1e-15)*diag(mu[ix]) - tcrossprod(mu[ix])) / (sx + 1))
+        L[ix, ix] = chol(((1 + 1e-15) * diag(mu[ix]) - tcrossprod(mu[ix])) / (sx + 1))
         vxb = diag(crossprod(L[ix, ix]))
     }
     if (need_z && p > 0) {
@@ -153,11 +164,19 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
         # - rows should sum to 0
         # - variance injected by Z should be prop. to variance of X
         L[iz, ix] = rnorm(p * n_x * need_x * need_z)
-        L[iz, ix] = scale_cols(L[iz, ix, drop=FALSE], sqrt(vxb))
-        res = optim(L[iz, ix], function(x) {
-            Lxz = matrix(x, nrow=p, ncol=n_x)
-            2*sum(abs(rowSums(Lxz))) + sum(abs(colSums(Lxz^2) - vxb)) + 1e-9*sum((Lxz - L[iz, ix])^2)
-        }, method="BFGS", control=list(abstol=1e-4))
+        L[iz, ix] = scale_cols(L[iz, ix, drop = FALSE], sqrt(vxb))
+        res = optim(
+            L[iz, ix],
+            function(x) {
+                Lxz = matrix(x, nrow = p, ncol = n_x)
+                2 *
+                    sum(abs(rowSums(Lxz))) +
+                    sum(abs(colSums(Lxz^2) - vxb)) +
+                    1e-9 * sum((Lxz - L[iz, ix])^2)
+            },
+            method = "BFGS",
+            control = list(abstol = 1e-4)
+        )
         L[iz, ix] = res$par
 
         # make R^2 work
@@ -165,27 +184,27 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
             cli_abort("{.arg r2_xz} must be a single value between 0 and 1.")
         }
         L[ix, ix] = scale_cols(L[ix, ix], sqrt(1 - r2_xz))
-        L[iz, ix] = scale_cols(L[iz, ix, drop=FALSE], sqrt(r2_xz))
+        L[iz, ix] = scale_cols(L[iz, ix, drop = FALSE], sqrt(r2_xz))
     }
 
     warmup = 10L
     thin = 5L
     L[, iz] = 1e-1 * L[, iz]
     R_sync_rng()
-    xz = R_ess_tmvn(warmup + thin*n, mu, t(L), init=mu)
+    xz = R_ess_tmvn(warmup + thin * n, mu, t(L), init = mu)
     if (p > 0) {
         if (need_z) {
-            z = 1e1 * (xz[seq(warmup + 1, nrow(xz), by=thin), iz, drop=FALSE] - 0.5)
+            z = 1e1 * (xz[seq(warmup + 1, nrow(xz), by = thin), iz, drop = FALSE] - 0.5)
         }
         z = shift_cols(z, colMeans(z))
     }
     if (need_x) {
-        x = xz[seq(warmup + 1, nrow(xz), by=thin), ix, drop=FALSE]
+        x = xz[seq(warmup + 1, nrow(xz), by = thin), ix, drop = FALSE]
         x = x / rowSums(x)
     }
 
     if (is.null(b_loc)) {
-        b_loc = seq(0.5, 0.9, length.out=n_x)
+        b_loc = seq(0.5, 0.9, length.out = n_x)
     }
     if (is.null(b_cov)) {
         b_cov = 0.02 * (1 + diag(n_x))
@@ -198,7 +217,7 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
     }
 
     if (p > 0) {
-        Lambda = matrix(rnorm(p * n_x), nrow=p, ncol=n_x)
+        Lambda = matrix(rnorm(p * n_x), nrow = p, ncol = n_x)
         # make R^2 work
         if (length(r2_bz) != 1 || r2_bz < 0 || r2_bz > 1) {
             cli_abort("{.arg r2_xz} must be a single value between 0 and 1.")
@@ -211,17 +230,20 @@ ei_synthetic = function(n, p = 0, n_x = 2, x = n_x:1, z = 0.25 * exp(-(seq_len(p
         eta = rep(1, n) %o% b_loc
     }
 
-    b = matrix(nrow=n, ncol=n_x)
+    b = matrix(nrow = n, ncol = n_x)
     L = t(chol(b_cov))
     for (i in seq_len(n)) {
         # b[i, ] = R_ess_tmvn(warmup, eta[i, ], L, init=eta[i, ])[warmup, ]
-        b[i, ] = R_ess_tmvn(warmup, eta[i, ], L, init=rep(0.5, n_x))[warmup, ]
+        b[i, ] = R_ess_tmvn(warmup, eta[i, ], L, init = rep(0.5, n_x))[warmup, ]
         eta[i, ] = R_ep_moments(eta[i, ], L, numeric(0), 0, 1e-4)[[2]]
     }
 
     colnames(x) = paste0("x", seq_len(n_x))
-    if (p > 0) colnames(z) = paste0("z", seq_len(p))
-    d = as.data.frame(cbind(y=rowSums(b * x), x, z))
+    if (p > 0) {
+        colnames(z) = paste0("z", seq_len(p))
+    }
+    
+    d = as.data.frame(cbind(y = rowSums(b * x), x, z))
     true = new_tibble(list(
         predictor = colnames(x),
         outcome = rep("y", n_x),
