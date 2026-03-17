@@ -15,6 +15,7 @@ ei_semisynthetic(
   confounding = 1,
   subset = NULL,
   contrast = NULL,
+  include = FALSE,
   est = NULL,
   b_cov = NULL
 )
@@ -61,6 +62,10 @@ between the two outcomes for each predictor group; and
 \code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
 difference in differences.}
 
+\item{include}{If \code{TRUE}, the returned \code{ei_spec} object will include the
+confounder as a covariate; if \code{FALSE}, the confounder will be a column in the
+\code{ei_spec} but not marked as a confounder.}
+
 \item{est}{An optional set of DML estimates from \code{\link[=ei_est]{ei_est()}}.
 If \code{NULL}, it will be computed automatically using \code{regr}, \code{riesz}, and
 \code{contrast}.}
@@ -89,9 +94,7 @@ An \code{ei_spec} object with:
 \item The original predictor columns (unchanged).
 \item New simulated outcome columns (replacing the original outcomes).
 \item The original covariate columns (unchanged).
-\item A \code{.confounder} column containing the hidden confounder values (not
-included in \code{ei_z}; add it manually to test what happens when it is
-included as a covariate).
+\item A \code{.confounder} column containing the hidden confounder values
 }
 
 Additional attributes:
@@ -138,11 +141,36 @@ specified \code{c_outcome} and \code{c_predictor}.
 \examples{
 data(elec_1968)
 
-spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
-               total = pres_total, covariates = c(pop_urban, farm))
+spec = ei_spec(
+    elec_1968, 
+    predictors = vap_white:vap_other, 
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(pop_urban, farm, educ_hsch, inc_25_99k),
+    preproc = function(z) poly(model.matrix(~ 0 + ., z), degree = 2)
+)
 regr = ei_ridge(spec)
 riesz = ei_riesz(spec, penalty = regr$penalty)
 
-ss = ei_semisynthetic(regr, riesz, spec, predictor = "vap_white", 
-                      outcome = "pres_dem_hum", c_outcome = 0.2, c_predictor = 0.1)
+spec_synth = ei_semisynthetic(
+    regr, riesz, spec, 
+    predictor = "vap_white", outcome = "pres_dem_hum", 
+    c_outcome = 0.5, c_predictor = 0.5, include = TRUE
+)
+
+# compute estimates on original and synthetic data
+regr_synth = ei_ridge(spec_synth)
+riesz_synth = ei_riesz(spec_synth, penalty = regr_synth$penalty)
+
+est = subset(
+    ei_est(regr, riesz, spec, conf_level = FALSE),
+    predictor == "vap_white" & outcome == "pres_dem_hum"
+)
+est_synth = subset(
+    ei_est(regr_synth, riesz_synth, spec_synth, conf_level = FALSE),
+    predictor == "vap_white" & outcome == "pres_dem_hum"
+)
+
+abs(est$estimate - est_synth$estimate) <= 
+    ei_sens(est, c_outcome = 0.5, c_predictor = 0.5)$bias_bound
 }

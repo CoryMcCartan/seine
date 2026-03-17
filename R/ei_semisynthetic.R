@@ -49,14 +49,15 @@
 #' @param confounding The correlation parameter between the confounder's effect
 #'   on the predictor and the outcome, between 0 and 1. Scales `Lambda` as a
 #'   whole.
+#' @param include If `TRUE`, the returned `ei_spec` object will include the
+#'   confounder as a covariate; if `FALSE`, the confounder will be a column in the
+#'   `ei_spec` but not marked as a confounder.
 #'
 #' @returns An `ei_spec` object with:
 #'   - The original predictor columns (unchanged).
 #'   - New simulated outcome columns (replacing the original outcomes).
 #'   - The original covariate columns (unchanged).
-#'   - A `.confounder` column containing the hidden confounder values (not
-#'     included in `ei_z`; add it manually to test what happens when it is
-#'     included as a covariate).
+#'   - A `.confounder` column containing the hidden confounder values 
 #'
 #'   Additional attributes:
 #'   - `b`: true unit-level parameters (\eqn{n \times n_x n_y} matrix, ordered
@@ -71,13 +72,37 @@
 #' @examples
 #' data(elec_1968)
 #'
-#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
-#'                total = pres_total, covariates = c(pop_urban, farm))
+#' spec = ei_spec(
+#'     elec_1968, 
+#'     predictors = vap_white:vap_other, 
+#'     outcome = pres_dem_hum:pres_abs,
+#'     total = pres_total,
+#'     covariates = c(pop_urban, farm, educ_hsch, inc_25_99k),
+#'     preproc = function(z) poly(model.matrix(~ 0 + ., z), degree = 2)
+#' )
 #' regr = ei_ridge(spec)
 #' riesz = ei_riesz(spec, penalty = regr$penalty)
 #'
-#' ss = ei_semisynthetic(regr, riesz, spec, predictor = "vap_white", 
-#'                       outcome = "pres_dem_hum", c_outcome = 0.2, c_predictor = 0.1)
+#' spec_synth = ei_semisynthetic(
+#'     regr, riesz, spec, 
+#'     predictor = "vap_white", outcome = "pres_dem_hum", 
+#'     c_outcome = 0.5, c_predictor = 0.5
+#' )
+#' 
+#' # compute estimates on original and synthetic data
+#' regr_synth = ei_ridge(spec_synth)
+#' riesz_synth = ei_riesz(spec_synth, penalty = regr_synth$penalty)
+#' est = ei_est(regr_synth, riesz_synth, spec_synth, conf_level = FALSE)
+#' 
+#' est_hum_white = subset(est, predictor == "vap_white" & outcome == "pres_dem_hum")
+#' true_hum_white = subset(
+#'     attr(spec_synth, "est_true"), 
+#'     predictor == "vap_white" & outcome == "pres_dem_hum"
+#' )$true
+#' transform(
+#'     ei_sens(est_hum_white, c_outcome = 0.5, c_predictor = 0.5),
+#'     bias_act = abs(estimate - true_hum_white)
+#' )
 #' @export
 ei_semisynthetic = function(
     regr,
@@ -90,6 +115,7 @@ ei_semisynthetic = function(
     confounding = 1,
     subset = NULL,
     contrast = NULL,
+    include = FALSE,
     est = NULL,
     b_cov = NULL
 ) {
@@ -117,6 +143,10 @@ ei_semisynthetic = function(
     x = rl$x  
     x_nm = colnames(x)
     y_nm = colnames(y)
+
+    # Process subset: used to weight the sensitivity-parameter calibration
+    subset_lgl = check_subset(eval_tidy(enquo(subset), spec), n)
+    subset_cal = which(subset_lgl)
 
     total = attr(spec, "ei_n")
     weights = riesz$blueprint$ei_wgt
@@ -209,12 +239,24 @@ ei_semisynthetic = function(
     }
 
     # --- Step 3: Binary search on dilution parameter to calibrate c_predictor ---
-    # nu2 for target predictor before augmentation
-    nu2_short_target = mean((alpha %*% q_pred)^2)
+    # nu2 for target predictor before augmentation.
+    # When a subset is used, refit Riesz on the subset so that nu2_short and
+    # nu2_full (inside measure_c_pred) share the same Dz normalisation.
+    if (all(subset_lgl)) {
+        nu2_short_target = mean((alpha %*% q_pred)^2)
+    } else {
+        fit_short_sub = ei_riesz_impl(x[subset_cal, , drop=FALSE],
+                                      z_riesz[subset_cal, , drop=FALSE],
+                                      total[subset_cal], weights[subset_cal],
+                                      riesz$penalty)
+        nu2_short_target = mean((fit_short_sub$alpha %*% q_pred)^2)
+    }
 
     measure_c_pred = function(dil) {
-        z_aug = cbind(z_riesz, make_a_dil(dil))
-        fit_aug = ei_riesz_impl(x, z_aug, total, weights, riesz$penalty)
+        a_dil = make_a_dil(dil)
+        z_aug = cbind(z_riesz[subset_cal, , drop=FALSE], a_dil[subset_cal])
+        fit_aug = ei_riesz_impl(x[subset_cal, , drop=FALSE], z_aug,
+                                total[subset_cal], weights[subset_cal], riesz$penalty)
         nu2_full_target = mean((fit_aug$alpha %*% q_pred)^2)
         if (nu2_full_target <= 0) return(0)
         1 - nu2_short_target / nu2_full_target
@@ -268,11 +310,18 @@ ei_semisynthetic = function(
     c_out_ss = sum(c_out^2)
     sigma2_target = as.numeric(crossprod(c_out^2, regr$sigma2))
 
-    center_scale = function(v) {
-        v = v - mean(v)
-        s = sd(v)
+    # center_scale_cal: centres/scales using subset statistics, returns full-n vector.
+    # When subset_cal == seq_len(n) this is identical to the naive centre_scale.
+    center_scale_cal = function(v) {
+        v_sub = v[subset_cal]
+        v = v - mean(v_sub)
+        s = sd(v_sub)
         if (s > 1e-14) v / s else v
     }
+    cov_cal = function(u, v) cov(u[subset_cal], v[subset_cal])
+    var_cal = function(v) var(v[subset_cal])
+    sd_cal  = function(v) sd(v[subset_cal])
+    cor_cal = function(u, v) cor(u[subset_cal], v[subset_cal])
 
     fit_aug = ei_riesz_impl(x, cbind(z_riesz, a), total, weights, riesz$penalty)
     delta_riesz = as.vector((fit_aug$alpha - alpha) %*% q_pred)
@@ -280,19 +329,19 @@ ei_semisynthetic = function(
     if (confounding < 1e-10 || c_predictor < 1e-10 || c_outcome < 1e-10) {
         delta_fit = numeric(n)
     } else {
-        a_std = center_scale(a)
-        rr_std = center_scale(delta_riesz)
-        rr_sd = sd(rr_std)
+        a_std = center_scale_cal(a)
+        rr_std = center_scale_cal(delta_riesz)
+        rr_sd = sd_cal(rr_std)
         if (rr_sd < 1e-14) {
             cli_abort("Unable to calibrate {.arg confounding}: Riesz change is degenerate.")
         }
 
-        r_ar = cor(a_std, rr_std)
+        r_ar = cor_cal(a_std, rr_std)
         a_perp_raw = a_std - r_ar * rr_std
-        a_perp_sd = sd(a_perp_raw)
+        a_perp_sd = sd_cal(a_perp_raw)
         if (a_perp_sd > 1e-14) {
             a_perp = a_perp_raw / a_perp_sd
-            if (cor(a_perp, a_std) < 0) a_perp = -a_perp
+            if (cor_cal(a_perp, a_std) < 0) a_perp = -a_perp
         } else {
             a_perp = rr_std
         }
@@ -303,9 +352,9 @@ ei_semisynthetic = function(
         delta_fit_dir =
             sign(r_ar) * sqrt(confounding) * rr_std +
             sqrt(1 - confounding) * a_perp
-        delta_fit_dir = center_scale(delta_fit_dir)
+        delta_fit_dir = center_scale_cal(delta_fit_dir)
 
-        r_da = cor(delta_fit_dir, a_std)
+        r_da = cor_cal(delta_fit_dir, a_std)
         if (r_da^2 + 1e-10 < c_outcome) {
             # Some extreme confounding requests are infeasible for the realised
             # A/RR geometry. Fall back to the fully outcome-aligned direction so
@@ -319,16 +368,16 @@ ei_semisynthetic = function(
 
     # Orthogonalize b_noise w.r.t. both a and delta_fit so that the target
     # contrast residual has the desired correlation with a and total variance.
-    a_basis = center_scale(a)
-    fit_basis = center_scale(delta_fit)
-    fit_basis = fit_basis - cov(fit_basis, a_basis) * a_basis
+    a_basis = center_scale_cal(a)
+    fit_basis = center_scale_cal(delta_fit)
+    fit_basis = fit_basis - cov_cal(fit_basis, a_basis) * a_basis
 
     proj = numeric(n)
-    if (sd(a_basis) > 1e-14) {
-        proj = proj + cov(eps_c, a_basis) * a_basis
+    if (sd_cal(a_basis) > 1e-14) {
+        proj = proj + cov_cal(eps_c, a_basis) * a_basis
     }
-    if (sd(fit_basis) > 1e-14) {
-        proj = proj + cov(eps_c, fit_basis) / var(fit_basis) * fit_basis
+    if (sd_cal(fit_basis) > 1e-14) {
+        proj = proj + cov_cal(eps_c, fit_basis) / var_cal(fit_basis) * fit_basis
     }
     if (any(abs(proj) > 0)) {
         for (k in seq_len(n_y)) {
@@ -346,9 +395,9 @@ ei_semisynthetic = function(
         idx = seq_len(n_x) + (k - 1L) * n_x
         eps_c = eps_c + c_out[k] * rowSums(b_noise[, idx, drop = FALSE] * x)
     }
-    var_eps_perp = var(eps_c)
+    var_eps_perp = var_cal(eps_c)
 
-    var_eps_target = sigma2_target - var(delta_fit)
+    var_eps_target = sigma2_target - var_cal(delta_fit)
     if (var_eps_target < -1e-10) {
         cli_abort(
             "Unable to jointly calibrate {.arg c_outcome} and {.arg confounding}: implied noise variance is negative."
@@ -404,12 +453,13 @@ ei_semisynthetic = function(
     new_data = as.data.frame(spec)
     new_data[y_nm] = y_new
     new_data[".confounder"] = a
+    ei_z = c(attr(spec, "ei_z"), if (isTRUE(include)) ".confounder")
 
     new_tibble(
         new_data,
         ei_x = attr(spec, "ei_x"),
         ei_y = y_nm,
-        ei_z = attr(spec, "ei_z"),
+        ei_z = ei_z,
         ei_n = total,
         ei_preproc = attr(spec, "ei_preproc"),
         ei_z_proc = attr(spec, "ei_z_proc"),

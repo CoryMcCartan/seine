@@ -207,10 +207,13 @@ test_that("confounding matches squared correlation of fitted and RR changes", {
 
 test_that("bias bound holds for specific predictor/outcome combo", {
     set.seed(1968)
-    c_out = 0.15; c_pred = 0.10; conf = 0.5
+    c_out = 0.15; c_pred = 0.70; conf = 0.5
     ss = ei_semisynthetic(m1, rr1, spec1, predictor = "vap_white", outcome = "pres_ind_wal",
                           est = est1, b_cov = bc1,
                           c_outcome = c_out, c_predictor = c_pred, confounding = conf)
+
+    m_ss = ei_ridge(ss)
+    rr_ss = ei_riesz(ss, penalty = m_ss$penalty)
 
     est_ss = ei_est(m1, rr1, ss)
     true_vals = attr(ss, "est_true")$true[1]
@@ -218,6 +221,7 @@ test_that("bias bound holds for specific predictor/outcome combo", {
 
     sens = ei_sens(est1, c_outcome = c_out, c_predictor = c_pred, confounding = conf)
     expect_true(actual_bias <= sens$bias_bound[1])
+    expect_true(actual_bias >= 0.5 * sens$bias_bound[1])
 })
 
 # --------------------------------------------------------------------------
@@ -353,4 +357,61 @@ test_that("wrong regr type is rejected", {
         ei_semisynthetic(list(x = 1), rr1, spec1, est = est1, b_cov = bc1),
         "ei_ridge"
     )
+})
+
+# --------------------------------------------------------------------------
+# subset= argument
+# --------------------------------------------------------------------------
+
+test_that("subset= returns a full-sized ei_spec", {
+    set.seed(1968)
+    idx = seq(1, nrow(spec1), by = 2)
+    ss = ei_semisynthetic(m1, rr1, spec1, est = est1, b_cov = bc1,
+                          c_outcome = 0.2, c_predictor = 0.1, subset = idx)
+    expect_s3_class(ss, "ei_spec")
+    expect_equal(nrow(ss), nrow(spec1))
+})
+
+test_that("c_predictor is calibrated over the subset", {
+    set.seed(1968)
+    target = 0.15
+    pred  = "vap_white"
+    idx   = seq(1, nrow(spec1), by = 2)
+
+    ss = ei_semisynthetic(m1, rr1, spec1, predictor = pred, outcome = "pres_ind_wal",
+                          est = est1, b_cov = bc1,
+                          c_outcome = 0.1, c_predictor = target, subset = idx)
+    a = ss$.confounder
+
+    z_riesz = make_z_riesz(spec1, rr1)
+    x     = as.matrix(spec1[attr(spec1, "ei_x")])
+    total = attr(spec1, "ei_n")
+    j     = match(pred, attr(spec1, "ei_x"))
+
+    # Replicate what measure_c_pred does: both nu2 from subset-only Riesz fits
+    fit_short = ei_riesz_impl(x[idx, ], z_riesz[idx, ], total[idx],
+                               rep(1, length(idx)), rr1$penalty)
+    nu2_short = mean((fit_short$alpha[, j])^2)
+    z_aug     = cbind(z_riesz[idx, ], a[idx])
+    fit_aug   = ei_riesz_impl(x[idx, ], z_aug, total[idx], rep(1, length(idx)), rr1$penalty)
+    nu2_full  = mean((fit_aug$alpha[, j])^2)
+    actual    = 1 - nu2_short / nu2_full
+
+    expect_lt(abs(actual - target), tol)
+})
+
+test_that("c_outcome is calibrated over the subset", {
+    set.seed(1968)
+    target = 0.2
+    out  = "pres_ind_wal"
+    idx  = seq(1, nrow(spec1), by = 2)
+
+    ss = ei_semisynthetic(m1, rr1, spec1, predictor = "vap_white", outcome = out,
+                          est = est1, b_cov = bc1,
+                          c_outcome = target, c_predictor = 0.1, subset = idx)
+    a       = ss$.confounder
+    resid_y = as.vector(as.matrix(ss[out]) - m1$fitted[, out, drop = FALSE])
+
+    r2 = cor(resid_y[idx], a[idx])^2
+    expect_lt(abs(r2 - target), tol)
 })
