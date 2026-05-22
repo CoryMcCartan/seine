@@ -155,22 +155,21 @@ riesz = ei_riesz(spec, penalty = regr$penalty)
 spec_synth = ei_semisynthetic(
     regr, riesz, spec, 
     predictor = "vap_white", outcome = "pres_dem_hum", 
-    c_outcome = 0.5, c_predictor = 0.5, include = TRUE
+    c_outcome = 0.5, c_predictor = 0.5
 )
 
 # compute estimates on original and synthetic data
 regr_synth = ei_ridge(spec_synth)
 riesz_synth = ei_riesz(spec_synth, penalty = regr_synth$penalty)
+est = ei_est(regr_synth, riesz_synth, spec_synth, conf_level = FALSE)
 
-est = subset(
-    ei_est(regr, riesz, spec, conf_level = FALSE),
+est_hum_white = subset(est, predictor == "vap_white" & outcome == "pres_dem_hum")
+true_hum_white = subset(
+    attr(spec_synth, "est_true"), 
     predictor == "vap_white" & outcome == "pres_dem_hum"
+)$true
+transform(
+    ei_sens(est_hum_white, c_outcome = 0.5, c_predictor = 0.5),
+    bias_act = abs(estimate - true_hum_white)
 )
-est_synth = subset(
-    ei_est(regr_synth, riesz_synth, spec_synth, conf_level = FALSE),
-    predictor == "vap_white" & outcome == "pres_dem_hum"
-)
-
-abs(est$estimate - est_synth$estimate) <= 
-    ei_sens(est, c_outcome = 0.5, c_predictor = 0.5)$bias_bound
 }

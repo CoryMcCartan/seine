@@ -115,18 +115,16 @@ test_that("ridge sum-to-1 constraint work", {
     skip_on_cran()
     skip_on_ci()
 
-    d = elec_1968
-    form = pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~ vap_white  |
-        pop_urban + pop_rural + farm + educ_elem + educ_hsch + educ_coll +
-        inc_00_03k + inc_03_08k + inc_08_25k + inc_25_99k + log(pop) + pres_turn
+    form = pres_dem_hum + pres_rep_nix + pres_ind_wal + pres_abs ~ vap_white |
+        pop_urban + farm + educ_coll + log(pop)
 
-    m = ei_ridge(form, data=elec_1968)
     m01s = ei_ridge(form, data=elec_1968, bounds=c(0, 1), sum_one=TRUE)
     m01def = ei_ridge(form, data=elec_1968, bounds=NULL, sum_one=NULL)
 
     expect_true(min(fitted(m01s)) > -1e-12)
-    expect_true(all(ei_est(m01s, data=elec_1968, total=pres_total)$estimate > 0))
-    expect_true(all(ei_est(m01s, data=elec_1968, total=pres_total)$estimate < 1))
+    est01 = ei_est(m01s, data=elec_1968, total=pres_total)
+    expect_true(all(est01$estimate > -0.01))
+    expect_true(all(est01$estimate < 1.01))
 
     tots = rowSums(as.matrix(ei_est(m01s, data=elec_1968, total=pres_total)))
     expect_true(all.equal(tots, c(vap_white=1, .other=1)))

@@ -33,6 +33,9 @@
 
 \item{normalize}{If \code{TRUE}, normalize the weights to have mean 1.}
 }
+\value{
+See individual methods.
+}
 \description{
 Models fitted with \code{\link[=ei_ridge]{ei_ridge()}} support various generic methods.
 }

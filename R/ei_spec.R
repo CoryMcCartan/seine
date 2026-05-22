@@ -271,6 +271,7 @@ weights.ei_spec <- function(object, normalize = TRUE, ...) {
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs, pres_total)
 #' plot(spec)
 #'
+#' @returns None, called for side effects (plotting).
 #' @export
 plot.ei_spec = function(x, ..., pch=16, cex=0.2) {
     nm_x = attr(x, "ei_x")

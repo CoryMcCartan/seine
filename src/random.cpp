@@ -51,6 +51,8 @@ uint64_t generator(void) {
 }
 // Rest of file is original code --------------------------------
 
+static double _norm_z = 0.0;
+static double _norm_valid = false;
 
 /*
  * Set RNG seed
@@ -62,6 +64,8 @@ void seed_rng(int seed) {
     state_xo[1] = next_sr();
     state_xo[2] = next_sr();
     state_xo[3] = next_sr();
+    // reset cached normal deviate from Marsaglia polar method
+    _norm_valid = false;
 }
 
 
@@ -73,8 +77,6 @@ double r_unif() {
 }
 
 
-static double _norm_z = 0.0;
-static double _norm_valid = false;
 /*
  * Generate a standard normal deviate via Marsaglia polar method.
  */

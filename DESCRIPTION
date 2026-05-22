@@ -1,15 +1,15 @@
 Package: seine
 Title: Semiparametric Ecological Inference
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
-    person("Cory", "McCartan", , "mccartan@psu.edu", role = c("aut", "cre"),
+    person("Cory", "McCartan", , "mccartan@psu.edu", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-6251-669X")),
-    person("Shiro", "Kuriwaki", , "shiro.kuriwaki@yale.edu", role = c("aut"),
+    person("Shiro", "Kuriwaki", , "shiro.kuriwaki@yale.edu", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0002-5687-2647"))
     )
 Description: Efficient and user-friendly routines for modern ecological
     inference. Implements the methods described in McCartan & Kuriwaki (2025+)
-    <arxiv:2509.20194>, which generalize ecological regression as introduced by
+    <doi:10.48550/arXiv.2509.20194>, which generalize ecological regression as introduced by
     Goodman (1953) <doi:10.2307/2088121>. Includes routines for preprocessing,
     synthetic data generation, double/debiased machine learning (DML)
     estimation, partial identification bounds, and sensitivity analysis.
@@ -38,7 +38,6 @@ LinkingTo:
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 LazyData: true
 SystemRequirements: C++17
 Config/testthat/edition: 3
@@ -46,3 +45,4 @@ URL: https://corymccartan.com/seine/, https://github.com/CoryMcCartan/seine
 BugReports: https://github.com/CoryMcCartan/seine/issues
 VignetteBuilder: knitr
 Config/build/compilation-database: true
+Config/roxygen2/version: 8.0.0

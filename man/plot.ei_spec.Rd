@@ -13,6 +13,9 @@
 
 \item{pch, cex}{As in \code{\link[=plot]{plot()}}}
 }
+\value{
+None, called for side effects (plotting).
+}
 \description{
 Useful for quickly visualizing scatterplots of outcome versus predictor
 variables.

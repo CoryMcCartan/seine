@@ -255,6 +255,7 @@ ei_sens_rv <- function(est, bias_bound, confounding = 1) {
 #' plot(sens)
 #'
 #' plot(sens, bench = ei_bench(spec), plot_se=NULL)
+#' @returns None, called for side effects (plotting).
 #' @export
 plot.ei_sens <- function(
     x,
@@ -456,6 +457,7 @@ plot.ei_sens <- function(
 #'                total = pres_total, covariates = c(educ_elem, pop_urban, farm))
 #' ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
 #' ei_bench(spec, contrast = list(outcome = c(1, -1)))
+#' @returns A data frame of benchmark covariate R-squared values.
 #' @export
 ei_bench <- function(spec, subset = NULL, contrast = NULL) {
     validate_ei_spec(spec)

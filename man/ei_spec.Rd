@@ -20,12 +20,12 @@ ei_spec(
 \arguments{
 \item{data}{A data frame.}
 
-\item{predictors}{<\code{\link[tidyselect:language]{tidy-select}}> Predictor
+\item{predictors}{<\code{\link[tidyselect:select_helpers]{tidy-select}}> Predictor
 variables. This is the \code{x} variable in ecological regression that is of
 primary interest. For example, the columns containing the percentage of
 each racial group.}
 
-\item{outcome}{<\code{\link[tidyselect:language]{tidy-select}}> Outcome
+\item{outcome}{<\code{\link[tidyselect:select_helpers]{tidy-select}}> Outcome
 variables. This is the \code{y} variable in ecological regression that is of
 primary interest. For example, the columns containing the percentage of
 votes for each party.}
@@ -35,7 +35,7 @@ containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required by
 default.}
 
-\item{covariates}{<\code{\link[tidyselect:language]{tidy-select}}> Covariates.}
+\item{covariates}{<\code{\link[tidyselect:select_helpers]{tidy-select}}> Covariates.}
 
 \item{preproc}{An optional function which takes in a data frame of covariates
 and returns a modeling-ready numeric matrix of covariates.

@@ -14,3 +14,5 @@
 ^compile_commands\.json$
 ^\.cache$
 ^\.air\.toml$
+^\.claude$
+^CLAUDE\.md$

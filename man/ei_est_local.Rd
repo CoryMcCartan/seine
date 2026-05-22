@@ -30,7 +30,7 @@ of regression model wrapped with \code{\link[=ei_wrap_model]{ei_wrap_model()}}.}
 \item{data}{The data frame, matrix, or \link{ei_spec} object that was used to fit
 the regression.}
 
-\item{total}{<\code{\link[tidyselect:language]{tidy-select}}> A variable
+\item{total}{<\code{\link[tidyselect:select_helpers]{tidy-select}}> A variable
 containing the total number of observations in each aggregate unit. For
 example, the column containing the total number of voters. Required if
 \code{data} is not an \code{\link[=ei_spec]{ei_spec()}} object.}

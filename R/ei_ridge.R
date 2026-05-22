@@ -32,7 +32,7 @@
 #' estimation, or any fixed set of weights.
 #'
 #' In general, estimation efficiency is improved when units with larger variance
-#' in the outcome receive less weight. Various bulit-in options are provided by
+#' in the outcome receive less weight. Various built-in options are provided by
 #' the helper functions in [ei_wgt()].
 #'
 #'
@@ -448,6 +448,7 @@ print.ei_ridge <- function(x, ...) {
 #'
 #' @param object A fitted [ei_ridge] model
 #' @param ... Additional arguments (ignored)
+#' @returns See individual methods.
 #'
 #' @name ridge-methods
 NULL

@@ -299,7 +299,7 @@ as.array.ei_est_local = function(x, ...) {
 #' fits an auto-tuned ridge regression of the empirical second moments of the
 #' residuals on these predictors, and uses the polarization identity discussed
 #' in the references to estimate the covariance for each local estimand. When
-#' the estiamated covariance is not positive semidefinite, it is projected onto
+#' the estimated covariance is not positive semidefinite, it is projected onto
 #' the cone of positive semidefinite matrices.
 #' A small amount of shrinkage is applied towards a naive estimator (the
 #' covariance of the regression residuals) under an inverse-Wishart conjugate prior,

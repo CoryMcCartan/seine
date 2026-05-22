@@ -23,6 +23,9 @@ between the two outcomes for each predictor group; and
 \code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
 difference in differences.}
 }
+\value{
+A data frame of benchmark covariate R-squared values.
+}
 \description{
 Produces a table of benchmark values for \code{c_outcome} and \code{c_predictor} in
 \code{\link[=ei_sens]{ei_sens()}} for each covariate, following the methodology of Chernozhukov

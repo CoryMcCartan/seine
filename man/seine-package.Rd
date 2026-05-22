@@ -6,7 +6,9 @@
 \alias{seine-package}
 \title{seine: Semiparametric Ecological Inference}
 \description{
-Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan & Kuriwaki (2025+) \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}, which generalize ecological regression as introduced by Goodman (1953) \doi{10.2307/2088121}. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, partial identification bounds, and sensitivity analysis.
+\if{html}{\figure{logo.svg}{options: style='float: right' alt='logo' width='120'}}
+
+Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan & Kuriwaki (2025+) \doi{10.48550/arXiv.2509.20194}, which generalize ecological regression as introduced by Goodman (1953) \doi{10.2307/2088121}. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, partial identification bounds, and sensitivity analysis.
 }
 \seealso{
 Useful links:
@@ -18,11 +20,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Cory McCartan \email{mccartan@psu.edu} (\href{https://orcid.org/0000-0002-6251-669X}{ORCID})
+\strong{Maintainer}: Cory McCartan \email{mccartan@psu.edu} (\href{https://orcid.org/0000-0002-6251-669X}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Shiro Kuriwaki \email{shiro.kuriwaki@yale.edu} (\href{https://orcid.org/0000-0002-5687-2647}{ORCID})
+  \item Cory McCartan \email{mccartan@psu.edu} (\href{https://orcid.org/0000-0002-6251-669X}{ORCID}) [copyright holder]
+  \item Shiro Kuriwaki \email{shiro.kuriwaki@yale.edu} (\href{https://orcid.org/0000-0002-5687-2647}{ORCID}) [copyright holder]
 }
 
 }

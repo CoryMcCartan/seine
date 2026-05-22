@@ -132,7 +132,7 @@ round(b_cov[1:3, 1:3], 3)
 
 The rows and columns are ordered by predictor within outcome, i.e.
 (Y1|X1, Y1|X2, ..., Y2|X1, Y2|X2, ...).
-One can visualize the estimated correlation structure with `heatmap()` or the [`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
+One can visualize the estimated correlation structure with `heatmap()` or the [`corrplot`](https://cran.r-project.org/package=corrplot) package.
 ```{r fig.height=7.5, fig.alt = "Heatmap of the estimated correlation structure for local estimands"}
 heatmap(
     cov2cor(b_cov),
@@ -150,7 +150,7 @@ These two patterns make sense in context.
 
 On the other hand, the estimated standard deviation for Black support for different candidates is quite large, around 0.3, especially compared to low variation in White preference for e.g. Humphrey, which has standard deviation just 0.086.
 As a reminder, these estimates are of the _residual_ variation, after controlling for covariates.
-Still, we might be expect redisual variation in Black support to be smaller across the board, especially for the segregationist Wallace.
+Still, we might be expect residual variation in Black support to be smaller across the board, especially for the segregationist Wallace.
 
 # Local point estimates
 

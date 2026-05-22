@@ -44,6 +44,9 @@ provided}
 
 \item{cex}{Scaling factor for the benchmark points and labels, if provided}
 }
+\value{
+None, called for side effects (plotting).
+}
 \description{
 Displays bias bound as a function of \code{c_outcome} and \code{c_predictor} in
 \code{\link[=ei_sens]{ei_sens()}} on a contour plot. Bounds on the outcome, and standard errors of

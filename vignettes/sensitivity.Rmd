@@ -65,7 +65,7 @@ print(est)
 ```
 
 While we normally do not recommend setting `conf_level = FALSE` to suppress confidence intervals, here we do, so that the output can more easily fit on the screen.
-If confidence intervals are present in `est`, they will be adjusted by the senstivity analysis below.
+If confidence intervals are present in `est`, they will be adjusted by the sensitivity analysis below.
 
 # Sensitivity analysis
 
