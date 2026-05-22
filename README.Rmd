@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/seine)](https://CRAN.R-project.org/package=seine)
 <!-- badges: end -->
 
 Ecological inference (EI) is the statistical problem of learning individual-level
