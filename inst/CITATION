@@ -1,0 +1,28 @@
+bibentry(
+    bibtype = "Manual",
+    title = "seine: Semiparametric Ecological Inference",
+    author = c(
+        person("Cory", "McCartan"),
+        person("Shiro", "Kuriwaki")
+    ),
+    year = "2026",
+    note = paste0("R package version ", meta$Version),
+    url = "https://corymccartan.com/seine/"
+)
+
+# When the paper is published, update the DOI/journal here and in:
+#   DESCRIPTION (lines 11-12)
+#   R/ei_est.R (@references)
+#   R/ei_test_car.R (@references)
+#   vignettes/seine.Rmd, local.Rmd, sensitivity.Rmd, test.Rmd (References)
+bibentry(
+    bibtype = "Article",
+    title = "Identification and Semiparametric Estimation of Conditional Means from Aggregate Data",
+    author = c(
+        person("Cory", "McCartan"),
+        person("Shiro", "Kuriwaki")
+    ),
+    year = "2025",
+    journal = "Working paper arXiv:2509.20194",
+    doi = "10.48550/arXiv.2509.20194"
+)

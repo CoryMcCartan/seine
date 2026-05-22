@@ -6,8 +6,6 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CoryMcCartan/seine/actions/workflows/R-CMD-check.yaml)
-[![CRAN
-status](https://www.r-pkg.org/badges/version/seine)](https://CRAN.R-project.org/package=seine)
 <!-- badges: end -->
 
 Ecological inference (EI) is the statistical problem of learning
@@ -35,7 +33,13 @@ inference quickly, accurately, and transparently.
 
 ## Installation
 
-You can install the development version of **seine** with
+You can install **seine** from CRAN with
+
+``` r
+install.packages("seine")
+```
+
+Or install the development version with
 
 ``` r
 remotes::install_github("CoryMcCartan/seine")
