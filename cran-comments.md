@@ -11,4 +11,5 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a new submission.
+* This is a resubmission of a new package after Debian incoming checks flagged
+  an issue with a linker flag (now fixed).

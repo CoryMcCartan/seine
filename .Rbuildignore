@@ -1,3 +1,4 @@
+^\.DS_Store$
 ^seine\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
@@ -17,3 +18,4 @@
 ^\.claude$
 ^CLAUDE\.md$
 ^cran-comments\.md$
+^CRAN-SUBMISSION$

@@ -1,6 +1,6 @@
 Package: seine
 Title: Semiparametric Ecological Inference
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Cory", "McCartan", , "mccartan@psu.edu", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-6251-669X")),
@@ -45,4 +45,4 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/build/compilation-database: true
 Config/roxygen2/version: 8.0.0
-Config/roxygen2/markdown: true
+Config/roxygen2/markdown: TRUE
