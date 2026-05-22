@@ -37,12 +37,12 @@ LinkingTo:
     testthat
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
 LazyData: true
-SystemRequirements: C++17
-Config/testthat/edition: 3
+SystemRequirements: C++20
 URL: https://corymccartan.com/seine/, https://github.com/CoryMcCartan/seine
 BugReports: https://github.com/CoryMcCartan/seine/issues
 VignetteBuilder: knitr
+Config/testthat/edition: 3
 Config/build/compilation-database: true
 Config/roxygen2/version: 8.0.0
+Config/roxygen2/markdown: true

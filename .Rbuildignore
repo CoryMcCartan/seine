@@ -16,4 +16,4 @@
 ^\.air\.toml$
 ^\.claude$
 ^CLAUDE\.md$
-^cran_comments\.md$
+^cran-comments\.md$

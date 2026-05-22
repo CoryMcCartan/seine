@@ -1,4 +1,4 @@
-CXX_STD = CXX17
+CXX_STD = CXX20
 PKG_CPPFLAGS = -DARMA_DONT_USE_BLAS -DPRINT_LN='std::cout << __func__ << "(), " << __FILE__ << ":" << __LINE__ << "\n";' #-DARMA_NO_DEBUG
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -fno-math-errno -flto
 PKG_LDFLAGS = -flto
