@@ -14,6 +14,7 @@ ei_est_local(
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
   subset = NULL,
+  sample = FALSE,
   conf_level = 0.95,
   regr_var = TRUE,
   unimodal = TRUE,
@@ -78,6 +79,12 @@ are \code{c(0, 1)} the outcome variables sum to 1.}
 \item{subset}{<\code{\link[rlang:args_data_masking]{data-masking}}> An optional
 indexing vector describing the subset of units over which to calculate
 estimates.}
+
+\item{sample}{If \code{TRUE}, draws a sample for each unit from \code{b_cov} (plus
+regression prediction uncertainty if \code{regr_var = TRUE}), adds it to the
+point estimate, and projects. This produces a single posterior draw of the
+local estimates rather than point estimates, and disables confidence
+intervals.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE}, no confidence intervals are calculated.

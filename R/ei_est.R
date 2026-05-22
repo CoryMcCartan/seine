@@ -281,13 +281,13 @@ fmt_contrast <- function(cc, nm) {
 }
 
 est_check_outcome = function(regr, data, quo_outcome) {
-    if (!is.null(regr)) {
+    if (inherits(data, "ei_spec")) {
+        y = as.matrix(data[attr(data, "ei_y")])
+    } else if (!is.null(regr)) {
         if (!is.list(regr)) {
             cli_abort("Wrong type for {.arg regr}.", call=parent.frame())
         }
         y = regr$y
-    } else if (inherits(data, "ei_spec")) {
-        y = as.matrix(data[attr(data, "ei_y")])
     } else {
         y = eval_tidy(quo_outcome, data)
         if (!is.null(y)) {

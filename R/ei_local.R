@@ -62,6 +62,11 @@
 #' @param regr_var If `TRUE`, incorporate uncertainty from the regression model
 #'   when calculating confidence intervals. Only applies when `regr` is fitted
 #'   with [ei_ridge()], and requires that function be called with `vcov = TRUE`.
+#' @param sample If `TRUE`, draws a sample for each unit from `b_cov` (plus
+#'   regression prediction uncertainty if `regr_var = TRUE`), adds it to the
+#'   point estimate, and projects. This produces a single posterior draw of the
+#'   local estimates rather than point estimates, and disables confidence
+#'   intervals.
 #' @param unimodal If `TRUE`, assume a unimodal residual distribution. Reduces
 #'   width of confidence intervals by a factor of 2/3.
 #' @param gaussian If `TRUE`, use Gaussian quantiles for confidence intervals,
@@ -107,6 +112,7 @@ ei_est_local = function(
     bounds = regr$blueprint$bounds,
     sum_one = NULL,
     subset = NULL,
+    sample = FALSE,
     conf_level = 0.95,
     regr_var = TRUE,
     unimodal = TRUE,
@@ -125,7 +131,8 @@ ei_est_local = function(
         )
         regr_var = FALSE
     }
-    rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = isTRUE(regr_var))
+    need_vcov = isTRUE(regr_var)
+    rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = need_vcov)
 
     # subset the predictions and x
     subset_idx = which(check_subset(eval_tidy(enquo(subset), data), n_orig))
@@ -162,7 +169,7 @@ ei_est_local = function(
             ">" = "Read about how to specify {.arg b_cov} in the documentation for {.help ei_est_local}"
         ), call = parent.frame())
     }
-    b_cov = check_proc_b_cov(b_cov, y - rl$yhat, n_x)
+    b_cov = check_proc_b_cov(b_cov, y - rl$yhat, n_x) # returns Cholesky
 
     contr = check_contrast(contrast, colnames(rl$x), colnames(y))
     x_nm = contr$x_nm
@@ -173,23 +180,49 @@ ei_est_local = function(
         idx = k + seq(0, by = n_x, length.out = n_y)
         eta[, idx] = rl$preds[[k]]
     }
-    eta_proj = local_proj(rl$x, eta, y - rl$yhat, b_cov, bounds, sum_one)
+    eps = y - rl$yhat
+    if (isTRUE(sample)) {
+        d = nrow(b_cov)
+        b_cov_mat = crossprod(b_cov)
+        draws = matrix(nrow = n, ncol = d)
+        if (isTRUE(regr_var)) {
+            Dsig = diag(regr$sigma2, nrow = n_y)
+            for (i in seq_len(n)) {
+                R_i = chol(b_cov_mat + (Dsig %x% matrix(rl$vcov_u[i, ], n_x, n_x)))
+                draws[i, ] = rnorm(d) %*% R_i
+            }
+        } else {
+            draws = matrix(rnorm(d * n), nrow = n) %*% b_cov
+        }
+        eta = eta + draws
+        # subtract x-weighted draw from residual so QP sees the correct constraint
+        x_draw = matrix(nrow = n, ncol = n_y)
+        for (l in seq_len(n_y)) {
+            x_draw[, l] = rowSums(rl$x * draws[, (l - 1) * n_x + seq_len(n_x), drop = FALSE])
+        }
+        eps = eps - x_draw
+    }
+    eta_proj = local_proj(rl$x, eta, eps, b_cov, bounds, sum_one)
     misses = attr(eta_proj, "misses")
     relaxations = attr(eta_proj, "relax")
     if (!is.null(contrast)) {
         eta_proj = eta_proj %*% contr$m
     }
 
-    sds = local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
+    if (!isTRUE(sample)) {
+        sds = local_sds(rl$x, b_cov, rl$vcov_u, regr$sigma2, contr$m, !is.null(contrast))
+    }
 
     ests = list(
         .row = rep(subset_idx, length(x_nm)),
         predictor = rep(x_nm, each = n),
         outcome = rep(y_nm, each = n),
         weight = 1L,
-        estimate = c(eta_proj),
-        std.error = c(sds)
+        estimate = c(eta_proj)
     )
+    if (!isTRUE(sample)) {
+        ests$std.error = c(sds)
+    }
     if (is.null(contrast)) {
         ests$weight = rep(c(rl$x * total), n_y)
     } else if (is.null(contrast$predictor)) {
@@ -212,13 +245,13 @@ ei_est_local = function(
         ))
     }
 
-    if (has_bounds) {
+    if (has_bounds && !isTRUE(sample)) {
         bb = ei_bounds_bridge(rl$x, y, total, contrast, bounds, sum_one)
         fac_se = if (isTRUE(unimodal)) sqrt(1 / 12) else 0.5
         ests$std.error = pmin(ests$std.error, fac_se * (bb$max - bb$min))
     }
 
-    if (!isFALSE(conf_level)) {
+    if (!isFALSE(conf_level) && !isTRUE(sample)) {
         if (isTRUE(gaussian)) {
             crit = qnorm(0.5 + conf_level / 2)
         } else {

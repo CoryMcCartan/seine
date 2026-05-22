@@ -447,3 +447,26 @@ test_that("ei_bounds works with numeric subset (formula)", {
     expect_equal(nrow(result_subset), 4)
     expect_true(all(result_subset$.row %in% c(1, 3)))
 })
+
+test_that("ei_bounds contains true b from ei_synthetic for every precinct", {
+    set.seed(12345)
+    spec = ei_synthetic(n = 80, p = 2, n_x = 3, r2_xz = 0.4, r2_bz = 0.4)
+    b_true = attr(spec, "b")  # n × n_x matrix of true unit-level parameters
+
+    bounds = ei_bounds(spec, bounds = c(0, 1))
+
+    x_names = attr(spec, "ei_x")
+    for (j in seq_along(x_names)) {
+        pred_name = x_names[j]
+        b_sub = bounds[bounds$predictor == pred_name, ]
+        rows = b_sub$.row
+        expect_true(
+            all(b_true[rows, j] >= b_sub$min - 1e-8),
+            label = paste0("true b[,", j, "] >= min for predictor ", pred_name)
+        )
+        expect_true(
+            all(b_true[rows, j] <= b_sub$max + 1e-8),
+            label = paste0("true b[,", j, "] <= max for predictor ", pred_name)
+        )
+    }
+})
