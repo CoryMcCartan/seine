@@ -26,6 +26,7 @@ observations), the asymptotic chi-squared distribution, which is faster,
 is used by default instead.
 
 ``` r
+
 library(seine)
 data(elec_1968)
 

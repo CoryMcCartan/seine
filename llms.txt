@@ -28,6 +28,7 @@ inference quickly, accurately, and transparently.
 You can install the development version of **seine** with
 
 ``` r
+
 remotes::install_github("CoryMcCartan/seine")
 ```
 
@@ -45,6 +46,7 @@ interface through a new
 object. Here, we’ll demonstrate the latter.
 
 ``` r
+
 library(seine)
 data(elec_1968)
 

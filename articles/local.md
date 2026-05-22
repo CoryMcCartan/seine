@@ -27,6 +27,7 @@ We now want to estimate the individual-level association between race
 and presidential vote choice *within* each county.
 
 ``` r
+
 library(seine)
 data(elec_1968)
 ```
@@ -38,6 +39,7 @@ and call
 [`ei_ridge()`](https://corymccartan.com/seine/reference/ei_ridge.md).
 
 ``` r
+
 spec = ei_spec(
     elec_1968,
     predictors = vap_white:vap_other,
@@ -75,6 +77,7 @@ statistical assumptions, the local estimates are completely
 unidentified.
 
 ``` r
+
 bounds = ei_bounds(spec, bounds = c(0, 1))
 head(bounds)
 #> # A tibble: 6 × 6
@@ -99,6 +102,7 @@ provides the `global = TRUE` argument to automatically compute the
 global bounds by taking a weighted average of the local bounds.
 
 ``` r
+
 ei_bounds(spec, bounds = c(0, 1), global = TRUE)
 #> # A tibble: 12 × 4
 #>    predictor outcome            min     max
@@ -127,6 +131,7 @@ predictors by outcomes by (min, max), which may be convenient for
 further analysis.
 
 ``` r
+
 dim(as.array(bounds))
 #> [1] 1143    3    4    2
 ```
@@ -139,6 +144,7 @@ above. Here, we calculate bounds on White-Black racially polarized
 voting for each candidate.
 
 ``` r
+
 ei_bounds(spec, bounds = c(0, 1), contrast = list(predictor = c(1, -1, 0)))
 #> # A tibble: 4,572 × 5
 #>     .row predictor             outcome         min    max
@@ -178,6 +184,7 @@ applied, controlled by the `prior_obs` argument. Details are provided in
 McCartan & Kuriwaki (2025+).
 
 ``` r
+
 b_cov = ei_local_cov(m, spec)
 round(sqrt(diag(b_cov)), 3)
 #> vap_white:pres_dem_hum vap_black:pres_dem_hum vap_other:pres_dem_hum 
@@ -201,13 +208,14 @@ round(b_cov[1:3, 1:3], 3)
 
 The rows and columns are ordered by predictor within outcome, i.e.
 (Y1\|X1, Y1\|X2, …, Y2\|X1, Y2\|X2, …). One can visualize the estimated
-covariance structure with
+correlation structure with
 [`heatmap()`](https://rdrr.io/r/stats/heatmap.html) or the
-[`corrplot`](https://cran.r-project.org/package=corrplot) pacakge.
+[`corrplot`](https://cran.r-project.org/package=corrplot) package.
 
 ``` r
+
 heatmap(
-    b_cov,
+    cov2cor(b_cov),
     Rowv = NA,
     col = hcl.colors(n = 100, palette = "Spectral"),
     symm = TRUE,
@@ -215,7 +223,8 @@ heatmap(
 )
 ```
 
-![](local_files/figure-html/unnamed-chunk-8-1.png)
+![Heatmap of the estimated correlation structure for local
+estimands](local_files/figure-html/unnamed-chunk-8-1.png)
 
 We strongly recommend examining the estimated covariance structure and
 evaluating if the estimates are plausible. For example, preferences for
@@ -229,7 +238,7 @@ for different candidates is quite large, around 0.3, especially compared
 to low variation in White preference for e.g. Humphrey, which has
 standard deviation just 0.086. As a reminder, these estimates are of the
 *residual* variation, after controlling for covariates. Still, we might
-be expect redisual variation in Black support to be smaller across the
+be expect residual variation in Black support to be smaller across the
 board, especially for the segregationist Wallace.
 
 ## Local point estimates
@@ -263,6 +272,7 @@ Here, we fit all three and compare the average width of the resulting
 confidence intervals.
 
 ``` r
+
 e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
 e_orth = ei_est_local(m, spec, b_cov = 0,     bounds = c(0, 1), sum_one = TRUE)
 e_nbhd = ei_est_local(m, spec, b_cov = 0.95,  bounds = c(0, 1), sum_one = TRUE)
@@ -286,6 +296,7 @@ We can visualize the distribution of local estimates for a particular
 predictor-outcome combination with a histogram.
 
 ``` r
+
 hist(
     subset(e_rcov, predictor == "vap_white" & outcome == "pres_dem_hum")$estimate,
     breaks = 50,
@@ -294,11 +305,13 @@ hist(
 )
 ```
 
-![](local_files/figure-html/unnamed-chunk-10-1.png)
+![Histogram of local estimates for White support for
+Humphrey](local_files/figure-html/unnamed-chunk-10-1.png)
 
 To examine results for a specific county, we can filter the output.
 
 ``` r
+
 subset(e_rcov, .row == 1)
 #> # A tibble: 12 × 8
 #>     .row predictor outcome      weight estimate std.error conf.low conf.high
@@ -321,6 +334,7 @@ The [`as.array()`](https://rdrr.io/r/base/array.html) method provides a
 convenient view of the point estimates as a three-dimensional array.
 
 ``` r
+
 head(as.array(e_rcov)[, , "pres_rep_nix"])
 #>       vap_white   vap_black  vap_other
 #> [1,] 0.10135960 0.00000e+00 0.09636897

@@ -15,6 +15,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE
 )
 
@@ -25,6 +26,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -37,6 +39,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -49,6 +52,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -61,6 +65,7 @@ ei_bounds(
   contrast = NULL,
   bounds = c(0, 1),
   sum_one = NULL,
+  subset = NULL,
   global = FALSE,
   ...
 )
@@ -117,6 +122,12 @@ as.array(x, ...)
   there is more than one outcome variable. If `NULL`, infers
   `sum_one = TRUE` when the bounds are `c(0, 1)` and the outcome
   variables sum to 1.
+
+- subset:
+
+  \<[`data-masking`](https://rlang.r-lib.org/reference/args_data_masking.html)\>
+  An optional indexing vector describing the subset of units over which
+  to calculate estimates.
 
 - global:
 

@@ -26,6 +26,10 @@ plot(x, ..., pch = 16, cex = 0.2)
 
   As in [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 
+## Value
+
+None, called for side effects (plotting).
+
 ## Examples
 
 ``` r

@@ -20,6 +20,7 @@ both filtered to a single outcome of interest. Both are described in
 [`vignette("sensitivity")`](https://corymccartan.com/seine/articles/sensitivity.md).
 
 ``` r
+
 library(ggplot2)
 library(geomtextpath)
 library(ggrepel)

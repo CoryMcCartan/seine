@@ -36,6 +36,10 @@ ei_bench(spec, subset = NULL, contrast = NULL)
   `list(predictor = c(1, -1, 0), outcome = c(1, -1))` will calculate the
   difference in differences.
 
+## Value
+
+A data frame of benchmark covariate R-squared values.
+
 ## References
 
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V.

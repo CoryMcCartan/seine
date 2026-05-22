@@ -234,7 +234,7 @@ each predictor level), given covariates, then it is appropriate to use
 uniform weights in estimation, or any fixed set of weights.
 
 In general, estimation efficiency is improved when units with larger
-variance in the outcome receive less weight. Various bulit-in options
+variance in the outcome receive less weight. Various built-in options
 are provided by the helper functions in
 [`ei_wgt()`](https://corymccartan.com/seine/reference/ei_wgt.md).
 

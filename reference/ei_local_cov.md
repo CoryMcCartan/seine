@@ -9,7 +9,7 @@ their local mean. See the reference for more detail.
 ## Usage
 
 ``` r
-ei_local_cov(regr, data, prior_obs = 10)
+ei_local_cov(regr, data, subset = NULL, prior_obs = 10)
 ```
 
 ## Arguments
@@ -25,7 +25,13 @@ ei_local_cov(regr, data, prior_obs = 10)
 
   The data frame, matrix, or
   [ei_spec](https://corymccartan.com/seine/reference/ei_spec.md) object
-  that was used to fit the regression.
+  that was used to fit the regression or Riesz representer.
+
+- subset:
+
+  \<[`data-masking`](https://rlang.r-lib.org/reference/args_data_masking.html)\>
+  An optional indexing vector describing the subset of units over which
+  to calculate estimates.
 
 - prior_obs:
 
@@ -45,8 +51,8 @@ residuals depends linearly on the entries of \\\bar{X}\bar{X}^\top\\.
 This function fits an auto-tuned ridge regression of the empirical
 second moments of the residuals on these predictors, and uses the
 polarization identity discussed in the references to estimate the
-covariance for each local estimand. When the estiamated covariance is
-not positive semidefinite, it is projected onto the cone of positive
+covariance for each local estimand. When the estimated covariance is not
+positive semidefinite, it is projected onto the cone of positive
 semidefinite matrices. A small amount of shrinkage is applied towards a
 naive estimator (the covariance of the regression residuals) under an
 inverse-Wishart conjugate prior, whose effective sample size is given by

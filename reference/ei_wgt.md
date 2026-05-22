@@ -32,7 +32,7 @@ observations as `x`. These will have mean 1.
 
 - `ei_wgt_unif()`: Uniform weights across units with any population.
   Appropriate if the unit-level variance is constant, i.e.,
-  homosekdastic.
+  homoskedastic.
 
 - `ei_wgt_prop()`: Weights proportional to the totals. Appropriate if
   the unit-level variance is inversely proportional to the number of

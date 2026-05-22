@@ -27,6 +27,7 @@ counties here are the **aggregation units**; in other analyses, states,
 precincts, or cities might be the aggregation units.
 
 ``` r
+
 library(seine)
 data(elec_1968)
 
@@ -85,6 +86,7 @@ function would let us create a new turnout proportion variable from our
 existing data.
 
 ``` r
+
 elec_1968_turn = ei_proportions(elec_1968, turnout = pres_total,
                                 .total = vap, clamp = 0.01)
 
@@ -131,7 +133,7 @@ More precisely, a researcher needs to believe that **coarsening at
 random** (CAR) holds in order to conduct EI. Coarsening at random means
 that unobserved joint data of interest are mean-independent of the
 predictors and the number of people in each aggregation unit, given
-covariates.[¹](#fn1)
+covariates.[^1]
 
 In these data, CAR means that once we know a set of covariate values for
 a county, such as its education and age, learning about the racial
@@ -142,11 +144,11 @@ For example, take the three counties shown below, which have been
 selected by a clustering algorithm to be similar on the observed
 covariates: urbanity, agriculture, education, and income.
 
-| state    | county              | pop_urban |   farm | educ_elem | educ_hsch | educ_coll | inc_00_03k | inc_03_08k | inc_08_25k | inc_25_99k |
-|:---------|:--------------------|----------:|-------:|----------:|----------:|----------:|-----------:|-----------:|-----------:|-----------:|
-| Virginia | Charles City County |         0 | 0.0409 |    0.5401 |    0.3669 |    0.0930 |     0.1778 |     0.4486 |     0.3570 |     0.0166 |
-| Virginia | Greene County       |         0 | 0.0737 |    0.5827 |    0.3517 |    0.0656 |     0.1736 |     0.3832 |     0.4368 |     0.0064 |
-| Virginia | Louisa County       |         0 | 0.0620 |    0.5300 |    0.3964 |    0.0736 |     0.1823 |     0.4200 |     0.3814 |     0.0163 |
+| state | county | pop_urban | farm | educ_elem | educ_hsch | educ_coll | inc_00_03k | inc_03_08k | inc_08_25k | inc_25_99k |
+|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Virginia | Charles City County | 0 | 0.0409 | 0.5401 | 0.3669 | 0.0930 | 0.1778 | 0.4486 | 0.3570 | 0.0166 |
+| Virginia | Greene County | 0 | 0.0737 | 0.5827 | 0.3517 | 0.0656 | 0.1736 | 0.3832 | 0.4368 | 0.0064 |
+| Virginia | Louisa County | 0 | 0.0620 | 0.5300 | 0.3964 | 0.0736 | 0.1823 | 0.4200 | 0.3814 | 0.0163 |
 
 CAR means that the preference for, e.g., George Wallace among White
 voters in these counties is roughly the same and is unrelated to the
@@ -199,6 +201,7 @@ The function returns an `ei_spec` object, which is just a data frame
 with some additional metadata about these variables.
 
 ``` r
+
 spec = ei_spec(
     elec_1968,
     predictors = vap_white:vap_other,
@@ -263,6 +266,7 @@ Using the tidy interface, fitting the regression is as simple as calling
 the `ei_spec` object:
 
 ``` r
+
 m = ei_ridge(spec)
 
 print(m)
@@ -288,6 +292,7 @@ can also be used in the formula interface. Formulas in **seine** require
 the user to separate the predictors and covariates by a vertical bar.
 
 ``` r
+
 m_form = ei_ridge(
     cbind(pres_dem_hum, pres_rep_nix, pres_ind_wal, pres_abs) ~
         vap_white + vap_black + vap_other |
@@ -310,6 +315,7 @@ values are almost all between 0 and 1, but the presence of some negative
 predictions indicates there is at least some model misspecification.
 
 ``` r
+
 summary(m)
 #> Fitted values:
 #>   pres_dem_hum        pres_rep_nix        pres_ind_wal        pres_abs         
@@ -337,6 +343,7 @@ requires a penalty to be specified. A good default is to use the same
 penalty as was used in the regression.
 
 ``` r
+
 rr = ei_riesz(spec, penalty = m$penalty)
 ```
 
@@ -348,6 +355,7 @@ exactly the same formula and data to both
 tidy interface obviates the need to worry about this.
 
 ``` r
+
 rr_form = ei_riesz(
     ~ vap_white + vap_black + vap_other |
         state * (pop_urban + pop_rural + farm + educ_hsch + educ_coll +
@@ -361,6 +369,7 @@ As with the regression model, the
 useful information for evaluating the Riesz representer.
 
 ``` r
+
 summary(rr)
 #> Second moment of representer:
 #>   vap_white   vap_black   vap_other 
@@ -390,6 +399,7 @@ argument is optional and produces confidence intervals of the specified
 width from the asymptotic Normal approximation.
 
 ``` r
+
 est = ei_est(m, rr, spec, conf_level = 0.95)
 print(est)
 #> # A tibble: 12 × 6
@@ -412,6 +422,7 @@ print(est)
 The same call works with the formula interface.
 
 ``` r
+
 est_form = ei_est(m_form, rr_form, elec_1968)
 ```
 
@@ -424,6 +435,7 @@ predictor group 1 (White voters) and predictor group 2 (Black voters).
 This is a measure of racially polarized voting.
 
 ``` r
+
 est_c = ei_est(m, rr, spec, contrast = list(predictor = c(1, -1, 0)), conf_level = 0.95)
 print(est_c)
 #> # A tibble: 4 × 6
@@ -443,6 +455,7 @@ matrix of all estimates is also accessible via
 [`vcov()`](https://rdrr.io/r/stats/vcov.html).
 
 ``` r
+
 as.matrix(est)
 #>            outcome
 #> predictor   pres_dem_hum  pres_rep_nix pres_ind_wal      pres_abs
@@ -464,6 +477,7 @@ Sometimes, estimates within a set of geographies are of interest. The
 for producing estimates in these smaller areas.
 
 ``` r
+
 as.matrix(ei_est(m, rr, spec, subset = pop_city >= 0.9))
 #>            outcome
 #> predictor   pres_dem_hum pres_rep_nix pres_ind_wal      pres_abs
@@ -486,6 +500,7 @@ have higher error. They generally have improperly calibrated confidence
 intervals.
 
 ``` r
+
 # Not recommended
 est_m = ei_est(regr = m, data = spec)
 est_rr = ei_est(riesz = rr, data = spec)
@@ -529,7 +544,5 @@ McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
 estimation of conditional means from aggregate data. Working paper
 [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
 
-------------------------------------------------------------------------
-
-1.  A slightly weaker assumption is possible; see the methodology paper
-    (McCartan and Kuriwaki 2025) for details.
+[^1]: A slightly weaker assumption is possible; see the methodology
+    paper (McCartan and Kuriwaki 2025) for details.

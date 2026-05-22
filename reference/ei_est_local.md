@@ -16,6 +16,8 @@ ei_est_local(
   contrast = NULL,
   bounds = regr$blueprint$bounds,
   sum_one = NULL,
+  subset = NULL,
+  sample = FALSE,
   conf_level = 0.95,
   regr_var = TRUE,
   unimodal = TRUE,
@@ -98,6 +100,20 @@ as.array(x, ...)
   only apply when `bounds` are enforced and there is more than one
   outcome variable. If `NULL`, infers `sum_one = TRUE` when the bounds
   are `c(0, 1)` the outcome variables sum to 1.
+
+- subset:
+
+  \<[`data-masking`](https://rlang.r-lib.org/reference/args_data_masking.html)\>
+  An optional indexing vector describing the subset of units over which
+  to calculate estimates.
+
+- sample:
+
+  If `TRUE`, draws a sample for each unit from `b_cov` (plus regression
+  prediction uncertainty if `regr_var = TRUE`), adds it to the point
+  estimate, and projects. This produces a single posterior draw of the
+  local estimates rather than point estimates, and disables confidence
+  intervals.
 
 - conf_level:
 

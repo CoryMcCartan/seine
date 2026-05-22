@@ -20,6 +20,7 @@ which we strongly recommend to avoid dependence on linearity
 assumptions.
 
 ``` r
+
 library(seine)
 data(elec_1968)
 
@@ -31,7 +32,7 @@ spec = ei_spec(
     covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
     preproc = function(x) {
         x = model.matrix(~ 0 + ., x) # convert factors to dummies
-        bases::b_bart(x, trees = 200)
+        bases::b_bart(x, trees = 250)
     }
 )
 ```
@@ -49,6 +50,7 @@ direct measure of racially polarized voting. See the main vignette
 for a full walkthrough of this estimation workflow.
 
 ``` r
+
 m = ei_ridge(spec)
 rr = ei_riesz(spec, penalty = m$penalty)
 
@@ -57,16 +59,16 @@ print(est)
 #> # A tibble: 4 × 4
 #>   predictor             outcome       estimate std.error
 #>   <chr>                 <chr>            <dbl>     <dbl>
-#> 1 vap_white - vap_black pres_dem_hum -0.366      0.0472 
-#> 2 vap_white - vap_black pres_rep_nix  0.508      0.0490 
-#> 3 vap_white - vap_black pres_ind_wal -0.142      0.0413 
-#> 4 vap_white - vap_black pres_abs      0.000367   0.00118
+#> 1 vap_white - vap_black pres_dem_hum -0.350     0.0484  
+#> 2 vap_white - vap_black pres_rep_nix  0.489     0.0485  
+#> 3 vap_white - vap_black pres_ind_wal -0.138     0.0413  
+#> 4 vap_white - vap_black pres_abs     -0.000327  0.000975
 ```
 
 While we normally do not recommend setting `conf_level = FALSE` to
 suppress confidence intervals, here we do, so that the output can more
 easily fit on the screen. If confidence intervals are present in `est`,
-they will be adjusted by the senstivity analysis below.
+they will be adjusted by the sensitivity analysis below.
 
 ## Sensitivity analysis
 
@@ -91,14 +93,15 @@ omitted confounder that explains 50% of the residual variation in the
 outcome and 20% of the variation in the Riesz representer.
 
 ``` r
+
 ei_sens(est, c_outcome = 0.5, c_predictor = 0.2)
 #> # A tibble: 4 × 7
 #>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
 #>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white - vap_b… pres_d… -3.66e-1   0.0472        0.5         0.2     0.334 
-#> 2 vap_white - vap_b… pres_r…  5.08e-1   0.0490        0.5         0.2     0.398 
-#> 3 vap_white - vap_b… pres_i… -1.42e-1   0.0413        0.5         0.2     0.434 
-#> 4 vap_white - vap_b… pres_a…  3.67e-4   0.00118       0.5         0.2     0.0147
+#> 1 vap_white - vap_b… pres_d… -3.50e-1  0.0484         0.5         0.2     0.322 
+#> 2 vap_white - vap_b… pres_r…  4.89e-1  0.0485         0.5         0.2     0.381 
+#> 3 vap_white - vap_b… pres_i… -1.38e-1  0.0413         0.5         0.2     0.418 
+#> 4 vap_white - vap_b… pres_a… -3.27e-4  0.000975       0.5         0.2     0.0143
 ```
 
 We can also work backwards and ask what one of the sensitivity
@@ -109,17 +112,19 @@ strongly that confounder would need to be related to the Riesz
 representer to produce a bias of up to 5pp.
 
 ``` r
+
 ei_sens(est, c_outcome = 1, bias_bound = 0.05)
 #> # A tibble: 4 × 7
 #>   predictor          outcome estimate std.error c_outcome c_predictor bias_bound
 #>   <chr>              <chr>      <dbl>     <dbl>     <dbl>       <dbl>      <dbl>
-#> 1 vap_white - vap_b… pres_d… -3.66e-1   0.0472          1     0.00280       0.05
-#> 2 vap_white - vap_b… pres_r…  5.08e-1   0.0490          1     0.00197       0.05
-#> 3 vap_white - vap_b… pres_i… -1.42e-1   0.0413          1     0.00165       0.05
-#> 4 vap_white - vap_b… pres_a…  3.67e-4   0.00118         1     0.590         0.05
+#> 1 vap_white - vap_b… pres_d… -3.50e-1  0.0484           1     0.00300       0.05
+#> 2 vap_white - vap_b… pres_r…  4.89e-1  0.0485           1     0.00215       0.05
+#> 3 vap_white - vap_b… pres_i… -1.38e-1  0.0413           1     0.00179       0.05
+#> 4 vap_white - vap_b… pres_a… -3.27e-4  0.000975         1     0.603         0.05
 ```
 
-For most predictors and outcomes, the answer is not very much!
+For all of the outcomes except `pres_abs`, whose estimate is much
+smaller than 0.05, the answer is not very much!
 
 ### Benchmarking
 
@@ -132,32 +137,34 @@ confounder, and calculates the implied values of the sensitivity
 parameters.
 
 ``` r
+
 bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
-#> ⠙ ETA:17s  Benchmarking state [1/13]
-#> ⠹ ETA:16s  Benchmarking pop_city [2/13]
-#> ⠸ ETA:13s  Benchmarking pop_rural [4/13]
-#> ⠼ ETA:10s  Benchmarking nonfarm [6/13]
-#> ⠴ ETA: 7s  Benchmarking educ_hsch [8/13]
-#> ⠦ ETA: 3s  Benchmarking inc_03_08k [11/13]
-#> ⠦ ETA: 0s  Benchmarking inc_25_99k [13/13]
+#> ⠙ ETA:20s  Benchmarking state [1/13]
+#> ⠹ ETA:17s  Benchmarking pop_urban [3/13]
+#> ⠸ ETA:13s  Benchmarking farm [5/13]
+#> ⠼ ETA:10s  Benchmarking educ_elem [7/13]
+#> ⠴ ETA: 8s  Benchmarking educ_hsch [8/13]
+#> ⠦ ETA: 5s  Benchmarking inc_00_03k [10/13]
+#> ⠧ ETA: 2s  Benchmarking inc_08_25k [12/13]
+#> ⠧ ETA: 0s  Benchmarking inc_25_99k [13/13]
 
 subset(bench, outcome == "pres_rep_nix")
 #> # A tibble: 13 × 7
 #>    covariate  predictor       outcome c_outcome c_predictor confounding  est_chg
 #>    <chr>      <chr>           <chr>       <dbl>       <dbl>       <dbl>    <dbl>
-#>  1 state      vap_white - va… pres_r…   0.216        0.439      -0.113  -0.0623 
-#>  2 pop_city   vap_white - va… pres_r…   0            0.742      -1      -0.00169
-#>  3 pop_urban  vap_white - va… pres_r…   0            0.349      -1      -0.0450 
-#>  4 pop_rural  vap_white - va… pres_r…   0            0.589      -1      -0.0186 
-#>  5 farm       vap_white - va… pres_r…   0            0.255      -1      -0.0243 
-#>  6 nonfarm    vap_white - va… pres_r…   0.0148       0.614      -0.419  -0.0677 
-#>  7 educ_elem  vap_white - va… pres_r…   0            0.219      -1      -0.0436 
-#>  8 educ_hsch  vap_white - va… pres_r…   0.0104       0.187       0.136   0.0119 
-#>  9 educ_coll  vap_white - va… pres_r…   0.0158       0.331      -0.0780 -0.0105 
-#> 10 inc_00_03k vap_white - va… pres_r…   0.0216       0.763      -0.126  -0.0263 
-#> 11 inc_03_08k vap_white - va… pres_r…   0            0.566      -1      -0.0321 
-#> 12 inc_08_25k vap_white - va… pres_r…   0.00749      0.292      -0.310  -0.0274 
-#> 13 inc_25_99k vap_white - va… pres_r…   0            0.0144     -1      -0.0185
+#>  1 state      vap_white - va… pres_r…   0.197        0.277      -0.0737 -2.95e-2
+#>  2 pop_city   vap_white - va… pres_r…   0.0129       0.633      -0.0204 -2.81e-3
+#>  3 pop_urban  vap_white - va… pres_r…   0.00584      0           1       9.20e-3
+#>  4 pop_rural  vap_white - va… pres_r…   0            0.111       1       1.25e-2
+#>  5 farm       vap_white - va… pres_r…   0.0236       0.116       0.209   2.01e-2
+#>  6 nonfarm    vap_white - va… pres_r…   0.0334       0.305       0.108   1.85e-2
+#>  7 educ_elem  vap_white - va… pres_r…   0.00979      0.0473     -0.0144 -5.87e-4
+#>  8 educ_hsch  vap_white - va… pres_r…   0.0323       0.154      -0.0897 -1.14e-2
+#>  9 educ_coll  vap_white - va… pres_r…   0.0370       0.147       0.271   3.62e-2
+#> 10 inc_00_03k vap_white - va… pres_r…   0.0135       0.150       0.336   2.74e-2
+#> 11 inc_03_08k vap_white - va… pres_r…   0            0           1       1.49e-2
+#> 12 inc_08_25k vap_white - va… pres_r…   0.0239       0.0684      0.0843  6.39e-3
+#> 13 inc_25_99k vap_white - va… pres_r…   0.00445      0.0174      1       1.82e-2
 ```
 
 The table above shows the benchmark values for each covariate for the
@@ -166,7 +173,7 @@ additional component of the sensitivity analysis that is discussed in
 the paper; the default value is 1, which is a conservative worst-case
 bound. The benchmark values here show that `state` is far and away the
 strongest observed confounder, whose inclusion changes the estimate by
-38pp. If the unobserved confounders were as strong as `state`, we might
+29pp. If the unobserved confounders were as strong as `state`, we might
 expect a significant amount of bias, as we will see next.
 
 ### Bias contour plot
@@ -178,6 +185,7 @@ We can further overlay the benchmarking values to help interpret the
 results.
 
 ``` r
+
 sens = ei_sens(est) # the default evaluates on a grid of parameters
 plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
 ```
@@ -196,8 +204,8 @@ example, bias of 1 standard error means that a confidence interval with
 The red asterisks indicate the benchmark values for each covariate. Most
 are clustered in the lower-left corner and can’t be distinguished. In
 contrast, the benchmark for `state` shows that an unobserved confounder
-of that strength could lead to bias of around 46pp, which is substantial
-compared to the estimate itself, which is 51pp.
+of that strength could lead to bias of around 30pp, which is substantial
+compared to the estimate itself, which is 49pp.
 
 ### Robustness value
 
@@ -211,14 +219,15 @@ evidence of racially polarized voting, i.e., bias equal to the estimated
 difference between White and Black voters.
 
 ``` r
+
 ei_sens_rv(est, bias_bound = estimate)
 #> # A tibble: 4 × 5
 #>   predictor             outcome       estimate std.error      rv
 #>   <chr>                 <chr>            <dbl>     <dbl>   <dbl>
-#> 1 vap_white - vap_black pres_dem_hum -0.366      0.0472  0.320  
-#> 2 vap_white - vap_black pres_rep_nix  0.508      0.0490  0.360  
-#> 3 vap_white - vap_black pres_ind_wal -0.142      0.0413  0.109  
-#> 4 vap_white - vap_black pres_abs      0.000367   0.00118 0.00876
+#> 1 vap_white - vap_black pres_dem_hum -0.350     0.0484   0.317  
+#> 2 vap_white - vap_black pres_rep_nix  0.489     0.0485   0.362  
+#> 3 vap_white - vap_black pres_ind_wal -0.138     0.0413   0.110  
+#> 4 vap_white - vap_black pres_abs     -0.000327  0.000975 0.00803
 ```
 
 The robustness value (one for each predictor/outcome combination) is

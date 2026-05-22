@@ -51,6 +51,10 @@ weights(object, normalize = TRUE, ...)
 
   If `TRUE`, normalize the weights to have mean 1.
 
+## Value
+
+See individual methods.
+
 ## Functions
 
 - `predict(ei_ridge)`: Predict from an `ei_ridge` model.

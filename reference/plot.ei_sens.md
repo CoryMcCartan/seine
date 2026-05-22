@@ -82,6 +82,10 @@ plot(
 
   Scaling factor for the benchmark points and labels, if provided
 
+## Value
+
+None, called for side effects (plotting).
+
 ## References
 
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V.
