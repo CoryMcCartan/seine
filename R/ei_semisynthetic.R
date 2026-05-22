@@ -86,8 +86,9 @@
 #' spec_synth = ei_semisynthetic(
 #'     regr, riesz, spec, 
 #'     predictor = "vap_white", outcome = "pres_dem_hum", 
-#'     c_outcome = 0.5, c_predictor = 0.5
+#'     c_outcome = 0.95, c_predictor = 0.95, include=F
 #' )
+#' ei_test_car(spec_synth, iter=200, use_chisq=F, use_hc=T)
 #' 
 #' # compute estimates on original and synthetic data
 #' regr_synth = ei_ridge(spec_synth)
@@ -462,7 +463,7 @@ ei_semisynthetic = function(
         ei_z = ei_z,
         ei_n = total,
         ei_preproc = attr(spec, "ei_preproc"),
-        ei_z_proc = attr(spec, "ei_z_proc"),
+        ei_z_proc = if (isTRUE(include)) run_preproc(new_data, attr(spec, "ei_preproc"), ei_z) else attr(spec, "ei_z_proc"),
         b = b,
         b_loc = eta,
         b_cov = b_cov,

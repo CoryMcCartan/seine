@@ -215,7 +215,7 @@ test_that("bias bound holds for specific predictor/outcome combo", {
     m_ss = ei_ridge(ss)
     rr_ss = ei_riesz(ss, penalty = m_ss$penalty)
 
-    est_ss = ei_est(m1, rr1, ss)
+    est_ss = ei_est(m_ss, rr_ss, ss)
     true_vals = attr(ss, "est_true")$true[1]
     actual_bias = abs(est_ss$estimate[1] - true_vals)
 
@@ -414,4 +414,22 @@ test_that("c_outcome is calibrated over the subset", {
 
     r2 = cor(resid_y[idx], a[idx])^2
     expect_lt(abs(r2 - target), tol)
+})
+
+# --------------------------------------------------------------------------
+# include=TRUE: confounder as covariate
+# --------------------------------------------------------------------------
+
+test_that("est_true matches DML estimate when include=TRUE", {
+    set.seed(1968)
+    ss = ei_semisynthetic(m1, rr1, spec1, predictor = "vap_white", outcome = "pres_ind_wal",
+                          est = est1, b_cov = bc1,
+                          c_outcome = 0.3, c_predictor = 0.3, confounding = 1,
+                          include = TRUE)
+    m_ss  = ei_ridge(ss)
+    rr_ss = ei_riesz(ss, penalty = m_ss$penalty)
+    est_ss = ei_est(m_ss, rr_ss, ss)
+
+    true_val = attr(ss, "est_true")$true[1]
+    expect_lt(abs(est_ss$estimate[1] - true_val), est_ss$std.error[1]*3)
 })
