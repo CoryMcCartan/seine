@@ -94,7 +94,8 @@ ei_riesz.ei_spec <- function(x, weights, penalty, scale=TRUE, ...) {
 #' @export
 #' @rdname ei_riesz
 ei_riesz.data.frame <- function(x, z, total, weights, penalty, scale=TRUE, ...) {
-    if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
+    both <- intersect(colnames(x), colnames(z))
+    if (length(both) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
     }
@@ -157,8 +158,8 @@ ei_riesz_bridge <- function(processed, ...) {
     }
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
+    if (anyNA(x)) cli_abort("Missing values found in predictors.", call=err_call)
+    if (anyNA(z)) cli_abort("Missing values found in covariates.", call=err_call)
 
     fit <- ei_riesz_impl(x, z, total, weights, penalty)
 

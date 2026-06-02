@@ -286,7 +286,7 @@ test_that("ei_bench leave-one-out logic produces different values per covariate"
     bench = ei_bench(spec)
 
     covs = unique(bench$covariate)
-    expect_equal(length(covs), 2)
+    expect_length(covs, 2)
 
     bench_urban = bench[bench$covariate == "pop_urban", ]
     bench_farm = bench[bench$covariate == "farm", ]
@@ -301,7 +301,7 @@ test_that("ei_bench works with predictor contrast", {
 
     expect_s3_class(bench, "ei_bench")
     expect_true(nrow(bench) > 0)
-    expect_equal(length(unique(bench$predictor)), 1)
+    expect_length(unique(bench$predictor), 1)
     expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
     expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
 })
@@ -314,7 +314,7 @@ test_that("ei_bench works with outcome contrast", {
 
     expect_s3_class(bench, "ei_bench")
     expect_true(nrow(bench) > 0)
-    expect_equal(length(unique(bench$outcome)), 1)
+    expect_length(unique(bench$outcome), 1)
     expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
     expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
 })
@@ -327,8 +327,8 @@ test_that("ei_bench works with predictor-outcome contrast", {
 
     expect_s3_class(bench, "ei_bench")
     expect_true(nrow(bench) > 0)
-    expect_equal(length(unique(bench$predictor)), 1)
-    expect_equal(length(unique(bench$outcome)), 1)
+    expect_length(unique(bench$predictor), 1)
+    expect_length(unique(bench$outcome), 1)
     expect_true(all(bench$c_outcome >= 0 & bench$c_outcome <= 1))
     expect_true(all(bench$c_predictor >= 0 & bench$c_predictor <= 1))
 })
@@ -353,9 +353,9 @@ test_that("ei_bench with contrast values remain valid", {
 
     bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
 
-    expect_true(all(!is.na(bench$c_outcome)))
-    expect_true(all(!is.na(bench$c_predictor)))
-    expect_true(all(!is.na(bench$confounding)))
+    expect_false(anyNA(bench$c_outcome))
+    expect_false(anyNA(bench$c_predictor))
+    expect_false(anyNA(bench$confounding))
     expect_true(all(is.finite(bench$c_outcome)))
     expect_true(all(is.finite(bench$c_predictor)))
 })

@@ -15,6 +15,7 @@
 ^compile_commands\.json$
 ^\.cache$
 ^\.air\.toml$
+^jarl\.toml$
 ^\.claude$
 ^CLAUDE\.md$
 ^cran-comments\.md$

@@ -68,7 +68,7 @@ ei_proportions = function(data, ..., .total=".total", .other=".other", clamp=1e-
     old_names = names(data)[cols]
     names(data)[cols] = names(cols)
 
-    if (any(is.na(data[cols]))) {
+    if (anyNA(data[cols])) {
         has_na = old_names[which(colSums(is.na(data[cols])) > 0)]
         cli_abort("Some selected columns have missing values: {.var {has_na}}.")
     }

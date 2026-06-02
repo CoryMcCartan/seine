@@ -1,0 +1,5 @@
+[lint]
+select = ["ALL"]
+exclude = ["explore/"]
+ignore = ["assignment"]
+fix-roxygen = true

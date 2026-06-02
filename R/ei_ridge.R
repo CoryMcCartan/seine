@@ -194,7 +194,8 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NU
 #' @rdname ei_ridge
 ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
                                 scale=TRUE, vcov=TRUE, ...) {
-    if (length(both <- intersect(colnames(x), colnames(z))) > 0) {
+    both <- intersect(colnames(x), colnames(z))
+    if (length(both) > 0) {
         cli_abort(c("Predictors and covariates must be distinct",
                     ">"="Got: {.var {both}}"), call=parent.frame())
     }
@@ -267,8 +268,12 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
     z_shift = colSums(z * weights) / sum(weights)
     z = shift_cols(z, z_shift)
     if (isTRUE(bp$scale)) {
-        z_scale = (colSums(z^2 * weights) / sum(weights))^-0.5
-        z = scale_cols(z, z_scale)
+        z_scale = (colSums(z^2 * weights) / sum(weights))
+        if (any(z_scale == 0)) {
+            cli_warn("Columns {which(z_scale == 0)} have zero variance and will not be scaled.", call = err_call)
+            z_scale[z_scale == 0] = 1
+        }
+        z = scale_cols(z, z_scale^-0.5)
     } else {
         z_scale = rep(1, ncol(z))
     }
@@ -276,9 +281,9 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
     y = as.matrix(processed$outcomes)
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=err_call)
-    if (any(is.na(y))) cli_abort("Missing values found in outcome.", call=err_call)
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.", call=err_call)
+    if (anyNA(x)) cli_abort("Missing values found in predictors.", call=err_call)
+    if (anyNA(y)) cli_abort("Missing values found in outcome.", call=err_call)
+    if (anyNA(z)) cli_abort("Missing values found in covariates.", call=err_call)
 
     if (ncol(z) == 0) {
         bp$penalty = 0
@@ -386,8 +391,8 @@ predict_ei_ridge_bridge <- function(type, object, processed) {
     z = scale_cols(z, object$z_scale)
 
     # NA checking
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.")
-    if (any(is.na(z))) cli_abort("Missing values found in covariates.")
+    if (anyNA(x)) cli_abort("Missing values found in predictors.")
+    if (anyNA(z)) cli_abort("Missing values found in covariates.")
 
     switch(
         type,
@@ -404,7 +409,7 @@ predict_ei_ridge_numeric <- function(object, x, z) {
 # helper to pull columns from predictor matrix and add .other if needed
 # used by ei_riesz and ei_est as well
 pull_x <- function(x, idx_x) {
-    if (any(is.na(idx_x))) {
+    if (anyNA(idx_x)) {
         cli_abort(c("Specification error.",
                     "i"="Factors are not allowed as predictors.
                           Check your formula or specification.",

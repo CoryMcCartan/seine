@@ -81,7 +81,7 @@ test_that("local confidence intervals work with contrasts", {
         bounds = c(0, 1),
         sum_one = TRUE,
         conf_level = 0.95,
-        regr_var = T
+        regr_var = TRUE
     )
     expect_equal(nrow(ests), nrow(spec))
     expect_lt(mean(ests$estimate), 0)

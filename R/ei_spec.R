@@ -221,6 +221,11 @@ reconstruct_ei_spec = function(data, old) {
     data
 }
 
+#' @exportS3Method dplyr::dplyr_reconstruct
+dplyr_reconstruct.ei_spec = function(data, template) {
+    reconstruct_ei_spec(data, template)
+}
+
 
 #' @export
 print.ei_spec = function(x, ..., n=5) {
@@ -350,7 +355,7 @@ check_make_weights = function(x, data = NULL, n = nrow(data), arg = "total", req
     if (isFALSE(x)) {
         x = rep(1, n)
     }
-    if (any(is.na(x))) {
+    if (anyNA(x)) {
         cli_abort("Missing values found in {.arg {arg}}.", call=parent.frame())
     }
     if (any(x < 0)) {

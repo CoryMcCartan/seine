@@ -177,8 +177,8 @@ ei_bounds_bridge <- function(x, y, total, contrast, bounds, sum_one = FALSE, glo
     if (identical(bounds, c(-Inf, Inf))) {
         cli_abort("At least one bound must be provided for {.fn ei_bounds}.", call=parent.frame())
     }
-    if (any(is.na(x))) cli_abort("Missing values found in predictors.", call=parent.frame())
-    if (any(is.na(y))) cli_abort("Missing values found in outcome.", call=parent.frame())
+    if (anyNA(x)) cli_abort("Missing values found in predictors.", call=parent.frame())
+    if (anyNA(y)) cli_abort("Missing values found in outcome.", call=parent.frame())
     if (has_contrast && !is.null(contrast$predictor) && isTRUE(global)) {
         cli_abort(
             "Cannot aggregate bounds with predictor contrasts using {.arg global=TRUE}.",

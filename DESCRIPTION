@@ -38,7 +38,6 @@ LinkingTo:
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-SystemRequirements: C++20
 URL: https://corymccartan.com/seine/, https://github.com/CoryMcCartan/seine
 BugReports: https://github.com/CoryMcCartan/seine/issues
 VignetteBuilder: knitr

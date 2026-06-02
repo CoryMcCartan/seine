@@ -203,7 +203,7 @@ check_subset = function(subset, n) {
             cli_abort("The {.arg subset} argument must be a logical or integer vector.",
                       call = parent.frame())
         }
-        if (any(is.na(subset))) {
+        if (anyNA(subset)) {
             cli_abort("The {.arg subset} argument must not contain missing values.",
                       call = parent.frame())
         }
@@ -270,7 +270,7 @@ fmt_contrast <- function(cc, nm) {
     apply(as.matrix(cc), 2, function(coefs) {
         xc = coefs[coefs != 0]
         xn = nm[coefs != 0][order(xc, decreasing = TRUE)]
-        xc = xc[order(xc, decreasing = TRUE)]
+        xc = sort(xc, decreasing = TRUE)
         xn = ifelse(abs(xc) == 1, xn, paste0(xc, "*", xn))
         xs = c(
             c("-", "")[1 + (xc[1] > 0)],
@@ -356,7 +356,7 @@ est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
     # normalize and check
     z = shift_cols(z, regr$z_shift)
     z = scale_cols(z, regr$z_scale)
-    if (any(is.na(z)))
+    if (anyNA(z))
         cli_abort("Missing values found in covariates.", call=parent.frame())
     z = cbind(regr$int_scale, z)
 
