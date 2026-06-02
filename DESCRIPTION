@@ -1,6 +1,6 @@
 Package: seine
 Title: Semiparametric Ecological Inference
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
     person("Cory", "McCartan", , "mccartan@psu.edu", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-6251-669X")),

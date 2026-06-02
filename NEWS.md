@@ -1,4 +1,4 @@
-# seine 0.1.1
+# seine 0.1.2
 
 * Double/debiased ML for ecological inference
 * Sensitivity analysis for EI

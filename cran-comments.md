@@ -11,5 +11,6 @@
 
 0 errors | 0 warnings | 1 note
 
-* This is a resubmission of a new package after Debian incoming checks flagged
-  an issue with a linker flag (now fixed).
+* This is a resubmission of a new package which moves `par()` inside `plot.ei_sens()`
+  from the end of the function to an `on.exit()` call right before plotting 
+  parameters are changed.

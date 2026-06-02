@@ -323,7 +323,8 @@ plot.ei_sens <- function(
     cz = matrix(x$bias_bound, nrow = length(cx), byrow = TRUE)
 
     breaks = 10^contour_exp %x% c(2:4, 6:9)
-    oldmar = graphics::par()$mar
+    oldpar = graphics::par()
+    on.exit(graphics::par(oldpar))
     graphics::par(mar = c(4.2, 5.2, 3, 1.1))
     graphics::contour(
         cx,
@@ -416,7 +417,6 @@ plot.ei_sens <- function(
             font = 2
         )
     }
-    graphics::par(mar = oldmar)
 }
 
 #' Benchmark sensitivity parameters from observed covariates
