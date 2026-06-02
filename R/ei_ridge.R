@@ -273,7 +273,8 @@ ei_ridge_bridge <- function(processed, vcov, ...) {
             cli_warn("Columns {which(z_scale == 0)} have zero variance and will not be scaled.", call = err_call)
             z_scale[z_scale == 0] = 1
         }
-        z = scale_cols(z, z_scale^-0.5)
+        z_scale = z_scale^-0.5
+        z = scale_cols(z, z_scale)
     } else {
         z_scale = rep(1, ncol(z))
     }
