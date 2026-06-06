@@ -383,3 +383,7 @@ of that identifying assumption.
 McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
 estimation of conditional means from aggregate data.
 Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+*Develops the estimator implemented in `seine`.*
+
+Kuriwaki, S. and McCartan, C., 2026. The Role of Confounders and Linearity in Ecological Inference: A Reassessment. [arXiv:2601.07668](https://arxiv.org/abs/2601.07668)
+*Situates ecological inference in the broader literature and compares common methods, including the one implemented in `seine`.*

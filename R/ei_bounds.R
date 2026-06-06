@@ -2,7 +2,9 @@
 #'
 #' For each observation, computes the minimum and maximum value of each local
 #' estimand that is consistent with the accounting identity and the bounds
-#' on the outcome. Optionally aggregate the computed bounds across units.
+#' on the outcome. These correspond to the Duncan-Davis (1953) bounds in the
+#' simplest 2-by-2 case, but generalize to more rows and columns.
+#' Optionally aggregate the computed bounds across units.
 #'
 #' @inheritParams ei_ridge
 #' @inheritParams ei_est_local
@@ -32,11 +34,18 @@
 #'   for each observation, where applicable. Taking a weighted average of the
 #'   bounds against this column will produce global bounds. It has class `ei_bounds`.
 #'
+#' @references
+#' Duncan, O. D., & Davis, B. (1953). An Alternative to Ecological Correlation.
+#' *American Sociological Review*, 18(6), 665--666.
+#'
+#' Cho, W. K. T., & Manski, C. F. (2008). Cross-Level/Ecological Inference. In
+#' *The Oxford Handbook of Political Methodology* (pp. 530--569).
+#'
 #' @examples
 #' data(elec_1968)
 #'
 #' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
-#'                total = pres_total, covariates = c(state, pop_urban, farm))
+#'                total = pres_total)
 #'
 #' ei_bounds(spec, bounds = c(0, 1))
 #' ei_bounds(spec, bounds = c(0, 1), global = TRUE)

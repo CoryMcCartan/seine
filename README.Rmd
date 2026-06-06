@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 Ecological inference (EI) is the statistical problem of learning individual-level
 associations from aggregate-level data.
-Without certain *identifying assumptions* and proper *estimation methods*,
+Without certain identifying assumptions and proper estimation methods,
 researchers can easily draw incorrect conclusions from aggregate data, finding
 patterns where none exist, missing important individual-level patterns, or
 even concluding an effect runs in the opposite direction than it actually does.
@@ -93,3 +93,14 @@ In addition to being an acronym for "semiparametric ecological inference,"
 catch fish like tuna in aggregate. A net also is visually similar to the
 tomography lines which are commonly used to visualize the interaction of the
 latent data and the accounting identity in 2&times;2 ecological inference.
+
+
+# References
+
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+*Develops the estimator implemented in `seine`.*
+
+Kuriwaki, S. and McCartan, C., 2026. The Role of Confounders and Linearity in Ecological Inference: A Reassessment. [arXiv:2601.07668](https://arxiv.org/abs/2601.07668)
+*Situates `seine` in the broader ecological inference literature, explains the importance of confounders in ecological inference, and synthesizes existing methods in the regression framework.*
