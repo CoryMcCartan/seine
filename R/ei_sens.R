@@ -224,7 +224,8 @@ ei_sens_rv <- function(est, bias_bound, confounding = 1) {
 
 #' Bias contour plot for ecological inference estimates
 #'
-#' Displays bias bound as a function of `c_outcome` and `c_predictor` in
+#' Displays the bias bound---the bias that an unobserved confounder could induce
+#' in the point estimate---as a function of `c_outcome` and `c_predictor` in
 #' [ei_sens()] on a contour plot. Bounds on the outcome, and standard errors of
 #' the point estimate, can be overlaid as contours on the plot to aid in
 #' interpretation. Benchmarked values of `c_outcome` and `c_predictor` based on
@@ -233,17 +234,23 @@ ei_sens_rv <- function(est, bias_bound, confounding = 1) {
 #' @param x An [ei_sens] object
 #' @param y An outcome variable, as a character vector. Defaults to first.
 #' @param predictor A predictor variable to plot, as a character vector. Defaults to first.
-#' @param bounds A vector `c(min, max)` of bounds for the outcome, which will
-#'   affect the contours which are plotted. If `bounds = NULL` (the default),
-#'   they will be inferred where possible. Setting `bounds = FALSE` turns off these labels.
+#' @param bounds A vector `c(min, max)` of bounds for the outcome. When
+#'   provided, "Implied truth" contours are drawn at the levels of confounding
+#'   (either positive or negative) that would generate the point estimate when the truth
+#'   is at that bound. If `bounds = NULL` (the default) or `FALSE`, these
+#'   contours are not drawn.
 #' @param bench A data frame of benchmark values, from [ei_bench()], to plot.
 #' @param plot_se A vector of multiples of the standard error to plot as contours.
 #' @param contour_exp Powers of 10 for which to plot contours of the bias bound.
+#' @param show_estimate If `TRUE` (the default), print the point estimate above
+#'   the plot.
 #' @param ... Additional arguments passed on to [contour()]
 #' @param lwd Scaling factor for the contour line widths
 #' @param cex Scaling factor for the benchmark points and labels, if provided
 #' @param pch The point type (see [points()]) for the benchmark values, if
 #'   provided
+#' @param asp The aspect ratio, passed to [plot.window()]. Defaults to `NA`,
+#'   filling the plotting region; set to `1` for a square plot.
 #'
 #' @references
 #' Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
@@ -273,10 +280,12 @@ plot.ei_sens <- function(
     bench = NULL,
     plot_se = 1:3,
     contour_exp = -2:-1,
+    show_estimate = TRUE,
     ...,
     lwd = 1,
     pch = 8,
-    cex = 1
+    cex = 1,
+    asp = NA
 ) {
     if (is.null(y)) {
         y = x$outcome[1]
@@ -311,10 +320,10 @@ plot.ei_sens <- function(
         )
     }
 
-    if (isFALSE(bounds)) {
+    # Only draw the "Implied truth" contours when bounds are explicitly passed;
+    # NULL (the default) and FALSE both turn them off.
+    if (isFALSE(bounds) || is.null(bounds)) {
         bounds = numeric(0)
-    } else if (is.null(bounds)) {
-        bounds = check_bounds(attr(x, "bounds_inf"), NULL)
     }
     bounds = bounds[is.finite(bounds)]
 
@@ -333,7 +342,7 @@ plot.ei_sens <- function(
     breaks = 10^contour_exp %x% c(2:4, 6:9)
     oldpar = graphics::par()
     on.exit(graphics::par(oldpar))
-    graphics::par(mar = c(4.2, 5.2, 3, 1.1))
+    graphics::par(mar = c(4.2, 5.2, 4.5, 1.1))
     graphics::contour(
         cx,
         cy,
@@ -346,12 +355,26 @@ plot.ei_sens <- function(
         ylab = bquote({R^2}[.(y) ~ "~ confounder | predictors, covariates"]),
         # ylab = bquote({R^2}[.(y) ~ "~ confounder |" ~
         #                .(paste(preds, collapse = ", ")) ~ ", covariates" ]),
-        main = paste0("Sensitivity bounds for E[", y, " | ", predictor, "]"),
         xaxs = "i",
         yaxs = "i",
+        asp = asp,
         cex.lab = 1.5
     )
     graphics::grid(col = "#dfdfdf")
+
+    # Title raised to leave breathing room above the plot
+    graphics::title(
+        main = paste0("Confounding bias for E[", y, " | ", predictor, "]"),
+        line = 3
+    )
+    if (isTRUE(show_estimate)) {
+        graphics::mtext(
+            paste0("Point estimate = ", format(x$estimate[1], digits = 3)),
+            side = 3,
+            line = 1.6,
+            cex = 0.9
+        )
+    }
 
     breaks = c(10^contour_exp %x% c(1, 5), 1)
     labels = as.character(breaks)
@@ -379,7 +402,7 @@ plot.ei_sens <- function(
             labcex = 0.85 * cex,
             col = "#a42",
             levels = abs(bounds - x$estimate[1]),
-            labels = paste("Estimate =", format(bounds, digits = 3)),
+            labels = paste("Implied truth =", format(bounds, digits = 3)),
             add = TRUE,
             method = "edge"
         )

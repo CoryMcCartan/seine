@@ -150,7 +150,7 @@ We can further overlay the benchmarking values to help interpret the results.
 
 ```{r fig.height = 7, fig.alt = "Bias contour plot for the racially polarized Nixon vote"}
 sens = ei_sens(est) # the default evaluates on a grid of parameters
-plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
+plot(sens, "pres_rep_nix", bench = bench)
 ```
 
 The contour lines indicate how much bias could result from an unobserved
@@ -166,6 +166,25 @@ Most are clustered in the lower-left corner and can't be distinguished. In
 contrast, the benchmark for `state` shows that an unobserved confounder of that
 strength could lead to bias of around `r fmt_pp(est_bias)`, which is substantial
 compared to the estimate itself, which is `r fmt_pp(est_pt)`.
+
+The point estimate is printed above the plot for reference; set
+`show_estimate = FALSE` to omit it.
+
+Setting the `bounds` parameter in the `plot` function will also indicate the limits
+of the bias given the bounds on the outcome variable. In the example above, the
+point estimate is that the difference in Nixon vote is 0.488. If this estimate 
+contained a bias of 1.488, a true value of -1 could produce this 
+estimate = -1 + 1.488. Similarly, if this estimate contained a bias of -0.512, 
+a true value of 1 could produce this estimate = 1 + (- 0.512). Any bias larger 
+in magnitude to these potential biases, such as 1.5, is not possible given that 
+the outcome is bounded between -1 and 1 in this case. The red lines in the plot
+below show these potential worst-cases biases in absolute terms: `abs(-0.512)` and
+`abs(1.488)`.
+
+```{r}
+plot(sens, "pres_rep_nix", bounds = c(-1, 1))
+```
+
 
 ## Robustness value
 

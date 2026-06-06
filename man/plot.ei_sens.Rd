@@ -12,10 +12,12 @@
   bench = NULL,
   plot_se = 1:3,
   contour_exp = -2:-1,
+  show_estimate = TRUE,
   ...,
   lwd = 1,
   pch = 8,
-  cex = 1
+  cex = 1,
+  asp = NA
 )
 }
 \arguments{
@@ -25,15 +27,20 @@
 
 \item{predictor}{A predictor variable to plot, as a character vector. Defaults to first.}
 
-\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome, which will
-affect the contours which are plotted. If \code{bounds = NULL} (the default),
-they will be inferred where possible. Setting \code{bounds = FALSE} turns off these labels.}
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome. When
+provided, "Implied truth" contours are drawn at the levels of confounding
+(either positive or negative) that would generate the point estimate when the truth
+is at that bound. If \code{bounds = NULL} (the default) or \code{FALSE}, these
+contours are not drawn.}
 
 \item{bench}{A data frame of benchmark values, from \code{\link[=ei_bench]{ei_bench()}}, to plot.}
 
 \item{plot_se}{A vector of multiples of the standard error to plot as contours.}
 
 \item{contour_exp}{Powers of 10 for which to plot contours of the bias bound.}
+
+\item{show_estimate}{If \code{TRUE} (the default), print the point estimate above
+the plot.}
 
 \item{...}{Additional arguments passed on to \code{\link[=contour]{contour()}}}
 
@@ -43,12 +50,16 @@ they will be inferred where possible. Setting \code{bounds = FALSE} turns off th
 provided}
 
 \item{cex}{Scaling factor for the benchmark points and labels, if provided}
+
+\item{asp}{The aspect ratio, passed to \code{\link[=plot.window]{plot.window()}}. Defaults to \code{NA},
+filling the plotting region; set to \code{1} for a square plot.}
 }
 \value{
 None, called for side effects (plotting).
 }
 \description{
-Displays bias bound as a function of \code{c_outcome} and \code{c_predictor} in
+Displays the bias bound---the bias that an unobserved confounder could induce
+in the point estimate---as a function of \code{c_outcome} and \code{c_predictor} in
 \code{\link[=ei_sens]{ei_sens()}} on a contour plot. Bounds on the outcome, and standard errors of
 the point estimate, can be overlaid as contours on the plot to aid in
 interpretation. Benchmarked values of \code{c_outcome} and \code{c_predictor} based on
