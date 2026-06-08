@@ -283,7 +283,7 @@ c(
     neighborhood = mean(e_nbhd$conf.high - e_nbhd$conf.low)
 )
 #>    estimated   orthogonal neighborhood 
-#>    0.4165165    0.2876576    0.2334284
+#>    0.4165163    0.2876576    0.2334294
 ```
 
 Setting `sum_one = TRUE` enforces the constraint that the local vote
@@ -316,18 +316,18 @@ subset(e_rcov, .row == 1)
 #> # A tibble: 12 × 8
 #>     .row predictor outcome      weight estimate std.error conf.low conf.high
 #>    <int> <chr>     <chr>         <dbl>    <dbl>     <dbl>    <dbl>     <dbl>
-#>  1     1 vap_white pres_dem_hum 5877.   0.111     0.0684   0          0.262 
-#>  2     1 vap_black pres_dem_hum 1831.   0.478     0.218    0          0.841 
-#>  3     1 vap_other pres_dem_hum   13.3  0.902     0.244    0.176      1     
-#>  4     1 vap_white pres_rep_nix 5877.   0.101     0.0293   0.0139     0.102 
-#>  5     1 vap_black pres_rep_nix 1831.   0         0.0941   0          0.281 
-#>  6     1 vap_other pres_rep_nix   13.3  0.0964    0.233    0          0.791 
-#>  7     1 vap_white pres_ind_wal 5877.   0.775     0.0627   0.620      0.934 
-#>  8     1 vap_black pres_ind_wal 1831.   0.512     0.200    0          1     
-#>  9     1 vap_other pres_ind_wal   13.3  0         0.289    0          0.861 
-#> 10     1 vap_white pres_abs     5877.   0.0128    0.00119  0.00927    0.0160
-#> 11     1 vap_black pres_abs     1831.   0.0103    0.00385  0          0.0218
-#> 12     1 vap_other pres_abs       13.3  0.00123   0.00954  0          0.0297
+#>  1     1 vap_white pres_dem_hum 5877.  1.11e- 1   0.0684   0          0.262 
+#>  2     1 vap_black pres_dem_hum 1831.  4.78e- 1   0.218    0          0.841 
+#>  3     1 vap_other pres_dem_hum   13.3 9.02e- 1   0.244    0.176      1     
+#>  4     1 vap_white pres_rep_nix 5877.  1.01e- 1   0.0293   0.0139     0.102 
+#>  5     1 vap_black pres_rep_nix 1831.  0          0.0941   0          0.281 
+#>  6     1 vap_other pres_rep_nix   13.3 9.64e- 2   0.233    0          0.791 
+#>  7     1 vap_white pres_ind_wal 5877.  7.75e- 1   0.0627   0.620      0.934 
+#>  8     1 vap_black pres_ind_wal 1831.  5.12e- 1   0.200    0          1     
+#>  9     1 vap_other pres_ind_wal   13.3 5.55e-17   0.289    0          0.861 
+#> 10     1 vap_white pres_abs     5877.  1.28e- 2   0.00119  0.00927    0.0160
+#> 11     1 vap_black pres_abs     1831.  1.03e- 2   0.00385  0          0.0218
+#> 12     1 vap_other pres_abs       13.3 1.23e- 3   0.00954  0          0.0297
 ```
 
 The [`as.array()`](https://rdrr.io/r/base/array.html) method provides a
@@ -336,13 +336,13 @@ convenient view of the point estimates as a three-dimensional array.
 ``` r
 
 head(as.array(e_rcov)[, , "pres_rep_nix"])
-#>       vap_white   vap_black  vap_other
-#> [1,] 0.10135960 0.00000e+00 0.09636897
-#> [2,] 0.13338927 0.00000e+00 0.09824133
-#> [3,] 0.07996136 0.00000e+00 0.10443038
-#> [4,] 0.07276098 0.00000e+00 0.10519746
-#> [5,] 0.22660678 0.00000e+00 0.10231746
-#> [6,] 0.11193454 5.20417e-18 0.10583097
+#>       vap_white    vap_black  vap_other
+#> [1,] 0.10135960 0.000000e+00 0.09636897
+#> [2,] 0.13338927 0.000000e+00 0.09824133
+#> [3,] 0.07996136 1.838807e-16 0.10443038
+#> [4,] 0.07276098 1.249001e-16 0.10519746
+#> [5,] 0.22660678 0.000000e+00 0.10231746
+#> [6,] 0.11193454 0.000000e+00 0.10583097
 ```
 
 ## References

@@ -25,7 +25,14 @@ inference quickly, accurately, and transparently.
 
 ## Installation
 
-You can install the development version of **seine** with
+You can install **seine** from CRAN with
+
+``` r
+
+install.packages("seine")
+```
+
+Or install the development version with
 
 ``` r
 

@@ -106,6 +106,19 @@ sens = ei_sens(est)
 
 plot(sens)
 
+#> Warning: graphical parameter "cin" cannot be set
+#> Warning: graphical parameter "cra" cannot be set
+#> Warning: graphical parameter "csi" cannot be set
+#> Warning: graphical parameter "cxy" cannot be set
+#> Warning: graphical parameter "din" cannot be set
+#> Warning: graphical parameter "page" cannot be set
 
 plot(sens, bench = ei_bench(spec), plot_se=NULL)
+
+#> Warning: graphical parameter "cin" cannot be set
+#> Warning: graphical parameter "cra" cannot be set
+#> Warning: graphical parameter "csi" cannot be set
+#> Warning: graphical parameter "cxy" cannot be set
+#> Warning: graphical parameter "din" cannot be set
+#> Warning: graphical parameter "page" cannot be set
 ```

@@ -271,5 +271,5 @@ all.equal(
 min(fitted(ei_ridge(spec)))
 #> [1] -0.1029557
 min(fitted(ei_ridge(spec, bounds = 0:1)))
-#> [1] 3.765682e-20
+#> [1] 9.701731e-20
 ```

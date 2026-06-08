@@ -1,6 +1,8 @@
 # Changelog
 
-## seine 0.1.0
+## seine 0.1.2
+
+CRAN release: 2026-06-08
 
 - Double/debiased ML for ecological inference
 - Sensitivity analysis for EI

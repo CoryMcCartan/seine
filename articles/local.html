@@ -33,7 +33,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 
     <a class="navbar-brand me-2" href="../index.html">seine</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@ gtag('config', 'G-2KH5JZ6JS1');
       <img src="../logo.svg" class="logo" alt=""><h1>Local estimates for ecological inference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/CoryMcCartan/seine/blob/main/vignettes/local.Rmd" class="external-link"><code>vignettes/local.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/CoryMcCartan/seine/blob/v0.1.2/vignettes/local.Rmd" class="external-link"><code>vignettes/local.Rmd</code></a></small>
       <div class="d-none name"><code>local.Rmd</code></div>
     </div>
 
@@ -321,7 +321,7 @@ confidence intervals.</p>
 <span>    neighborhood <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">e_nbhd</span><span class="op">$</span><span class="va">conf.high</span> <span class="op">-</span> <span class="va">e_nbhd</span><span class="op">$</span><span class="va">conf.low</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;    estimated   orthogonal neighborhood </span></span>
-<span><span class="co">#&gt;    0.4165165    0.2876576    0.2334284</span></span></code></pre></div>
+<span><span class="co">#&gt;    0.4165163    0.2876576    0.2334294</span></span></code></pre></div>
 <p>Setting <code>sum_one = TRUE</code> enforces the constraint that the
 local vote shares across candidates sum to one within each racial group,
 which is the correct restriction for these data. The
@@ -345,29 +345,29 @@ output.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 12 × 8</span></span></span>
 <span><span class="co">#&gt;     .row predictor outcome      weight estimate std.error conf.low conf.high</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>     1 vap_white pres_dem_hum <span style="text-decoration: underline;">5</span>877.   0.111     0.068<span style="text-decoration: underline;">4</span>   0          0.262 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>     1 vap_black pres_dem_hum <span style="text-decoration: underline;">1</span>831.   0.478     0.218    0          0.841 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>     1 vap_other pres_dem_hum   13.3  0.902     0.244    0.176      1     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>     1 vap_white pres_rep_nix <span style="text-decoration: underline;">5</span>877.   0.101     0.029<span style="text-decoration: underline;">3</span>   0.013<span style="text-decoration: underline;">9</span>     0.102 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>     1 vap_black pres_rep_nix <span style="text-decoration: underline;">1</span>831.   0         0.094<span style="text-decoration: underline;">1</span>   0          0.281 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>     1 vap_other pres_rep_nix   13.3  0.096<span style="text-decoration: underline;">4</span>    0.233    0          0.791 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>     1 vap_white pres_ind_wal <span style="text-decoration: underline;">5</span>877.   0.775     0.062<span style="text-decoration: underline;">7</span>   0.620      0.934 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>     1 vap_black pres_ind_wal <span style="text-decoration: underline;">1</span>831.   0.512     0.200    0          1     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>     1 vap_other pres_ind_wal   13.3  0         0.289    0          0.861 </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>     1 vap_white pres_abs     <span style="text-decoration: underline;">5</span>877.   0.012<span style="text-decoration: underline;">8</span>    0.001<span style="text-decoration: underline;">19</span>  0.009<span style="text-decoration: underline;">27</span>    0.016<span style="text-decoration: underline;">0</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>     1 vap_black pres_abs     <span style="text-decoration: underline;">1</span>831.   0.010<span style="text-decoration: underline;">3</span>    0.003<span style="text-decoration: underline;">85</span>  0          0.021<span style="text-decoration: underline;">8</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span>     1 vap_other pres_abs       13.3  0.001<span style="text-decoration: underline;">23</span>   0.009<span style="text-decoration: underline;">54</span>  0          0.029<span style="text-decoration: underline;">7</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>     1 vap_white pres_dem_hum <span style="text-decoration: underline;">5</span>877.  1.11<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.068<span style="text-decoration: underline;">4</span>   0          0.262 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>     1 vap_black pres_dem_hum <span style="text-decoration: underline;">1</span>831.  4.78<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.218    0          0.841 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>     1 vap_other pres_dem_hum   13.3 9.02<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.244    0.176      1     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>     1 vap_white pres_rep_nix <span style="text-decoration: underline;">5</span>877.  1.01<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.029<span style="text-decoration: underline;">3</span>   0.013<span style="text-decoration: underline;">9</span>     0.102 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>     1 vap_black pres_rep_nix <span style="text-decoration: underline;">1</span>831.  0   <span style="color: #949494;"> </span>      0.094<span style="text-decoration: underline;">1</span>   0          0.281 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>     1 vap_other pres_rep_nix   13.3 9.64<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.233    0          0.791 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>     1 vap_white pres_ind_wal <span style="text-decoration: underline;">5</span>877.  7.75<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.062<span style="text-decoration: underline;">7</span>   0.620      0.934 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>     1 vap_black pres_ind_wal <span style="text-decoration: underline;">1</span>831.  5.12<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.200    0          1     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>     1 vap_other pres_ind_wal   13.3 5.55<span style="color: #949494;">e</span><span style="color: #BB0000;">-17</span>   0.289    0          0.861 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>     1 vap_white pres_abs     <span style="text-decoration: underline;">5</span>877.  1.28<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.001<span style="text-decoration: underline;">19</span>  0.009<span style="text-decoration: underline;">27</span>    0.016<span style="text-decoration: underline;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>     1 vap_black pres_abs     <span style="text-decoration: underline;">1</span>831.  1.03<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.003<span style="text-decoration: underline;">85</span>  0          0.021<span style="text-decoration: underline;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span>     1 vap_other pres_abs       13.3 1.23<span style="color: #949494;">e</span><span style="color: #BB0000;">- 3</span>   0.009<span style="text-decoration: underline;">54</span>  0          0.029<span style="text-decoration: underline;">7</span></span></span></code></pre></div>
 <p>The <code><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array()</a></code> method provides a convenient view of the
 point estimates as a three-dimensional array.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/array.html" class="external-link">as.array</a></span><span class="op">(</span><span class="va">e_rcov</span><span class="op">)</span><span class="op">[</span>, , <span class="st">"pres_rep_nix"</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       vap_white   vap_black  vap_other</span></span>
-<span><span class="co">#&gt; [1,] 0.10135960 0.00000e+00 0.09636897</span></span>
-<span><span class="co">#&gt; [2,] 0.13338927 0.00000e+00 0.09824133</span></span>
-<span><span class="co">#&gt; [3,] 0.07996136 0.00000e+00 0.10443038</span></span>
-<span><span class="co">#&gt; [4,] 0.07276098 0.00000e+00 0.10519746</span></span>
-<span><span class="co">#&gt; [5,] 0.22660678 0.00000e+00 0.10231746</span></span>
-<span><span class="co">#&gt; [6,] 0.11193454 5.20417e-18 0.10583097</span></span></code></pre></div>
+<span><span class="co">#&gt;       vap_white    vap_black  vap_other</span></span>
+<span><span class="co">#&gt; [1,] 0.10135960 0.000000e+00 0.09636897</span></span>
+<span><span class="co">#&gt; [2,] 0.13338927 0.000000e+00 0.09824133</span></span>
+<span><span class="co">#&gt; [3,] 0.07996136 1.838807e-16 0.10443038</span></span>
+<span><span class="co">#&gt; [4,] 0.07276098 1.249001e-16 0.10519746</span></span>
+<span><span class="co">#&gt; [5,] 0.22660678 0.000000e+00 0.10231746</span></span>
+<span><span class="co">#&gt; [6,] 0.11193454 0.000000e+00 0.10583097</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

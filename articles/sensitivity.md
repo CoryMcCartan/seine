@@ -139,14 +139,15 @@ parameters.
 ``` r
 
 bench = ei_bench(spec, contrast = list(predictor = c(1, -1, 0)))
-#> ⠙ ETA:20s  Benchmarking state [1/13]
-#> ⠹ ETA:17s  Benchmarking pop_urban [3/13]
-#> ⠸ ETA:13s  Benchmarking farm [5/13]
-#> ⠼ ETA:10s  Benchmarking educ_elem [7/13]
-#> ⠴ ETA: 8s  Benchmarking educ_hsch [8/13]
-#> ⠦ ETA: 5s  Benchmarking inc_00_03k [10/13]
-#> ⠧ ETA: 2s  Benchmarking inc_08_25k [12/13]
-#> ⠧ ETA: 0s  Benchmarking inc_25_99k [13/13]
+#> ⠙ ETA:22s  Benchmarking state [1/13]
+#> ⠹ ETA:19s  Benchmarking pop_urban [3/13]
+#> ⠸ ETA:17s  Benchmarking pop_rural [4/13]
+#> ⠼ ETA:13s  Benchmarking nonfarm [6/13]
+#> ⠴ ETA:11s  Benchmarking educ_elem [7/13]
+#> ⠦ ETA: 8s  Benchmarking educ_coll [9/13]
+#> ⠧ ETA: 6s  Benchmarking inc_00_03k [10/13]
+#> ⠇ ETA: 2s  Benchmarking inc_08_25k [12/13]
+#> ⠇ ETA: 0s  Benchmarking inc_25_99k [13/13]
 
 subset(bench, outcome == "pres_rep_nix")
 #> # A tibble: 13 × 7
@@ -192,6 +193,13 @@ plot(sens, "pres_rep_nix", bench = bench, bounds = c(-1, 1))
 
 ![Bias contour plot for the racially polarized Nixon
 vote](sensitivity_files/figure-html/unnamed-chunk-7-1.png)
+
+    #> Warning in graphics::par(oldpar): graphical parameter "cin" cannot be set
+    #> Warning in graphics::par(oldpar): graphical parameter "cra" cannot be set
+    #> Warning in graphics::par(oldpar): graphical parameter "csi" cannot be set
+    #> Warning in graphics::par(oldpar): graphical parameter "cxy" cannot be set
+    #> Warning in graphics::par(oldpar): graphical parameter "din" cannot be set
+    #> Warning in graphics::par(oldpar): graphical parameter "page" cannot be set
 
 The contour lines indicate how much bias could result from an unobserved
 confounder with the specified sensitivity parameters. The blue dashed

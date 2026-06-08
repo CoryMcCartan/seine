@@ -204,7 +204,7 @@ ei_est_local(m, spec, b_cov = 0, bounds = c(0, 1), sum_one = TRUE, conf_level = 
 #>  1     1 vap_white pres_dem_hum  5877. 5.07e- 2   0.0260   0          0.224 
 #>  2     2 vap_white pres_dem_hum 16131. 1.46e- 2   0.0137   0          0.106 
 #>  3     3 vap_white pres_dem_hum  4872. 1.04e- 2   0.0454   0          0.313 
-#>  4     4 vap_white pres_dem_hum  3566. 8.67e-19   0.0236   0          0.157 
+#>  4     4 vap_white pres_dem_hum  3566. 4.34e-19   0.0236   0          0.157 
 #>  5     5 vap_white pres_dem_hum  8801. 2.63e- 2   0.00161  0.0190     0.0371
 #>  6     6 vap_white pres_dem_hum  1698. 1.10e- 1   0.0681   0          0.564 
 #>  7     7 vap_white pres_dem_hum  4970. 0          0.0364   0          0.243 

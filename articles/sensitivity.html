@@ -33,7 +33,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 
     <a class="navbar-brand me-2" href="../index.html">seine</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@ gtag('config', 'G-2KH5JZ6JS1');
       <img src="../logo.svg" class="logo" alt=""><h1>Sensitivity analysis for ecological inference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/CoryMcCartan/seine/blob/main/vignettes/sensitivity.Rmd" class="external-link"><code>vignettes/sensitivity.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/CoryMcCartan/seine/blob/v0.1.2/vignettes/sensitivity.Rmd" class="external-link"><code>vignettes/sensitivity.Rmd</code></a></small>
       <div class="d-none name"><code>sensitivity.Rmd</code></div>
     </div>
 
@@ -200,14 +200,15 @@ understand plausible values of these parameters, we can conduct a
 sensitivity parameters.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bench</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_bench.html">ei_bench</a></span><span class="op">(</span><span class="va">spec</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>predictor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ⠙ ETA:20s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
-<span><span class="co">#&gt; ⠹ ETA:17s  Benchmarking <span style="color: #00BB00;">pop_urban</span> [3/13]</span></span>
-<span><span class="co">#&gt; ⠸ ETA:13s  Benchmarking <span style="color: #00BB00;">farm</span> [5/13]</span></span>
-<span><span class="co">#&gt; ⠼ ETA:10s  Benchmarking <span style="color: #00BB00;">educ_elem</span> [7/13]</span></span>
-<span><span class="co">#&gt; ⠴ ETA: 8s  Benchmarking <span style="color: #00BB00;">educ_hsch</span> [8/13]</span></span>
-<span><span class="co">#&gt; ⠦ ETA: 5s  Benchmarking <span style="color: #00BB00;">inc_00_03k</span> [10/13]</span></span>
-<span><span class="co">#&gt; ⠧ ETA: 2s  Benchmarking <span style="color: #00BB00;">inc_08_25k</span> [12/13]</span></span>
-<span><span class="co">#&gt; ⠧ ETA: 0s  Benchmarking <span style="color: #00BB00;">inc_25_99k</span> [13/13]</span></span>
+<span><span class="co">#&gt; ⠙ ETA:22s  Benchmarking <span style="color: #00BB00;">state</span> [1/13]</span></span>
+<span><span class="co">#&gt; ⠹ ETA:19s  Benchmarking <span style="color: #00BB00;">pop_urban</span> [3/13]</span></span>
+<span><span class="co">#&gt; ⠸ ETA:17s  Benchmarking <span style="color: #00BB00;">pop_rural</span> [4/13]</span></span>
+<span><span class="co">#&gt; ⠼ ETA:13s  Benchmarking <span style="color: #00BB00;">nonfarm</span> [6/13]</span></span>
+<span><span class="co">#&gt; ⠴ ETA:11s  Benchmarking <span style="color: #00BB00;">educ_elem</span> [7/13]</span></span>
+<span><span class="co">#&gt; ⠦ ETA: 8s  Benchmarking <span style="color: #00BB00;">educ_coll</span> [9/13]</span></span>
+<span><span class="co">#&gt; ⠧ ETA: 6s  Benchmarking <span style="color: #00BB00;">inc_00_03k</span> [10/13]</span></span>
+<span><span class="co">#&gt; ⠇ ETA: 2s  Benchmarking <span style="color: #00BB00;">inc_08_25k</span> [12/13]</span></span>
+<span><span class="co">#&gt; ⠇ ETA: 0s  Benchmarking <span style="color: #00BB00;">inc_25_99k</span> [13/13]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">bench</span>, <span class="va">outcome</span> <span class="op">==</span> <span class="st">"pres_rep_nix"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 13 × 7</span></span></span>
@@ -248,6 +249,12 @@ interpret the results.</p>
 <code class="sourceCode R"><span><span class="va">sens</span> <span class="op">=</span> <span class="fu"><a href="../reference/ei_sens.html">ei_sens</a></span><span class="op">(</span><span class="va">est</span><span class="op">)</span> <span class="co"># the default evaluates on a grid of parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sens</span>, <span class="st">"pres_rep_nix"</span>, bench <span class="op">=</span> <span class="va">bench</span>, bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sensitivity_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="Bias contour plot for the racially polarized Nixon vote" width="700"></p>
+<pre><code><span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "cin" cannot be set</span></span>
+<span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "cra" cannot be set</span></span>
+<span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "csi" cannot be set</span></span>
+<span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "cxy" cannot be set</span></span>
+<span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "din" cannot be set</span></span>
+<span><span class="co">#&gt; Warning in graphics::par(oldpar): graphical parameter "page" cannot be set</span></span></code></pre>
 <p>The contour lines indicate how much bias could result from an
 unobserved confounder with the specified sensitivity parameters. The
 blue dashed contours correspond to bias of 1, 2, and 3 standard errors.
@@ -273,7 +280,7 @@ of an unobserved confounder that would lead to a bias of a given amount.
 Here, we consider bias sufficient to eliminate any evidence of racially
 polarized voting, i.e., bias equal to the estimated difference between
 White and Black voters.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ei_sens_rv.html">ei_sens_rv</a></span><span class="op">(</span><span class="va">est</span>, bias_bound <span class="op">=</span> <span class="va">estimate</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
 <span><span class="co">#&gt;   predictor             outcome       estimate std.error      rv</span></span>

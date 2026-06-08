@@ -42,7 +42,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 
     <a class="navbar-brand me-2" href="index.html">seine</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,8 +99,11 @@ gtag('config', 'G-2KH5JZ6JS1');
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <strong>seine</strong> with</p>
+<p>You can install <strong>seine</strong> from CRAN with</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"seine"</span><span class="op">)</span></span></code></pre></div>
+<p>Or install the development version with</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"CoryMcCartan/seine"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -108,7 +111,7 @@ gtag('config', 'G-2KH5JZ6JS1');
 </h2>
 <p>The package contains county-level data from the 1968 U.S. presidential election for southern states, where Hubert Humphrey (Democrat) ran against Richard Nixon (Republican) and George Wallace (independent; segregationist).</p>
 <p>In this data, one might be interested in estimating vote choice by race. To do so, <strong>seine</strong> provides both a formula interface and a tidy interface through a new <code><a href="reference/ei_spec.html">ei_spec()</a></code> object. Here, we’ll demonstrate the latter.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://corymccartan.com/seine/">seine</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">elec_1968</span><span class="op">)</span></span>
 <span></span>
@@ -148,6 +151,7 @@ gtag('config', 'G-2KH5JZ6JS1');
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=seine" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/CoryMcCartan/seine/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/CoryMcCartan/seine/issues" class="external-link">Report a bug</a></li>
 </ul>
