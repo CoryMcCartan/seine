@@ -111,7 +111,7 @@ For all of the outcomes except `pres_abs`, whose estimate is much smaller than 0
 ## Benchmarking
 
 The `c_outcome` parameter is relatively easy to understand, but `c_predictor`
-is more difficult to interpret (though see the methodology paper for more
+is more difficult to interpret (though see [McCartan and Kuriwaki](https://arxiv.org/abs/2509.20194) for more
 discussion).
 To help understand plausible values of these parameters, we can conduct a
 **benchmarking analysis** that treats each of our *observed* covariates in turn

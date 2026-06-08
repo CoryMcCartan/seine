@@ -340,8 +340,8 @@ plot.ei_sens <- function(
     cz = matrix(x$bias_bound, nrow = length(cx), byrow = TRUE)
 
     breaks = 10^contour_exp %x% c(2:4, 6:9)
-    oldpar = graphics::par()
-    on.exit(graphics::par(oldpar))
+    oldmar = graphics::par("mar")
+    on.exit(graphics::par(mar = oldmar))
     graphics::par(mar = c(4.2, 5.2, 4.5, 1.1))
     graphics::contour(
         cx,
@@ -379,8 +379,10 @@ plot.ei_sens <- function(
     breaks = c(10^contour_exp %x% c(1, 5), 1)
     labels = as.character(breaks)
     special = c(abs(bounds - x$estimate[1]), x$std.error[1] * plot_se)
-    dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
-    labels[dists < 0.05] = ""
+    if (length(special) > 0) {
+        dists = apply(abs(outer(special, breaks, `/`) - 1), 2, min)
+        labels[dists < 0.05] = ""
+    }
     graphics::contour(
         cx,
         cy,
