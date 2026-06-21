@@ -1,3 +1,7 @@
+# seine 0.1.2.9999
+
+* Fix bug in sensitivity benchmarking parameter calculation
+
 # seine 0.1.2
 
 * Double/debiased ML for ecological inference
