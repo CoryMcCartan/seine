@@ -232,12 +232,13 @@ riesz_naive <- function(xz, p, total, weights, group=1, penalty=0) {
     XXinv = solve(crossprod(xz, weights*xz) + Lambda)
     xzAinv = xz %*% XXinv[, use, drop=FALSE]
     alpha = c(xzAinv %*% Dz)
+    coef = XXinv[, use, drop=FALSE] %*% Dz
 
     h1m = 1 - ridge_hat_naive(xz, weights, XXinv, penalty)
     xzi = xz[, use, drop=FALSE] * total / mean(xz[, group] * total)
     loo = c((alpha - rowSums(xzAinv * xzi)) / h1m)
 
-    list(alpha = alpha, loo = loo, nu2 = NA)
+    list(alpha = alpha, coef = coef, loo = loo, nu2 = NA)
 }
 
 # Closed-form Riesz regression via SVD
@@ -250,6 +251,7 @@ riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
 
     xzAinv = (udv$u / sqrt_w) %*% (d_pen * t(udv$v[use, , drop=FALSE]))
     alpha = xzAinv %*% Dz
+    coef = udv$v %*% crossprod(scale_cols(udv$v[use, , drop=FALSE], 1 / (udv$d^2 + penalty)), Dz)
 
     h1m = 1 - ridge_hat_svd(udv, penalty)
     xzi = xz[, use, drop=FALSE] * total / mean(xz[, group] * total)
@@ -259,5 +261,5 @@ riesz_svd <- function(xz, udv, p, total, weights, sqrt_w, group=1, penalty=0) {
     nu2 = sum(crossprod(Dz, udv$v[use, , drop=FALSE])^2 *
                   (2/(udv$d^2 + penalty) - d_pen^2)) / nrow(xz)
 
-    list(alpha = alpha, loo = loo, nu2 = nu2)
+    list(alpha = alpha, coef = coef, loo = loo, nu2 = nu2)
 }
