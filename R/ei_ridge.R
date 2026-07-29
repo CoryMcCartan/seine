@@ -132,14 +132,14 @@
 #' min(fitted(ei_ridge(spec)))
 #' min(fitted(ei_ridge(spec, bounds = 0:1)))
 #' @export
-ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = FALSE, penalty = NULL, scale = TRUE, vcov = TRUE) {
+ei_ridge <- function(x, ..., weights, bounds = FALSE, sum_one = NULL, penalty = NULL, scale = TRUE, vcov = TRUE) {
     UseMethod("ei_ridge")
 }
 
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one=FALSE,
+ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one=NULL,
                              penalty=NULL, scale=TRUE, vcov=TRUE, ...) {
     forms = ei_forms(formula)
     form_preds = terms(rlang::new_formula(lhs=NULL, rhs=forms$predictors))
@@ -166,7 +166,7 @@ ei_ridge.formula <- function(formula, data, weights, bounds=FALSE, sum_one=FALSE
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
+ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=NULL, penalty=NULL,
                              scale=TRUE, vcov=TRUE, ...) {
     spec = x
     validate_ei_spec(spec)
@@ -192,7 +192,7 @@ ei_ridge.ei_spec <- function(x, weights, bounds=FALSE, sum_one=FALSE, penalty=NU
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
+ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=NULL, penalty=NULL,
                                 scale=TRUE, vcov=TRUE, ...) {
     both <- intersect(colnames(x), colnames(z))
     if (length(both) > 0) {
@@ -222,7 +222,7 @@ ei_ridge.data.frame <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, p
 
 #' @export
 #' @rdname ei_ridge
-ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one=FALSE, penalty=NULL,
+ei_ridge.matrix <- function(x, y, z, weights, bounds=FALSE, sum_one=NULL, penalty=NULL,
                             scale=TRUE, vcov=TRUE, ...) {
     ei_ridge.data.frame(x, y, z, weights, penalty, sum_one, bounds, scale, vcov, ...)
 }

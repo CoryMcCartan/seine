@@ -31,6 +31,11 @@
 #'   between the two outcomes for each predictor group; and
 #'   `list(predictor = c(1, -1, 0), outcome = c(1, -1))` will calculate the
 #'   difference in differences.
+#' @inheritParams ei_ridge bounds sum_one
+#' @param tmle If `TRUE`, use Targeted Minimum Loss-based Estimation (TMLE)
+#'   to produce doubly-robust estimates.  Requires `riesz` to be an
+#'   [ei_riesz()] object. Only effective when `bounds` constraints are
+#'   satisfied by the initial regression fit.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
@@ -79,8 +84,11 @@
 #' as.matrix(est)
 #' nobs(est)
 #' @export
-ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
-                  contrast=NULL, outcome=NULL, conf_level=0.95, use_student=TRUE) {
+ei_est = function(
+    regr=NULL, riesz=NULL, data, total, subset=NULL, contrast=NULL,
+    bounds=FALSE, sum_one=NULL, tmle=TRUE, outcome=NULL,
+    conf_level=0.95, use_student=TRUE
+) {
     if (is.null(regr) && is.null(riesz)) {
         cli_abort("At least one of {.arg regr} or {.arg riesz} must be provided.")
     }
@@ -113,7 +121,23 @@ ei_est = function(regr=NULL, riesz=NULL, data, total, subset=NULL,
     rm = est_check_riesz(riesz, data, w, n, regr) # riesz matrix
     rl = est_check_regr(regr, data, n, colnames(rm), n_y, vcov = FALSE) # regr list
 
-    # evaluate EIF
+    bounds = check_bounds(bounds, y, clamp = 1e-8)
+    if (is.null(sum_one) && all(bounds == c(0, 1))) {
+        sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
+    }
+    has_bounds = !identical(bounds, c(-Inf, Inf))
+    if (has_bounds) {
+        if (isTRUE(tmle)) {
+            if (!inherits(riesz, "ei_riesz")) {
+                cli_abort("{.arg tmle = TRUE} requires an {.cls ei_riesz} object for {.arg riesz}.")
+            }
+            rm_cf = tmle_riesz_cf(riesz, data)
+            rl = tmle_target(y, rl, rm, rm_cf, bounds, sum_one)
+        } else {
+            cli_warn("{.arg bounds} is only used when {.arg tmle = TRUE}.")
+        }
+    }
+
     n_x = ncol(rm)
     x_nm = names(rl$preds)
     y_nm = colnames(y)
@@ -356,8 +380,9 @@ est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
     # normalize and check
     z = shift_cols(z, regr$z_shift)
     z = scale_cols(z, regr$z_scale)
-    if (anyNA(z))
+    if (anyNA(z)) {
         cli_abort("Missing values found in covariates.", call=parent.frame())
+    }
     z = cbind(regr$int_scale, z)
 
     preds = list()

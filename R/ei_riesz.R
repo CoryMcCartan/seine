@@ -169,6 +169,7 @@ ei_riesz_bridge <- function(processed, ...) {
         weights_loo = fit$loo,
         nu2 = fit$nu2,
         penalty = penalty,
+        int_scale = fit$int_scale,
         z_shift = z_shift,
         z_scale = z_scale,
         blueprint = processed$blueprint
@@ -183,7 +184,7 @@ ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)
     xz = row_kronecker(x, z, int_scale)
-    sqrt_w = sqrt(weights / mean(weights))
+    sqrt_w = sqrt(w)
     udv = svd(xz * sqrt_w)
 
     alpha = matrix(nrow=nrow(x), ncol=ncol(x))
@@ -203,7 +204,7 @@ ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     colnames(loo) = colnames(x)
     names(nu2) = colnames(x)
 
-    list(alpha = alpha, coef = coef, loo = loo, nu2 = nu2)
+    list(alpha = alpha, coef = coef, loo = loo, nu2 = nu2, int_scale = int_scale)
 }
 
 # Model type ------------------------------------------------------------------

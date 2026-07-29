@@ -14,6 +14,9 @@ ei_est(
   total,
   subset = NULL,
   contrast = NULL,
+  bounds = FALSE,
+  sum_one = NULL,
+  tmle = TRUE,
   outcome = NULL,
   conf_level = 0.95,
   use_student = TRUE
@@ -57,6 +60,21 @@ predictor groups; \code{list(outcome = c(1, -1))} will calculate the difference
 between the two outcomes for each predictor group; and
 \code{list(predictor = c(1, -1, 0), outcome = c(1, -1))} will calculate the
 difference in differences.}
+
+\item{bounds}{A vector \code{c(min, max)} of bounds for the outcome.
+If \code{bounds = NULL}, they will be inferred from the outcome variable:
+if it is contained within \eqn{[0, 1]}, for instance, then the bounds will
+be \code{c(0, 1)}. The default \code{bounds = FALSE} uses an unbounded outcome.}
+
+\item{sum_one}{If \code{TRUE}, the outcome variables are constrained to sum to one.
+Can only apply when \code{bounds} are enforced and there is more than one
+outcome variable. If \code{NULL}, infers \code{sum_one = TRUE} when the bounds
+are \code{c(0, 1)} the outcome variables sum to 1.}
+
+\item{tmle}{If \code{TRUE}, use Targeted Minimum Loss-based Estimation (TMLE)
+to produce doubly-robust estimates.  Requires \code{riesz} to be an
+\code{\link[=ei_riesz]{ei_riesz()}} object. Only effective when \code{bounds} constraints are
+satisfied by the initial regression fit.}
 
 \item{outcome}{<\code{\link[rlang:args_data_masking]{data-masking}}> A vector or
 matrix of outcome variables. Only required if both \code{riesz} is provided
