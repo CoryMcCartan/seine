@@ -1,13 +1,14 @@
 devtools::load_all(".")
 
 data(elec_1968)
+elec_1968$log_total = sqrt(elec_1968$pres_total)
 
 spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
-               total = pres_total, covariates = c(state, pop_urban, farm))
+               total = pres_total, covariates = c(state, pop_urban, farm, pres_total))
 
-m0 = ei_ridge(spec)
-m = ei_ridge(spec, bounds = 0:1, sum_one = TRUE)
-rr = ei_riesz(spec, penalty = m$penalty)
+m0 = ei_ridge(spec)#, weights = weights(spec))
+m = ei_ridge(spec, bounds = 0:1, sum_one = TRUE)#, weights = weights(spec))
+rr = ei_riesz(spec, penalty = m$penalty)#, weights = weights(spec))
 
 # Three estimators
 est_plugin0 = ei_est(regr = m0, data = spec)
@@ -46,4 +47,5 @@ rbind(
     plugin = px %*% as.matrix(est_plugin) - py,
     dml = px %*% as.matrix(est_dml) - py,
     tmle = px %*% as.matrix(est_tmle) - py
-)
+) |> 
+    zapsmall()

@@ -4,6 +4,9 @@
 #' ecological inference model or Riesz representer.
 #' If both a regression model and a Riesz representer are provided, a debiased
 #' machine learning (DML) estimate is produced.
+#' Note that for non-DML estimates based on just a regression or just a Riesz
+#' representer, the estimated standard errors are conditional on the fitted
+#' nuisance functions, and so understate the total variance.
 #'
 #' @param regr A fitted regression model, from [ei_ridge()], or another kind
 #'    of regression model wrapped with [ei_wrap_model()].
@@ -336,8 +339,9 @@ est_check_riesz = function(riesz, data, weights, n, regr) {
         if (length(xcols) == 1) {
             xcols = c(xcols, ".other")
         }
-        riesz = matrix(1/n, nrow=n, ncol=length(xcols))
+        riesz = matrix(0, nrow=n, ncol=length(xcols))
         colnames(riesz) = xcols
+        return(riesz)
     } else if (inherits(riesz, "ei_riesz")) {
         riesz = riesz$weights
     } else if (!is.matrix(riesz)) {
