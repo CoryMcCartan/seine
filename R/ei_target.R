@@ -29,8 +29,8 @@
 #' m = ei_ridge(spec)
 #' rr = ei_riesz(spec, penalty = m$penalty)
 #'
-#' m_targeted = ei_target(m, rr, spec, bounds = 0:1, sum_one = TRUE)
-#' ei_est(m_targeted, rr, spec)
+#' m_tgt = ei_target(m, rr, spec, bounds = c(0, 1), sum_one = TRUE)
+#' ei_est(m_tgt, rr, spec)
 #' @export
 ei_target = function(regr, riesz=NULL, data, bounds=NULL, sum_one=NULL) {
     if (!inherits(riesz, "ei_riesz")) {
