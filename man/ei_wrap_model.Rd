@@ -23,7 +23,9 @@ variables. This is the \code{y} variable in ecological regression that is of
 primary interest. For example, the columns containing the percentage of
 votes for each party.}
 
-\item{...}{Additional arguments passed to the \code{\link[=predict]{predict()}} method.}
+\item{...}{Additional arguments passed to the \code{\link[=predict]{predict()}} method. If the
+method advertises \code{"response"} as a value for a \code{type} or \code{what} argument,
+that value is used unless supplied explicitly.}
 }
 \value{
 An \code{ei_wrapped} object, which has the information required to use
