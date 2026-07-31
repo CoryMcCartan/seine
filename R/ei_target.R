@@ -111,8 +111,8 @@ tmle_target = function(y, rl, rm, rm_cf, bounds, sum_one) {
 # Construct the counterfactual 'clever covariates' for a fitted Riesz object.
 tmle_riesz_cf = function(riesz, data) {
     data = hardhat::forge(data, riesz$blueprint)$predictors
-    xcols = riesz$blueprint$ei_x
-    idx_x = match(xcols, colnames(data))
+    idx_x = match(riesz$blueprint$ei_x, colnames(data))
+    xcols = colnames(pull_x(data, idx_x))
     z = as.matrix(data[, -idx_x, drop = FALSE])
     p = ncol(z)
     n_x = length(xcols)

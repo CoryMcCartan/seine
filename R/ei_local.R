@@ -138,9 +138,10 @@ ei_est_local = function(
         )
         regr_var = FALSE
     }
-    need_vcov = isTRUE(regr_var)
-    rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = need_vcov)
-    if (!need_vcov) rl$vcov_u = NULL
+    rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = isTRUE(regr_var))
+    if (!isTRUE(regr_var)) {
+        rl$vcov_u = NULL
+    }
 
     # subset the predictions and x
     subset_idx = which(check_subset(eval_tidy(enquo(subset), data), n_orig))

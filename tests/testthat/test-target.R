@@ -53,6 +53,17 @@ test_that("Unbounded targeting solves the empirical score equations", {
                  tolerance = 1e-6, ignore_attr = TRUE)
 })
 
+test_that("Targeting supports an implicit other predictor group", {
+    m = ei_ridge(pres_ind_wal ~ vap_black | farm, elec_1968, bounds = 0:1)
+    rr = ei_riesz(pres_ind_wal ~ vap_black | farm, elec_1968,
+                  total = pres_total, penalty = m$penalty)
+
+    expect_s3_class(
+        ei_target(m, rr, elec_1968, bounds = 0:1),
+        "ei_targeted"
+    )
+})
+
 test_that("Targeted regressions support sensitivity analysis", {
     spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_oth,
                    total = pres_total, covariates = c(pop_urban, farm))
@@ -159,6 +170,9 @@ test_that("TMLE respects outcome contrasts", {
     expect_equal(est_contrast$estimate,
                  unname(drop(as.matrix(est) %*% c(1, -1, 0, 0))),
                  tolerance = 1e-8)
+    crit = qt(0.025, df = nrow(spec) - 1)
+    expect_equal(est_contrast$conf.low, est_contrast$estimate + crit * est_contrast$std.error)
+    expect_equal(est_contrast$conf.high, est_contrast$estimate - crit * est_contrast$std.error)
 })
 
 test_that("Counterfactual Riesz representers recover normalized fitted weights", {

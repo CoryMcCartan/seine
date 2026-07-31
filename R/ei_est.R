@@ -186,7 +186,7 @@ ei_est = function(
         out$conf.high = out$estimate - crit * out$std.error
 
         bounds = regr$blueprint$bounds
-        if (is.numeric(bounds) && length(bounds) == 2) {
+        if (is.null(contrast) && is.numeric(bounds) && length(bounds) == 2) {
             if (is.finite(bounds[1])) out$conf.low = pmax(out$conf.low, bounds[1])
             if (is.finite(bounds[2])) out$conf.high = pmin(out$conf.high, bounds[2])
         }
