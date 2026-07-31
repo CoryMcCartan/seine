@@ -122,7 +122,14 @@ ei_est_local = function(
     n_orig = nrow(y)
     n_y = ncol(y)
 
-    if (inherits(regr, "ei_wrapped") && isTRUE(regr_var) && !isFALSE(conf_level)) {
+    if (inherits(regr, "ei_targeted") && isTRUE(regr_var) && is.null(regr$pred_vcov_u)) {
+        cli_abort(c(
+            "Standard errors not available for this {.arg regr} object.",
+            ">"="Target an {.cls ei_ridge} object fitted with {.arg vcov = TRUE} to enable."
+        ), call=parent.frame())
+    }
+    if (inherits(regr, "ei_wrapped") && !inherits(regr, "ei_targeted") &&
+        isTRUE(regr_var) && !isFALSE(conf_level)) {
         cli_warn(
             "Local confidence intervals with wrapped model objects
                   do not incorporate prediction uncertainty.",
@@ -133,6 +140,7 @@ ei_est_local = function(
     }
     need_vcov = isTRUE(regr_var)
     rl = est_check_regr(regr, data, n_orig, NULL, n_y, vcov = need_vcov)
+    if (!need_vcov) rl$vcov_u = NULL
 
     # subset the predictions and x
     subset_idx = which(check_subset(eval_tidy(enquo(subset), data), n_orig))

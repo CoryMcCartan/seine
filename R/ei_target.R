@@ -1,9 +1,99 @@
+#' Target an ecological regression to respect constraints on the outcome
+#'
+#' Updates a fitted ecological regression using Targeted Minimum Loss-based
+#' Estimation (TMLE). The returned targeted regression can be supplied to
+#' [ei_est()] together with the same Riesz representer to produce a targeted
+#' estimate that respects the provided outcome bounds and optional sum-to-one
+#' constraint.
+#'
+#' @param regr A fitted regression model, from [ei_ridge()], or another kind
+#'   of regression model wrapped with [ei_wrap_model()].
+#' @param riesz A fitted Riesz representer from [ei_riesz()].
+#' @param data The data frame, matrix, or [ei_spec] object used to fit the
+#'   regression and Riesz representer.
+#' @param bounds A vector `c(min, max)` of bounds for the outcome. By default,
+#'   uses the bounds stored in `regr`, if available; otherwise infers bounds
+#'   from the outcome variable. Set to `FALSE` for unbounded targeting.
+#' @param sum_one If `TRUE`, constrain outcomes to sum to one. By default, uses
+#'   the value stored in `regr`, if available; otherwise infers the constraint
+#'   from the outcome variable and bounds.
+#'
+#' @returns An `ei_targeted` object, which is also an `ei_wrapped` object and
+#'   can be supplied as the `regr` argument to [ei_est()].
+#'
+#' @examples
+#' data(elec_1968)
+#'
+#' spec = ei_spec(elec_1968, vap_white:vap_other, pres_dem_hum:pres_abs,
+#'                total = pres_total, covariates = c(pop_urban, farm))
+#' m = ei_ridge(spec)
+#' rr = ei_riesz(spec, penalty = m$penalty)
+#'
+#' m_targeted = ei_target(m, rr, spec, bounds = 0:1, sum_one = TRUE)
+#' ei_est(m_targeted, rr, spec)
+#' @export
+ei_target = function(regr, riesz=NULL, data, bounds=NULL, sum_one=NULL) {
+    if (!inherits(riesz, "ei_riesz")) {
+        cli_abort("{.arg riesz} must be an {.cls ei_riesz} object.",
+                  call=parent.frame())
+    }
+
+    y = est_check_outcome(regr, data, NULL)
+    n = nrow(y)
+    n_y = ncol(y)
+    rm = est_check_riesz(riesz, data, rep(1, n), n, regr)
+    rl = est_check_regr(regr, data, n, colnames(rm), n_y, vcov=FALSE)
+    pred_vcov_u = NULL
+    if (inherits(regr, "ei_ridge") && !is.null(regr$vcov_u)) {
+        pred_vcov_u = est_check_regr(regr, data, n, colnames(rm), n_y, vcov=TRUE)$vcov_u
+    }
+
+    if (is.null(sum_one) && !is.null(regr$blueprint$sum_one) && !isFALSE(bounds)) {
+        sum_one = regr$blueprint$sum_one
+    }
+    if (is.null(bounds) && !is.null(regr$blueprint$bounds)) {
+        bounds = regr$blueprint$bounds
+    }
+    bounds = check_bounds(bounds, y, clamp=1e-8)
+    if (is.null(sum_one) && all(bounds == c(0, 1))) {
+        sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
+    }
+
+    rm_cf = tmle_riesz_cf(riesz, data)
+    rl = tmle_target(y, rl, rm, rm_cf, bounds, sum_one)
+
+    w = regr$blueprint$ei_wgt
+    if (is.null(w)) {
+        w = rep(1, n)
+    }
+
+    structure(list(
+        y = y,
+        yhat = rl$yhat,
+        sigma2 = colMeans((y - rl$yhat)^2 * w / mean(w)),
+        eps = rl$eps,
+        vcov_u = regr$vcov_u,
+        pred_vcov_u = pred_vcov_u,
+        r2 = diag(as.matrix(cor(rl$yhat, y)^2)),
+        preds = rl$preds,
+        x = rl$x,
+        blueprint = list(
+            ei_x = names(rl$preds),
+            ei_wgt = w,
+            bounds = bounds,
+            sum_one = sum_one
+        ),
+        classes = if (inherits(regr, "ei_wrapped")) regr$classes else class(regr)
+    ), class=c("ei_targeted", "ei_wrapped"))
+}
+
 tmle_target = function(y, rl, rm, rm_cf, bounds, sum_one) {
     fluctuation = tmle_fluctuation(bounds, sum_one)
     rl$yhat = fluctuation$project(rl$yhat)
     rl$preds = lapply(rl$preds, fluctuation$project)
 
     eps = fluctuation$fit_eps(y, rl$yhat, rm)
+    dimnames(eps) = list(colnames(rm), colnames(y))
     rl$yhat = fluctuation$update(rl$yhat, rm, eps)
 
     score = crossprod(rm, y - rl$yhat) / nrow(y)
@@ -14,6 +104,7 @@ tmle_target = function(y, rl, rm, rm_cf, bounds, sum_one) {
     for (group in names(rl$preds)) {
         rl$preds[[group]] = fluctuation$update(rl$preds[[group]], rm_cf[[group]], eps)
     }
+    rl$eps = eps
     rl
 }
 
@@ -89,9 +180,28 @@ tmle_fluctuation = function(bounds, sum_one) {
             },
             update = function(q, H, eps) tmle_update_log(q, H, eps, bounds[2], upper = TRUE)
         )
-    } else{
-        cli_abort("TMLE requires at least one finite outcome bound.", call = parent.frame())
+    } else {
+        if (isTRUE(sum_one)) {
+            cli_abort("TMLE cannot enforce {.arg sum_one = TRUE} for an unbounded outcome.",
+                      call = parent.frame())
+        }
+        list(
+            project = identity,
+            fit_eps = tmle_fit_eps_gaussian,
+            update = function(q, H, eps) q + H %*% eps
+        )
     }
+}
+
+# Fit an unbounded least-squares fluctuation after column-normalizing H.
+tmle_fit_eps_gaussian = function(y, q, H) {
+    H_scale = pmax(sqrt(colMeans(H^2)), 1e-8)
+    H_norm = scale_cols(H, 1 / H_scale)
+    udv = svd(H_norm)
+    tol = max(dim(H_norm)) * max(udv$d) * .Machine$double.eps
+    d_inv = ifelse(udv$d > tol, 1 / udv$d, 0)
+    eps = udv$v %*% (d_inv * crossprod(udv$u, y - q))
+    sweep(eps, 1, H_scale, "/")
 }
 
 
@@ -179,4 +289,49 @@ tmle_project_lower = function(q, lower, delta = 1e-8) {
 
 tmle_project_upper = function(q, upper, delta = 1e-8) {
     pmin(q, upper - delta)
+}
+
+#' @export
+print.ei_targeted = function(x, ...) {
+    cat_line(format_inline(paste0(
+        "A targeted {.cls {x$classes[1]}} model with {ncol(x$y)} outcome{?s}, ",
+        "{length(x$blueprint$ei_x)} group{?s}, and {nrow(x$yhat)} observations"
+    )))
+    bounds = x$blueprint$bounds
+    if (any(is.finite(bounds))) {
+        sumt1 = if (isTRUE(x$blueprint$sum_one)) " and constrained to sum to 1" else ""
+        pl = if (ncol(x$y) > 1) "s" else ""
+        cat_line("With outcome", pl, " bounded in (", bounds[1], ", ", bounds[2], ")", sumt1)
+    }
+}
+
+#' @export
+fitted.ei_targeted = function(object, ...) {
+    object$yhat
+}
+
+#' @export
+residuals.ei_targeted = function(object, ...) {
+    object$y - object$yhat
+}
+
+#' @export
+vcov.ei_targeted = function(object, ...) {
+    object$vcov_u
+}
+
+#' @export
+summary.ei_targeted = function(object, ...) {
+    cat_line("Fitted values:")
+    print(summary((object$yhat)))
+    cat_line()
+    cat_line("R-squared by outcome:")
+    print(object$r2)
+}
+
+#' @export
+weights.ei_targeted = function(object, normalize = TRUE, ...) {
+    w = object$blueprint$ei_wgt
+    if (is.null(w)) w = rep(1, nrow(object$y))
+    if (isTRUE(normalize)) w / mean(w) else w
 }

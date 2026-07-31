@@ -435,10 +435,10 @@ new_ei_ridge <- function(..., blueprint) {
 
 #' @export
 print.ei_ridge <- function(x, ...) {
-    cat_line("An ecological inference model with ",
-             ncol(x$coef), " outcomes, ",
-             length(x$blueprint$ei_x), " groups, and ",
-             nrow(x$fitted), " observations")
+    cat_line(format_inline(paste0(
+        "An ecological inference model with {ncol(x$coef)} outcome{?s}, ",
+        "{length(x$blueprint$ei_x)} group{?s}, and {nrow(x$fitted)} observations"
+    )))
     bounds = x$blueprint$bounds
     if (any(is.finite(bounds))) {
         sumt1 = if (isTRUE(x$blueprint$sum_one)) " and constrained to sum to 1" else ""

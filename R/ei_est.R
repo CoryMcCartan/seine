@@ -34,17 +34,13 @@
 #'   between the two outcomes for each predictor group; and
 #'   `list(predictor = c(1, -1, 0), outcome = c(1, -1))` will calculate the
 #'   difference in differences.
-#' @inheritParams ei_ridge bounds sum_one
-#' @param tmle If `TRUE`, use Targeted Minimum Loss-based Estimation (TMLE)
-#'   to produce doubly-robust estimates.  Requires `riesz` to be an
-#'   [ei_riesz()] object. Only effective when `bounds` constraints are
-#'   satisfied by the initial regression fit.
 #' @param outcome <[`data-masking`][rlang::args_data_masking]> A vector or
 #'   matrix of outcome variables. Only required if both `riesz` is provided
 #'   alone (without `regr`) and `data` is not an [ei_spec] object.
 #' @param conf_level A numeric specifying the level for confidence intervals.
 #'   If `FALSE`, no confidence intervals are calculated. Standard
-#'   errors are always returned.
+#'   errors are always returned. When `regr` stores outcome bounds, confidence
+#'   interval endpoints are truncated to those bounds.
 #' @param use_student If `TRUE`, use construct confidence intervals from a
 #'   Student-_t_ distribution, which may improve coverage properties in
 #'   small samples.
@@ -89,7 +85,7 @@
 #' @export
 ei_est = function(
     regr=NULL, riesz=NULL, data, total, subset=NULL, contrast=NULL,
-    bounds=FALSE, sum_one=NULL, tmle=TRUE, outcome=NULL,
+    outcome=NULL,
     conf_level=0.95, use_student=TRUE
 ) {
     if (is.null(regr) && is.null(riesz)) {
@@ -124,23 +120,6 @@ ei_est = function(
     rm = est_check_riesz(riesz, data, w, n, regr) # riesz matrix
     rl = est_check_regr(regr, data, n, colnames(rm), n_y, vcov = FALSE) # regr list
 
-    bounds = check_bounds(bounds, y, clamp = 1e-8)
-    if (is.null(sum_one) && all(bounds == c(0, 1))) {
-        sum_one = isTRUE(all.equal(rowSums(y), rep(1, nrow(y))))
-    }
-    has_bounds = !identical(bounds, c(-Inf, Inf))
-    if (has_bounds) {
-        if (isTRUE(tmle)) {
-            if (!inherits(riesz, "ei_riesz")) {
-                cli_abort("{.arg tmle = TRUE} requires an {.cls ei_riesz} object for {.arg riesz}.")
-            }
-            rm_cf = tmle_riesz_cf(riesz, data)
-            rl = tmle_target(y, rl, rm, rm_cf, bounds, sum_one)
-        } else {
-            cli_warn("{.arg bounds} is only used when {.arg tmle = TRUE}.")
-        }
-    }
-
     n_x = ncol(rm)
     x_nm = names(rl$preds)
     y_nm = colnames(y)
@@ -161,7 +140,7 @@ ei_est = function(
     }
 
     # save data for sensitivity analysis
-    if (inherits(riesz, "ei_riesz") && inherits(regr, "ei_ridge")) {
+    if (inherits(riesz, "ei_riesz") && inherits(regr, c("ei_ridge", "ei_wrapped"))) {
         if (is.null(contrast)) {
             # nu2 is Neyman orthogonal est
             sens_s = sqrt(riesz$nu2 %o% regr$sigma2)
@@ -205,17 +184,19 @@ ei_est = function(
         }
         out$conf.low = out$estimate + crit * out$std.error
         out$conf.high = out$estimate - crit * out$std.error
+
+        bounds = regr$blueprint$bounds
+        if (is.numeric(bounds) && length(bounds) == 2) {
+            if (is.finite(bounds[1])) out$conf.low = pmax(out$conf.low, bounds[1])
+            if (is.finite(bounds[2])) out$conf.high = pmin(out$conf.high, bounds[2])
+        }
     }
 
     rownames(vcov) = colnames(vcov) = vcov_nm
     attr(out, "vcov") = vcov
     attr(out, "n") = sum(subset)
     attr(out, "sens_s") = sens_s
-    attr(out, "bounds_inf") = if (is.null(contrast)) {
-        check_bounds(NULL, rl$y)
-    } else {
-        c(-Inf, Inf)
-    }
+    attr(out, "bounds_inf") = if (is.null(contrast)) check_bounds(NULL, rl$y) else c(-Inf, Inf)
 
     out
 }
@@ -364,6 +345,10 @@ est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
         x = matrix(1, nrow=n, ncol=length(xcols))
         return(list(yhat=preds[[1]], preds=preds, x=x, z=NULL))
     }
+    if (inherits(regr, "ei_targeted")) {
+        regr$vcov_u = if (isTRUE(vcov)) regr$pred_vcov_u else NULL
+        return(regr)
+    }
     if (inherits(regr, "ei_wrapped")) {
         return(regr)
     }
@@ -426,7 +411,9 @@ est_check_regr = function(regr, data, n, xcols, n_y, vcov = FALSE) {
 #' @param data A data frame or matrix containing the data used to fit the model,
 #'   or an [ei_spec()] object (recommended). If the latter, then the
 #'   `predictors` and `outcome` arguments are ignored and need not be provided.
-#' @param ... Additional arguments passed to the [predict()] method.
+#' @param ... Additional arguments passed to the [predict()] method. If the
+#'   method advertises `"response"` as a value for a `type` or `what` argument,
+#'   that value is used unless supplied explicitly.
 #' @inheritParams ei_spec
 #'
 #' @returns An `ei_wrapped` object, which has the information required to use
@@ -487,34 +474,73 @@ ei_wrap_model <- function(x, data, predictors = NULL, outcome = NULL, ...) {
                   call = parent.frame())
     }
 
+    pred_args = list(...)
+    arg_names = names(pred_args)
+    if (is.null(arg_names)) arg_names = character(0)
+    for (arg_type in intersect(c("type", "what"), args)) {
+        if (arg_type %in% arg_names) next
+        default = try_fetch(
+            eval(formals(fn_pred)[[arg_type]], envir=environment(fn_pred)),
+            error = function(cnd) NULL
+        )
+        if (is.character(default) && "response" %in% default) {
+            pred_args[[arg_type]] = "response"
+            break
+        }
+    }
+    predict_data = function(new_data) {
+        argl = c(list(x), setNames(list(new_data), arg), pred_args)
+        as.matrix(do.call(fn_pred, argl))
+    }
+
+    y = as.matrix(data[, outcome])
+    yhat = as.matrix(fitted(x))
+    if (!is.numeric(yhat) || !identical(dim(yhat), dim(y))) {
+        cli_abort("Fitted values must be a numeric matrix with the same dimensions as the outcome.",
+                  call=parent.frame())
+    }
+    if (anyNA(yhat)) {
+        cli_abort("Missing values found in fitted values", call=parent.frame())
+    }
+    colnames(yhat) = colnames(y)
+
     preds = list()
     for (group in predictors) {
         data_copy = data
         data_copy[, predictors] = 0
         data_copy[, group] = 1
-
-        argl = list(x, data_copy, ...)
-        names(argl) = c("", arg, names(argl)[-1:-2])
-        preds[[group]] = as.matrix(do.call(fn_pred, argl))
+        pred = predict_data(data_copy)
+        if (!is.numeric(pred) || !identical(dim(pred), dim(y))) {
+            cli_abort("Predictions must be a numeric matrix with the same dimensions as the outcome.",
+                      call=parent.frame())
+        }
+        if (anyNA(pred)) {
+            cli_abort("Missing values found in Predictions.", call=parent.frame())
+        }
+        colnames(pred) = colnames(y)
+        preds[[group]] = pred
     }
 
-    y = as.matrix(data[, outcome])
-    yhat = as.matrix(fitted(x))
-    sigma2 = colMeans((y - yhat)^2)
+    w = try_fetch(stats::weights(x), error = function(cnd) NULL)
+    if (is.null(w)) w = rep(1, nrow(y))
+    if (!is.numeric(w) || length(w) != nrow(y) || anyNA(w) || any(!is.finite(w)) ||
+        any(w < 0) || !any(w > 0)) {
+        cli_abort("Model weights must be a nonnegative numeric vector with one entry per observation.",
+                  call=parent.frame())
+    }
+
+    df = try_fetch(stats::df.residual(x), error = function(cnd) nrow(y))
+    sigma2 = colSums((y - yhat)^2 * w / mean(w)) / df
     out = list(
         y = y,
         yhat = yhat,
         sigma2 = sigma2,
         preds = preds,
         x = as.matrix(data[, predictors]),
-        blueprint = list(ei_x = predictors),
+        blueprint = list(ei_x = predictors, ei_wgt = w),
         classes = class(x)
     )
     class(out) = "ei_wrapped"
-
-    if (is.null(out$yhat)) {
-        cli_abort("Unable to extract fitted values for {.cls class(x)} model.")
-    }
 
     out
 }
@@ -553,7 +579,7 @@ wrap_king_ei <- function(obj) {
         sigma2 = var(y - yhat),
         preds = list(.x = eta[, 1, drop=FALSE], .other = eta[, 2, drop=FALSE]),
         x = x,
-        blueprint = list(ei_x = colnames(x)),
+        blueprint = list(ei_x = colnames(x), ei_wgt = rep(1, n)),
         classes = "ei"
     ), class = "ei_wrapped")
 }
@@ -600,5 +626,8 @@ nobs.ei_est <- function(object, ...) {
 
 #' @export
 print.ei_wrapped <- function(x, ...) {
-    cat_line(format_inline("A wrapped {.cls {x$classes}} model with {length(x$yhat)} observations"))
+    cat_line(format_inline(paste0(
+        "A wrapped {.cls {x$classes}} model with {ncol(x$y)} outcome{?s}, ",
+        "{length(x$preds)} group{?s}, and {nrow(x$y)} observations"
+    )))
 }
