@@ -13,7 +13,6 @@ test_that("Estimation methods agree when there is no penalization", {
     expect_equal(est_p$estimate, est_d$estimate)
     expect_true(all(est_d$std.error > est_p$std.error))
 })
-
 test_that("Estimation methods work with single predictor", {
     m = ei_ridge(pres_ind_wal ~ vap_black | farm, elec_1968, penalty=0)
     rr = ei_riesz(pres_ind_wal ~ vap_black | farm, elec_1968,
@@ -94,4 +93,26 @@ test_that("Contrasts work with no predictors", {
     se0 = sqrt(sum(est0$std.error[1:2]^2))
     expect_equal(estc$estimate, pt0)
     expect_lte(estc$std.error, se0)
+})
+
+test_that("Wrapped models use response-scale predictions and model variance", {
+    spec = ei_spec(elec_1968, vap_white:vap_other, pres_ind_wal,
+                   total = pres_total, covariates = c(pop_urban, farm))
+    m = glm(
+        pres_ind_wal ~ 0 + vap_white + vap_black + vap_other + pop_urban + farm,
+        data = spec, weights = attr(spec, "ei_n")
+    )
+    rr = ei_riesz(spec, penalty = 0.01)
+
+    expect_no_warning({
+        m_wrap = ei_wrap_model(m, spec)
+    })
+    yhat = as.matrix(predict(m, spec, type = "response"))
+    w = stats::weights(m)
+    w = w / mean(w)
+    sigma2 = colSums((m_wrap$y - yhat)^2 * w) / stats::df.residual(m)
+
+    expect_equal(m_wrap$yhat, yhat, ignore_attr = TRUE)
+    expect_equal(m_wrap$sigma2, sigma2)
+    expect_no_error(ei_sens(ei_est(m_wrap, rr, spec), c_outcome = 0.2, c_predictor = 0.2))
 })

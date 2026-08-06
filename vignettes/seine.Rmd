@@ -359,6 +359,48 @@ sd(est_m$estimate - est_rr$estimate) # estimates (here) are close
 sd(est_m$std.error - est_rr$std.error) # standard errors are very different
 ```
 
+# Constrained outcomes
+
+Often, the outcome variable is constrained in some way, such as being bounded above or below.
+Most commonly, the individual-level outcome is categorical, so the aggregate outcomes are proportions that must sum to 1.
+The DML estimator above does not by default enforce these constraints, but they can be enforced by using a similar semiparametric strategy known as Targeted Maximum Likelihood Estimation (TMLE).
+Rather than apply the Riesz representer only to a preliminary estimate, TMLE uses it to adjust the regression predictions themselves, in a way that respects the constraints on the outcome.
+The so-called *targeted* regression can then be passed into `ei_est()` or other functions just as before.
+
+To start, we must fit the regression function so that the predictions satisfy the constraints.
+To reduce computational time for the purposes of this vignette, we will use a new `spec` object with a smaller basis expansion.
+This also lets us demonstrate the entire constrained workflow in one place. 
+
+```{r}
+spec = ei_spec(
+    elec_1968,
+    predictors = vap_white:vap_other,
+    outcome = pres_dem_hum:pres_abs,
+    total = pres_total,
+    covariates = c(state, pop_city:pop_rural, farm:educ_coll, inc_00_03k:inc_25_99k),
+    preproc = ~ bases::b_bart(model.matrix(~ 0 + ., .x), trees = 20)
+)
+
+m_bound = ei_ridge(spec, bounds = c(0, 1), sum_one = TRUE)
+rr = ei_riesz(spec, penalty = m_bound$penalty)
+all(fitted(m_bound) >= 0 & fitted(m_bound) <= 1)
+```
+
+When using the `bound` argument together with `sum_one` in `ei_ridge()`, sometimes the bounds cannot be exactly satisfied, and so sum_one may be slightly violated.
+In this example, `mean(rowSums(fitted(m_bound)))` is `r mean(rowSums(fitted(m_bound)))`, which is not perfect, but reasonably close.
+The `ei_target()` function will handle any remaining violations.
+
+```{r}
+m_tgt = ei_target(m_bound, rr, spec, bounds = c(0, 1), sum_one = TRUE)
+all(abs(rowSums(fitted(m_tgt)) - 1) < 1e-6)
+```
+
+We can then pass the targeted regression into `ei_est()` to produce estimates that respect the constraints.
+
+```{r}
+ei_est(m_tgt, rr, spec, conf_level = 0.95)
+```
+
 # Local estimates
 
 Sometimes, it is of interest to produce estimates that are even more fine-grained

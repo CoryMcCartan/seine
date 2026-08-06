@@ -164,10 +164,12 @@ ei_riesz_bridge <- function(processed, ...) {
     fit <- ei_riesz_impl(x, z, total, weights, penalty)
 
     new_ei_riesz(
+        coef = fit$coef,
         weights = fit$alpha,
         weights_loo = fit$loo,
         nu2 = fit$nu2,
         penalty = penalty,
+        int_scale = fit$int_scale,
         z_shift = z_shift,
         z_scale = z_scale,
         blueprint = processed$blueprint
@@ -182,23 +184,27 @@ ei_riesz_impl <- function(x, z, total, weights=rep(1, nrow(x)), penalty) {
     int_scale = 1 + 1e2*sqrt(penalty)
     w = weights / mean(weights)
     xz = row_kronecker(x, z, int_scale)
-    sqrt_w = sqrt(weights / mean(weights))
+    sqrt_w = sqrt(w)
     udv = svd(xz * sqrt_w)
 
     alpha = matrix(nrow=nrow(x), ncol=ncol(x))
+    coef = matrix(nrow=ncol(xz), ncol=ncol(x))
     loo = matrix(nrow=nrow(x), ncol=ncol(x))
     nu2 = numeric(ncol(x))
     for (group in seq_len(ncol(x))) {
         fit = riesz_svd(xz, udv, ncol(z), total, w, sqrt_w, group, penalty)
         alpha[, group] = fit$alpha * int_scale * w
+        coef[, group] = fit$coef
         loo[, group] = fit$loo * int_scale * w
         nu2[group] = fit$nu2  * int_scale^2
     }
     colnames(alpha) = colnames(x)
+    colnames(coef) = colnames(x)
+    rownames(coef) = colnames(xz)
     colnames(loo) = colnames(x)
     names(nu2) = colnames(x)
 
-    list(alpha = alpha, loo = loo, nu2 = nu2)
+    list(alpha = alpha, coef = coef, loo = loo, nu2 = nu2, int_scale = int_scale)
 }
 
 # Model type ------------------------------------------------------------------

@@ -64,7 +64,8 @@ alone (without \code{regr}) and \code{data} is not an \link{ei_spec} object.}
 
 \item{conf_level}{A numeric specifying the level for confidence intervals.
 If \code{FALSE}, no confidence intervals are calculated. Standard
-errors are always returned.}
+errors are always returned. When \code{regr} stores outcome bounds, confidence
+interval endpoints are truncated to those bounds.}
 
 \item{use_student}{If \code{TRUE}, use construct confidence intervals from a
 Student-\emph{t} distribution, which may improve coverage properties in
@@ -90,6 +91,9 @@ Produces estimates of overall conditional means from a fitted
 ecological inference model or Riesz representer.
 If both a regression model and a Riesz representer are provided, a debiased
 machine learning (DML) estimate is produced.
+Note that for non-DML estimates based on just a regression or just a Riesz
+representer, the estimated standard errors are conditional on the fitted
+nuisance functions, and so understate the total variance.
 }
 \section{Methods (by generic)}{
 \itemize{

@@ -41,6 +41,7 @@ test_that("Riesz regression methods agree", {
         fit_svd = riesz_svd(xz, udv, ncol(z), tot, w, sqrt(w), group=1, penalty=lambda)
 
         expect_equal(fit_naive$alpha, fit_svd$alpha, ignore_attr=TRUE)
+        expect_equal(fit_naive$coef, fit_svd$coef, ignore_attr=TRUE)
         expect_equal(fit_naive$loo, fit_svd$loo, ignore_attr=TRUE)
     }
 })

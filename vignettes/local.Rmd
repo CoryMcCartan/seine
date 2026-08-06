@@ -168,19 +168,29 @@ There are three common choices:
 - `b_cov = 0`: the **orthogonal model**, which assumes no correlation in the
   local estimands across predictors within a unit. When the estimated `b_cov`
   is implausible, this can be an acceptable choice.
-- `b_cov = 0.95` (or another value near 1): the **neighborhood model**, which
-  assumes nearly perfect positive correlation across predictors. This is
-  appropriate when counties are relatively homogeneous and the local estimands
-  are expected to vary together. However, it leads to quite narrow confidence
-  intervals, which may not cover the truth in practice.
+- `b_cov` near 1: the **neighborhood model**, which assumes nearly perfect
+  positive correlation across predictors. This is appropriate when counties are
+  relatively homogeneous and the local estimands are expected to vary together.
+  However, it leads to quite narrow confidence intervals, which may not cover 
+  the truth in practice. Values farther from 1 may be more plausible.
+
+To further improve accuracy, we recommend using a targeted regression model,
+i.e. a model that has been passed through `ei_target()`, inside `ei_est_local()`.
+We discuss targeting more in the main vignette.
+
+```{r}
+rr = ei_riesz(spec, penalty = m$penalty)
+m_tgt = ei_target(m, rr, spec, bounds = c(0, 1), sum_one = TRUE)
+m_tgt
+```
 
 Here, we fit all three and compare the average width of the resulting confidence
 intervals.
 
 ```{r}
-e_rcov = ei_est_local(m, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
-e_orth = ei_est_local(m, spec, b_cov = 0,     bounds = c(0, 1), sum_one = TRUE)
-e_nbhd = ei_est_local(m, spec, b_cov = 0.95,  bounds = c(0, 1), sum_one = TRUE)
+e_rcov = ei_est_local(m_tgt, spec, b_cov = b_cov, bounds = c(0, 1), sum_one = TRUE)
+e_orth = ei_est_local(m_tgt, spec, b_cov = 0,     bounds = c(0, 1), sum_one = TRUE)
+e_nbhd = ei_est_local(m_tgt, spec, b_cov = 0.8,  bounds = c(0, 1), sum_one = TRUE)
 
 c(
     estimated = mean(e_rcov$conf.high - e_rcov$conf.low),

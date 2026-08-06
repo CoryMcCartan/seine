@@ -554,7 +554,7 @@ ei_bench <- function(spec, subset = NULL, contrast = NULL) {
         }
         r2_riesz = nu2_loo / nu2_0
 
-        c_outcome = pmax(pmin((r2_out0 - r2_out_loo) / r2_out0, 1), 0)
+        c_outcome = pmax(pmin((r2_out0 - r2_out_loo) / (1 - r2_out0), 1), 0)
         c_predictor = pmax(pmin((1 - r2_riesz) / r2_riesz, 1), 0)
         est_chg = est_loo$estimate - est0$estimate
         sd_diff = sqrt(pmax(var_resid_loo - var_resid0, 0))
