@@ -10,6 +10,15 @@
 
 Efficient and user-friendly routines for modern ecological inference. Implements the methods described in McCartan & Kuriwaki (2025+) \doi{10.48550/arXiv.2509.20194}, which generalize ecological regression as introduced by Goodman (1953) \doi{10.2307/2088121}. Includes routines for preprocessing, synthetic data generation, double/debiased machine learning (DML) estimation, partial identification bounds, and sensitivity analysis.
 }
+\references{
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
+
+Kuriwaki, S., & McCartan, C. (2026). The role of confounders and linearity
+in ecological inference: A reassessment.
+Working paper \href{https://arxiv.org/abs/2601.07668}{arXiv:2601.07668}.
+}
 \seealso{
 Useful links:
 \itemize{

@@ -1,4 +1,13 @@
 #' @keywords internal
+#'
+#' @references
+#' McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+#' estimation of conditional means from aggregate data.
+#' Working paper [arXiv:2509.20194](https://arxiv.org/abs/2509.20194).
+#'
+#' Kuriwaki, S., & McCartan, C. (2026). The role of confounders and linearity
+#' in ecological inference: A reassessment.
+#' Working paper [arXiv:2601.07668](https://arxiv.org/abs/2601.07668).
 "_PACKAGE"
 
 ## usethis namespace: start

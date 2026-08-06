@@ -96,6 +96,10 @@ ei_sens(est, c_outcome=0.5, c_predictor=0.5)
 
 }
 \references{
+McCartan, C., & Kuriwaki, S. (2025+). Identification and semiparametric
+estimation of conditional means from aggregate data.
+Working paper \href{https://arxiv.org/abs/2509.20194}{arXiv:2509.20194}.
+
 Chernozhukov, V., Cinelli, C., Newey, W., Sharma, A., & Syrgkanis, V. (2024).
 \emph{Long story short: Omitted variable bias in causal machine learning}
 (No. w30302). National Bureau of Economic Research.
